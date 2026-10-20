@@ -16,84 +16,184 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
+    <!-- 헤더 -->
     <header class="bg-blue-600 text-white shadow-md sticky top-0 z-50">
         <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-            <h1 id="header-trip-title" class="text-base font-bold">여행 매니저 (연결 확인중)</h1>
-            <span id="sync-status" class="text-xs bg-amber-500 px-2.5 py-1 rounded-full text-white font-semibold">연결 대기</span>
+            <div class="flex items-center gap-2">
+                <button onclick="goTripSelector()" id="btn-back" class="hidden bg-blue-700 px-2.5 py-1 rounded-lg text-xs font-bold"><i class="fa-solid fa-arrow-left mr-1"></i> 목록</button>
+                <h1 id="header-trip-title" class="text-base font-bold">여행 일정 목록</h1>
+            </div>
+            <span id="sync-status" class="text-xs bg-emerald-500 px-2.5 py-1 rounded-full text-white font-semibold">연결됨</span>
         </div>
     </header>
 
-    <div id="debug-banner" class="bg-amber-600 text-white px-4 py-3 text-xs">
-        <div id="debug-message">Firebase 연결을 시도하고 있습니다...</div>
+    <!-- 0. 여행 선택 화면 -->
+    <div id="trip-selector-screen" class="max-w-4xl mx-auto px-4 py-6 w-full space-y-4">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-bold text-slate-800">내 여행 일정 목록</h2>
+                <button onclick="createTestTrip()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-sm">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> 단양 여행 일정 생성
+                </button>
+            </div>
+            <p class="text-xs text-slate-500">아래 여행 카드를 터치하면 해당 일정으로 입장합니다.</p>
+            <div id="trip-cards-container" class="space-y-2.5 pt-2"></div>
+        </div>
     </div>
 
-    <main class="max-w-4xl mx-auto px-3 py-4 flex-grow w-full space-y-4">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
-            <h2 class="text-lg font-bold text-slate-800">여행 일정 목록</h2>
-            <button onclick="createTestTrip()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold">단양 여행 일정 생성하기</button>
-            <div id="trip-cards-container" class="space-y-2"></div>
+    <!-- 메인 앱 화면 (여행 입장 시 표시) -->
+    <main id="main-app-screen" class="max-w-4xl mx-auto px-3 py-4 flex-grow w-full space-y-4 hidden">
+        <div class="flex border-b border-slate-200 bg-white rounded-t-xl shadow-sm overflow-x-auto no-scrollbar text-xs md:text-sm sticky top-[60px] z-40">
+            <button onclick="switchTab('timeline')" id="btn-tab-timeline" class="flex-1 min-w-[75px] py-3 text-center font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50">타임라인</button>
+            <button onclick="switchTab('expected')" id="btn-tab-expected" class="flex-1 min-w-[75px] py-3 text-center font-semibold text-slate-500">예상일정</button>
+            <button onclick="switchTab('actual')" id="btn-tab-actual" class="flex-1 min-w-[75px] py-3 text-center font-semibold text-slate-500">가계부</button>
         </div>
+
+        <!-- 1. 타임라인 -->
+        <section id="tab-timeline" class="space-y-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm border space-y-2">
+                <h3 class="font-bold text-slate-700 text-xs"><i class="fa-solid fa-map text-blue-600 mr-1"></i> 지도상 동선 확인</h3>
+                <div id="map-timeline"></div>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border">
+                <h3 class="font-bold text-blue-600 mb-3 text-sm">예상 일정 목록</h3>
+                <div id="expected-timeline-list" class="space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- 2. 예상일정 관리 -->
+        <section id="tab-expected" class="space-y-4 hidden">
+            <div class="bg-white p-5 rounded-xl shadow-sm border space-y-3">
+                <h3 class="font-bold text-slate-700 text-sm">예상 방문지 추가</h3>
+                <div id="map-expected"></div>
+                <form id="expected-form" class="grid grid-cols-1 gap-3">
+                    <input type="text" id="exp-place-name" placeholder="장소명" required class="border rounded-lg px-3 py-2 text-sm">
+                    <input type="number" id="exp-budget" placeholder="예산 (원)" required class="border rounded-lg px-3 py-2 text-sm">
+                    <div class="flex gap-2">
+                        <input type="text" id="exp-lat" placeholder="위도" required class="w-1/2 border rounded-lg px-3 py-2 text-xs bg-slate-50">
+                        <input type="text" id="exp-lng" placeholder="경도" required class="w-1/2 border rounded-lg px-3 py-2 text-xs bg-slate-50">
+                    </div>
+                    <button type="submit" class="bg-blue-600 text-white py-2 rounded-lg text-sm font-bold">일정 저장</button>
+                </form>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border"><div id="expected-list" class="space-y-2"></div></div>
+        </section>
+
+        <!-- 3. 가계부 -->
+        <section id="tab-actual" class="space-y-4 hidden">
+            <div class="bg-white p-5 rounded-xl shadow-sm border space-y-3">
+                <h3 class="font-bold text-slate-700 text-sm">실제 지출 입력</h3>
+                <div id="map-actual"></div>
+                <form id="actual-form" class="grid grid-cols-1 gap-3">
+                    <input type="text" id="act-place" placeholder="장소명" required class="border rounded-lg px-3 py-2 text-sm">
+                    <input type="number" id="act-expense" placeholder="지출금액 (원)" required class="border rounded-lg px-3 py-2 text-sm">
+                    <textarea id="act-action" placeholder="지출 내역" rows="2" required class="border rounded-lg px-3 py-2 text-sm"></textarea>
+                    <div class="flex gap-2">
+                        <input type="text" id="act-lat" placeholder="위도" class="w-1/2 border rounded-lg px-3 py-2 text-xs bg-slate-50">
+                        <input type="text" id="act-lng" placeholder="경도" class="w-1/2 border rounded-lg px-3 py-2 text-xs bg-slate-50">
+                    </div>
+                    <button type="submit" class="bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-bold">지출 저장</button>
+                </form>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border"><div id="actual-list" class="space-y-2"></div></div>
+        </section>
     </main>
 
+    <!-- 스크립트 로직 -->
     <script>
         let currentTripId = null;
-        let tripsData = [], carsData = [], expectedData = [], actualData = [];
+        let mapTl, mapExp, mapAct;
+        let expMarker, actMarker;
+        let tlMarkers = [];
+        let expectedData = [], actualData = [];
+
+        function goTripSelector() {
+            currentTripId = null;
+            document.getElementById('trip-selector-screen').classList.remove('hidden');
+            document.getElementById('main-app-screen').classList.add('hidden');
+            document.getElementById('btn-back').classList.add('hidden');
+            document.getElementById('header-trip-title').innerText = "여행 일정 목록";
+        }
+
+        function selectTrip(tripId, tripName) {
+            currentTripId = tripId;
+            document.getElementById('trip-selector-screen').classList.add('hidden');
+            document.getElementById('main-app-screen').classList.remove('hidden');
+            document.getElementById('btn-back').classList.remove('hidden');
+            document.getElementById('header-trip-title').innerText = tripName;
+            switchTab('timeline');
+            subscribeTripData(tripId);
+        }
+
+        function switchTab(tabId) {
+            ['timeline', 'expected', 'actual'].forEach(id => {
+                document.getElementById(`tab-${id}`).classList.add('hidden');
+                document.getElementById(`btn-tab-${id}`).className = "flex-1 min-w-[75px] py-3 text-center font-semibold text-slate-500";
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.getElementById(`btn-tab-${tabId}`).className = "flex-1 min-w-[75px] py-3 text-center font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50";
+            
+            setTimeout(() => {
+                if (tabId === 'timeline' && mapTl) { mapTl.invalidateSize(); renderTimelineMap(); }
+                if (tabId === 'expected' && mapExp) mapExp.invalidateSize();
+                if (tabId === 'actual' && mapAct) mapAct.invalidateSize();
+            }, 200);
+        }
+
+        function renderTimelines() {
+            let expHtml = '';
+            expectedData.forEach(item => {
+                expHtml += `<div class="p-3 bg-slate-50 border rounded-lg flex justify-between items-center text-xs"><div><b>${item.place_name}</b><p class="text-slate-500">예산: ${Number(item.budget || 0).toLocaleString()}원</p></div><button onclick="deleteSubItem('expected_places', '${item.id}')" class="text-red-500">삭제</button></div>`;
+            });
+            document.getElementById('expected-timeline-list').innerHTML = expHtml || '<p class="text-xs text-slate-400">예상 일정이 없습니다.</p>';
+            document.getElementById('expected-list').innerHTML = expHtml;
+        }
+
+        function renderTimelineMap() {
+            if (!mapTl) return;
+            tlMarkers.forEach(m => mapTl.removeLayer(m));
+            tlMarkers = [];
+            const bounds = [];
+            expectedData.forEach(item => {
+                if (item.lat && item.lng) {
+                    const m = L.circleMarker([item.lat, item.lng], { radius: 7, fillColor: "#2563eb", color: "#fff", weight: 2, fillOpacity: 0.9 }).addTo(mapTl).bindPopup(item.place_name);
+                    tlMarkers.push(m);
+                    bounds.push([item.lat, item.lng]);
+                }
+            });
+            if (bounds.length > 0) mapTl.fitBounds(bounds, { padding: [30, 30] });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const center = [36.9997, 128.3435];
+            mapTl = L.map('map-timeline').setView(center, 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapTl);
+
+            mapExp = L.map('map-expected').setView(center, 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapExp);
+            mapExp.on('click', (e) => {
+                document.getElementById('exp-lat').value = e.latlng.lat.toFixed(6);
+                document.getElementById('exp-lng').value = e.latlng.lng.toFixed(6);
+                if (expMarker) mapExp.removeLayer(expMarker);
+                expMarker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(mapExp);
+            });
+
+            mapAct = L.map('map-actual').setView(center, 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapAct);
+            mapAct.on('click', (e) => {
+                document.getElementById('act-lat').value = e.latlng.lat.toFixed(6);
+                document.getElementById('act-lng').value = e.latlng.lng.toFixed(6);
+                if (actMarker) mapAct.removeLayer(actMarker);
+                actMarker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(mapAct);
+            });
+        });
     </script>
 
+    <!-- Firebase 통신 모듈 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, onSnapshot, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBVXAi7WTQJ0sm7FXOjWwAMzmnvw1wSt0M",
-            authDomain: "group-trip-app-754ca.firebaseapp.com",
-            projectId: "group-trip-app-754ca",
-            storageBucket: "group-trip-app-754ca.firebasestorage.app",
-            messagingSenderId: "686842634804",
-            appId: "1:686842634804:web:52b428c33b50167c312061",
-            measurementId: "G-QP2ZYPK8MG"
-        };
-
-        const statusBadge = document.getElementById('sync-status');
-        const debugBanner = document.getElementById('debug-banner');
-        const debugMessage = document.getElementById('debug-message');
-
-        try {
-            const app = initializeApp(firebaseConfig);
-            const db = getFirestore(app);
-            window.db = db;
-
-            debugMessage.innerText = "Firebase 초기화 완료. 데이터 로딩 중...";
-
-            onSnapshot(query(collection(db, "trips")), (snapshot) => {
-                statusBadge.innerText = "연결됨";
-                statusBadge.className = "text-xs bg-emerald-500 px-2.5 py-1 rounded-full text-white font-semibold";
-                debugBanner.classList.add('hidden');
-
-                let html = '';
-                snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    html += `<div class="p-3 bg-slate-100 rounded-lg flex justify-between items-center text-sm"><span><b>${data.name}</b> (${data.startDate}~${data.endDate})</span></div>`;
-                });
-                document.getElementById('trip-cards-container').innerHTML = html || '<p class="text-xs text-slate-400">저장된 여행이 없습니다. 위 버튼을 눌러보세요.</p>';
-            }, (err) => {
-                debugBanner.className = "bg-red-600 text-white px-4 py-3 text-xs";
-                debugMessage.innerHTML = `<b>DB 연결 에러 발생:</b> ${err.code} - ${err.message}<br>👉 Firestore Database가 생성되었는지, 규칙(Rules)이 게시되었는지 확인해주세요.`;
-            });
-
-            window.createTestTrip = async function() {
-                try {
-                    await addDoc(collection(db, "trips"), { name: "단양·영월·청풍호 1박 2일", startDate: "2026-10-23", endDate: "2026-10-24" });
-                    alert('여행 일정이 생성되었습니다!');
-                } catch (e) {
-                    alert('생성 실패: ' + e.message);
-                }
-            };
-
-        } catch (e) {
-            debugBanner.className = "bg-red-600 text-white px-4 py-3 text-xs";
-            debugMessage.innerHTML = `<b>코드 실행 에러:</b> ${e.message}`;
-        }
-    </script>
-</body>
-</html>
+            authDomain: "group-
