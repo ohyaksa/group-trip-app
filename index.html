@@ -13,8 +13,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- SheetJS (엑셀 백업 및 복원용 라이브러리) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- 카카오(Daum) 도로명 우편번호·주소 검색 API (무료/키 불필요) -->
+    <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+
     <style>
-        #map-timeline, #map-expected, #map-actual { height: 320px; border-radius: 0.75rem; z-index: 10; }
+        #map-plan, #map-visit, #map-expected, #map-actual { height: 320px; border-radius: 0.75rem; z-index: 10; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -126,19 +129,22 @@
             </form>
         </div>
 
-        <!-- 엑셀(.xlsx) 백업 및 복원 센터 -->
+        <!-- 엑셀(.xlsx) 백업 및 복원 센터 (Permission denied 완벽 해결 버전) -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-            <div>
-                <h2 class="text-base font-bold text-slate-800 flex items-center gap-1.5">
-                    <i class="fa-solid fa-file-excel text-emerald-600"></i> 전체 데이터 엑셀(.xlsx) 백업 및 복원
-                </h2>
-                <p class="text-xs text-slate-500 mt-0.5">모든 여행 일정, 가계부 지출, 차량 배정 정보를 엑셀 파일로 백업하거나 복원합니다.</p>
+            <div class="flex justify-between items-start">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-excel text-emerald-600"></i> 전체 데이터 엑셀(.xlsx) 백업 및 복원
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-0.5">모든 여행 일정, 주소, 전화번호, 대안장소, 가계부, 차량 정보를 엑셀로 백업·복원합니다.</p>
+                </div>
+                <span id="backup-ready-badge" class="text-[11px] bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-bold">백업 준비중...</span>
             </div>
 
             <!-- 백업 버튼 3종 (스마트폰 / PC / 구글드라이브) -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <button type="button" onclick="exportExcelBackup('mobile')" class="bg-emerald-600 active:bg-emerald-800 text-white p-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm cursor-pointer transition">
-                    <i class="fa-solid fa-mobile-screen-button text-sm"></i> 스마트폰 백업 (공유/드라이브앱)
+                    <i class="fa-solid fa-mobile-screen-button text-sm"></i> 스마트폰 백업 (다운로드/공유)
                 </button>
                 <button type="button" onclick="exportExcelBackup('pc')" class="bg-slate-800 active:bg-slate-950 text-white p-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm cursor-pointer transition">
                     <i class="fa-solid fa-desktop text-sm"></i> PC / 내 기기에 엑셀 저장
@@ -152,7 +158,7 @@
             <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div class="text-xs">
                     <p class="font-bold text-slate-700"><i class="fa-solid fa-rotate-left text-blue-600 mr-1"></i>백업된 엑셀 파일(.xlsx)로 데이터 복원하기</p>
-                    <p class="text-[11px] text-slate-500 mt-0.5">백업해 둔 엑셀 파일을 선택하면 여행 일정과 가계부 데이터가 자동으로 복원됩니다.</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">백업해 둔 엑셀 파일을 선택하면 여행 일정, 대안 장소, 가계부 데이터가 그대로 복원됩니다.</p>
                 </div>
                 <label class="w-full sm:w-auto bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer text-center shrink-0 shadow-sm">
                     <i class="fa-solid fa-folder-open text-amber-500 mr-1"></i> 엑셀 파일 선택하여 복원
@@ -161,7 +167,7 @@
             </div>
         </div>
 
-        <!-- 요청사항 1: 가장 밑으로 눈에 띄지 않게 배치한 단양 기본일정 자동 생성 -->
+        <!-- 가장 밑으로 눈에 띄지 않게 배치한 단양 기본일정 자동 생성 -->
         <div class="pt-6 pb-2 text-center">
             <button type="button" id="btn-create-danyang" class="text-[11px] text-slate-400 hover:text-slate-600 underline decoration-slate-300 cursor-pointer transition">
                 + 단양·청풍호 기본일정 샘플 자동생성 (초기 세팅용)
@@ -174,50 +180,52 @@
     <!-- ========================================== -->
     <main id="main-app-screen" class="max-w-4xl mx-auto px-3 py-4 flex-grow w-full space-y-4 hidden">
         
-        <div class="flex border-b border-slate-200 bg-white rounded-xl shadow-sm overflow-x-auto no-scrollbar text-xs md:text-sm sticky top-[56px] z-40">
-            <button type="button" onclick="switchTab('timeline')" id="btn-tab-timeline" class="flex-1 min-w-[75px] py-3 text-center font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 cursor-pointer">
-                <i class="fa-solid fa-route mr-1"></i>타임라인
+        <!-- 5개 탭 네비게이션: 타임라인(계획) / 타임라인(방문) 분리 -->
+        <div class="flex border-b border-slate-200 bg-white rounded-xl shadow-sm overflow-x-auto no-scrollbar text-xs sticky top-[56px] z-40">
+            <button type="button" onclick="switchTab('plan')" id="btn-tab-plan" class="flex-1 min-w-[92px] py-3 text-center font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 cursor-pointer">
+                <i class="fa-regular fa-calendar-check mr-1"></i>타임라인(계획)
             </button>
-            <button type="button" onclick="switchTab('expected')" id="btn-tab-expected" class="flex-1 min-w-[75px] py-3 text-center font-semibold text-slate-500 cursor-pointer">
+            <button type="button" onclick="switchTab('visit')" id="btn-tab-visit" class="flex-1 min-w-[92px] py-3 text-center font-semibold text-slate-500 cursor-pointer">
+                <i class="fa-solid fa-shoe-prints mr-1"></i>타임라인(방문)
+            </button>
+            <button type="button" onclick="switchTab('expected')" id="btn-tab-expected" class="flex-1 min-w-[80px] py-3 text-center font-semibold text-slate-500 cursor-pointer">
                 <i class="fa-solid fa-calendar-plus mr-1"></i>일정관리
             </button>
-            <button type="button" onclick="switchTab('actual')" id="btn-tab-actual" class="flex-1 min-w-[75px] py-3 text-center font-semibold text-slate-500 cursor-pointer">
+            <button type="button" onclick="switchTab('actual')" id="btn-tab-actual" class="flex-1 min-w-[80px] py-3 text-center font-semibold text-slate-500 cursor-pointer">
                 <i class="fa-solid fa-calculator mr-1"></i>가계부·회비
             </button>
-            <button type="button" onclick="switchTab('cars')" id="btn-tab-cars" class="flex-1 min-w-[75px] py-3 text-center font-semibold text-slate-500 cursor-pointer">
+            <button type="button" onclick="switchTab('cars')" id="btn-tab-cars" class="flex-1 min-w-[80px] py-3 text-center font-semibold text-slate-500 cursor-pointer">
                 <i class="fa-solid fa-car mr-1"></i>차량·체크
             </button>
         </div>
 
-        <!-- ------------------------------------------ -->
-        <!-- 탭 1: 타임라인 (방문전/방문완료 + 동선지도)  -->
-        <!-- ------------------------------------------ -->
-        <section id="tab-timeline" class="space-y-4">
-            
-            <!-- 일자 필터 및 지도 선 스타일 모드 전환 -->
-            <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-2">
-                <div class="flex gap-1 bg-slate-100 p-1 rounded-lg text-xs font-bold">
-                    <button type="button" onclick="setDayFilter('all')" id="filter-day-all" class="px-3 py-1.5 rounded-md bg-white text-blue-600 shadow-sm cursor-pointer">전체</button>
-                    <button type="button" onclick="setDayFilter('1')" id="filter-day-1" class="px-3 py-1.5 rounded-md text-slate-600 cursor-pointer">1일차</button>
-                    <button type="button" onclick="setDayFilter('2')" id="filter-day-2" class="px-3 py-1.5 rounded-md text-slate-600 cursor-pointer">2일차</button>
-                    <button type="button" onclick="setDayFilter('3')" id="filter-day-3" class="px-3 py-1.5 rounded-md text-slate-600 cursor-pointer">3일차+</button>
-                </div>
-                <div class="flex gap-1.5">
-                    <button type="button" onclick="toggleMapLineMode()" id="btn-map-mode" class="bg-slate-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1">
-                        <i class="fa-solid fa-eye"></i> <span id="map-mode-label">기본 동선 모드 (완료=점선)</span>
-                    </button>
-                    <button type="button" onclick="switchTab('expected')" class="bg-blue-600 active:bg-blue-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer">
-                        + 일정추가
-                    </button>
-                </div>
+        <!-- 공통 일자 필터 바 (타임라인 계획/방문에서 공유) -->
+        <div id="common-day-filter-bar" class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-2">
+            <div class="flex gap-1 bg-slate-100 p-1 rounded-lg text-xs font-bold">
+                <button type="button" onclick="setDayFilter('all')" id="filter-day-all" class="px-3 py-1.5 rounded-md bg-white text-blue-600 shadow-sm cursor-pointer">전체</button>
+                <button type="button" onclick="setDayFilter('1')" id="filter-day-1" class="px-3 py-1.5 rounded-md text-slate-600 cursor-pointer">1일차</button>
+                <button type="button" onclick="setDayFilter('2')" id="filter-day-2" class="px-3 py-1.5 rounded-md text-slate-600 cursor-pointer">2일차</button>
+                <button type="button" onclick="setDayFilter('3')" id="filter-day-3" class="px-3 py-1.5 rounded-md text-slate-600 cursor-pointer">3일차+</button>
             </div>
+            <div class="flex gap-1.5">
+                <button type="button" onclick="locateMyGPS()" class="bg-slate-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer">
+                    <i class="fa-solid fa-location-crosshairs mr-0.5"></i>내위치
+                </button>
+                <button type="button" onclick="switchTab('expected')" class="bg-blue-600 active:bg-blue-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer">
+                    + 일정추가
+                </button>
+            </div>
+        </div>
 
-            <!-- 타임라인 지도 -->
-            <div id="timeline-map-card" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-2.5 scroll-mt-28">
+        <!-- ------------------------------------------ -->
+        <!-- 탭 1: 타임라인(계획) - 방문전=실선, 완료=점선 -->
+        <!-- ------------------------------------------ -->
+        <section id="tab-plan" class="space-y-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-2.5">
                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1.5 text-xs">
                     <div>
-                        <h3 class="font-bold text-slate-800"><i class="fa-solid fa-map-location-dot text-blue-600 mr-1"></i>타임라인 동선 지도 (선 클릭 시 거리·소요시간 팝업)</h3>
-                        <p id="map-mode-desc" class="text-[11px] text-slate-500 mt-0.5">* 현재 <b>기본 모드</b>: 방문전 구간은 실선, <b>방문완료 구간은 점선</b>으로 표시됩니다. 아래 완료된 일정을 터치하면 <b>방문=굵은선 / 예정=점선</b> 모드로 전환됩니다.</p>
+                        <h3 class="font-bold text-blue-700"><i class="fa-solid fa-map-location-dot mr-1"></i>계획 타임라인 지도 (방문전=실선 / 방문완료=점선)</h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">* 선을 터치하면 구간 거리와 소요시간이 표시됩니다. 완료된 일정은 점선으로 유지됩니다.</p>
                     </div>
                     <div class="flex gap-2 text-[10px] font-semibold flex-wrap shrink-0">
                         <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span>1일차 오전</span>
@@ -226,63 +234,80 @@
                         <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-600 inline-block"></span>2일차 오후</span>
                     </div>
                 </div>
-                <div id="map-timeline"></div>
+                <div id="map-plan"></div>
             </div>
 
-            <!-- 예상 일정 타임라인 & 실제 방문 타임라인 -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- 예상 일정 타임라인 -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
-                    <div class="flex justify-between items-center pb-2 border-b border-slate-100">
-                        <div>
-                            <h3 class="font-bold text-blue-600 text-sm flex items-center gap-1.5">
-                                <i class="fa-regular fa-calendar-check"></i> 예상 일정 타임라인
-                            </h3>
-                            <p class="text-[11px] text-slate-400">[방문전]을 누르면 [방문완료]로 변경되며 일정은 그대로 유지됩니다.</p>
-                        </div>
-                        <span id="exp-count-badge" class="text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full font-bold shrink-0">0건</span>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
+                <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+                    <div>
+                        <h3 class="font-bold text-blue-600 text-sm flex items-center gap-1.5">
+                            <i class="fa-regular fa-calendar-check"></i> 예상 일정 타임라인 (계획)
+                        </h3>
+                        <p class="text-[11px] text-slate-400">[방문전]을 누르면 [방문완료]로 변경되며, 등록된 대안 장소가 있으면 1초 만에 교체할 수 있습니다.</p>
                     </div>
-                    <div id="expected-timeline-list" class="space-y-4"></div>
+                    <span id="exp-count-badge" class="text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full font-bold shrink-0">0건</span>
                 </div>
-
-                <!-- 방문완료 및 실제 가계부 타임라인 -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
-                    <div class="flex justify-between items-center pb-2 border-b border-slate-100">
-                        <div>
-                            <h3 class="font-bold text-emerald-600 text-sm flex items-center gap-1.5">
-                                <i class="fa-solid fa-shoe-prints"></i> 방문완료 및 지출 타임라인
-                            </h3>
-                            <p class="text-[11px] text-slate-400">항목을 터치하면 지도에서 <b>방문=굵은선 / 예정=점선</b>으로 표시됩니다.</p>
-                        </div>
-                        <span id="act-count-badge" class="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full font-bold shrink-0">0건</span>
-                    </div>
-                    <div id="actual-timeline-list" class="space-y-4"></div>
-                </div>
+                <div id="expected-timeline-list" class="space-y-4"></div>
             </div>
         </section>
 
         <!-- ------------------------------------------ -->
-        <!-- 탭 2: 예상 일정 쉽게 추가·수정하기            -->
+        <!-- 탭 2: 타임라인(방문) - 방문=굵은선, 예정=점선 -->
+        <!-- ------------------------------------------ -->
+        <section id="tab-visit" class="space-y-4 hidden">
+            <div id="visit-map-card" class="bg-white p-4 rounded-xl shadow-sm border border-emerald-200 space-y-2.5 scroll-mt-28">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1.5 text-xs">
+                    <div>
+                        <h3 class="font-bold text-emerald-700"><i class="fa-solid fa-route mr-1"></i>실제 방문 타임라인 지도 (방문완료=굵은 실선 / 방문예정=점선)</h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">* 실제로 방문을 완료한 구간은 <b>굵은 실선</b>으로 강조되고, 아직 방문 예정인 곳은 <b>점선</b>으로 표시됩니다.</p>
+                    </div>
+                </div>
+                <div id="map-visit"></div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
+                <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+                    <div>
+                        <h3 class="font-bold text-emerald-600 text-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-shoe-prints"></i> 방문완료 및 실제 지출 타임라인
+                        </h3>
+                        <p class="text-[11px] text-slate-400">항목을 터치하면 위 지도에서 해당 방문 위치와 굵은 동선을 즉시 비춰줍니다.</p>
+                    </div>
+                    <span id="act-count-badge" class="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full font-bold shrink-0">0건</span>
+                </div>
+                <div id="actual-timeline-list" class="space-y-4"></div>
+            </div>
+        </section>
+
+        <!-- ------------------------------------------ -->
+        <!-- 탭 3: 일정관리 (주소·전화번호·대안장소 자유등록)-->
         <!-- ------------------------------------------ -->
         <section id="tab-expected" class="space-y-4 hidden">
             <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
                 <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <h3 id="exp-form-title" class="font-bold text-slate-800 text-base">➕ 새로운 예상 일정 추가하기</h3>
+                    <h3 id="exp-form-title" class="font-bold text-slate-800 text-base">➕ 예상 일정 추가 / 수정하기</h3>
                     <button type="button" onclick="resetExpForm()" id="exp-cancel-btn" class="hidden text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-lg font-bold cursor-pointer">수정 취소</button>
                 </div>
 
-                <div class="bg-blue-50/70 p-3.5 rounded-xl border border-blue-100 space-y-2">
-                    <label class="block text-xs font-bold text-blue-800"><i class="fa-solid fa-magnifying-glass mr-1"></i>1단계: 장소 검색으로 위치(좌표) 자동 찾기</label>
+                <!-- 1단계: 카카오 도로명 주소 검색 + 키워드 좌표 검색 결합 -->
+                <div class="bg-blue-50/70 p-3.5 rounded-xl border border-blue-100 space-y-2.5">
+                    <div class="flex flex-wrap justify-between items-center gap-2">
+                        <label class="text-xs font-bold text-blue-900"><i class="fa-solid fa-map-pin mr-1"></i>1단계: 도로명 주소 또는 장소명으로 위치·좌표 자동 입력</label>
+                        <button type="button" onclick="openKakaoAddressPopup('exp')" class="bg-amber-400 hover:bg-amber-500 text-slate-900 px-3 py-1.5 rounded-lg text-xs font-extrabold shadow-sm cursor-pointer flex items-center gap-1">
+                            <i class="fa-solid fa-magnifying-glass-location"></i> 카카오 도로명 주소검색 팝업
+                        </button>
+                    </div>
                     <div class="flex gap-2">
-                        <input type="text" id="exp-search-keyword" placeholder="장소명 입력 (예: 도담삼봉, 카페 산)" class="flex-1 border border-blue-200 rounded-lg px-3 py-2 text-sm bg-white">
+                        <input type="text" id="exp-search-keyword" placeholder="또는 장소명 키워드 입력 (예: 도담삼봉, 속초중앙시장)" class="flex-1 border border-blue-200 rounded-lg px-3 py-2 text-sm bg-white">
                         <button type="button" onclick="searchPlaceCoord('exp')" class="bg-blue-600 active:bg-blue-800 text-white px-4 py-2 rounded-lg text-xs font-bold shrink-0 cursor-pointer">장소 검색</button>
                     </div>
                     <div id="exp-search-results" class="hidden space-y-1 pt-1 max-h-40 overflow-y-auto"></div>
-                    <p class="text-[11px] text-slate-500">* 검색 후 선택하거나 아래 지도를 직접 터치하면 위도·경도가 입력됩니다.</p>
+                    <p class="text-[11px] text-slate-500">* 아래 지도를 직접 터치해도 해당 위치의 <b>한국 도로명/지번 주소와 좌표</b>가 자동으로 입력됩니다.</p>
                 </div>
 
                 <div id="map-expected"></div>
 
+                <!-- 2단계: 일정 상세 입력 폼 (주소, 전화번호, 대안 장소 포함) -->
                 <form id="expected-form" class="space-y-3 pt-1">
                     <input type="hidden" id="exp-edit-id">
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
@@ -313,25 +338,51 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">장소 이름</label>
-                            <input type="text" id="exp-place-name" placeholder="예: 만천하스카이워크" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                            <input type="text" id="exp-place-name" placeholder="예: 돌집식당" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">예상 지출 금액 (원)</label>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">전화번호 (선택)</label>
+                            <input type="tel" id="exp-phone" placeholder="예: 043-422-2842" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">예상 지출 총액 (원)</label>
                             <input type="number" id="exp-budget" value="0" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
                         </div>
                     </div>
 
                     <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">정확한 주소 (도로명/지번 주소)</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="exp-address" placeholder="예: 충북 단양군 단양읍 중앙2로 11" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                            <button type="button" onclick="geocodeFromAddressInput('exp')" class="bg-slate-700 text-white px-3 py-2 rounded-lg text-xs font-bold shrink-0 cursor-pointer">주소로 좌표찾기</button>
+                        </div>
+                    </div>
+
+                    <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">메모 및 예정 행동</label>
-                        <input type="text" id="exp-memo" placeholder="예: 곤드레마늘정식 8명 예약 필수" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                        <input type="text" id="exp-memo" placeholder="예: 곤드레마늘정식 8인 예약 필수" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
                     </div>
 
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="text" id="exp-lat" placeholder="위도 (지도 터치/검색)" required class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-slate-50">
-                        <input type="text" id="exp-lng" placeholder="경도 (지도 터치/검색)" required class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-slate-50">
+                        <input type="text" id="exp-lat" placeholder="위도 (자동/지도터치)" required class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-slate-50">
+                        <input type="text" id="exp-lng" placeholder="경도 (자동/지도터치)" required class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-slate-50">
+                    </div>
+
+                    <!-- 모든 여행에서 자유롭게 쓸 수 있는 [대안 장소(식당/카페 등)] 등록 섹션 -->
+                    <div class="bg-indigo-50/60 p-3.5 rounded-xl border border-indigo-200 space-y-2.5">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h4 class="text-xs font-bold text-indigo-900"><i class="fa-solid fa-Random mr-1"></i>대안 식당·카페·장소 후보 등록 (선택)</h4>
+                                <p class="text-[11px] text-indigo-700">현장 대기나 날씨에 따라 바꿀 후보 장소를 등록해 두면 타임라인에서 1초 만에 교체됩니다.</p>
+                            </div>
+                            <button type="button" onclick="addAlternativeRow()" class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer shrink-0">
+                                + 대안 장소 추가
+                            </button>
+                        </div>
+                        <div id="exp-alternatives-container" class="space-y-2"></div>
                     </div>
 
                     <button type="submit" id="exp-submit-btn" class="w-full bg-blue-600 active:bg-blue-800 text-white py-3 rounded-xl text-sm font-bold cursor-pointer shadow-sm">
@@ -347,7 +398,7 @@
         </section>
 
         <!-- ------------------------------------------ -->
-        <!-- 탭 3: 가계부 및 1/N 개인별 납부 회비 정산기  -->
+        <!-- 탭 4: 가계부 및 1/N 개인별 납부 회비 정산기  -->
         <!-- ------------------------------------------ -->
         <section id="tab-actual" class="space-y-4 hidden">
             
@@ -401,7 +452,7 @@
                 </div>
             </div>
 
-            <!-- 실제 방문 및 가계부 입력 폼 -->
+            <!-- 실제 방문 및 가계부 입력 폼 (주소 및 전화번호 포함) -->
             <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
                 <div class="flex justify-between items-center border-b border-slate-100 pb-2">
                     <h3 id="act-form-title" class="font-bold text-slate-800 text-base">🧾 실제 방문 및 지출 내역 입력</h3>
@@ -409,7 +460,12 @@
                 </div>
 
                 <div class="bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-200 space-y-2">
-                    <label class="block text-xs font-bold text-emerald-800">💡 계획된 예상 일정에서 선택해 자동 채우기</label>
+                    <div class="flex flex-wrap justify-between items-center gap-2">
+                        <label class="text-xs font-bold text-emerald-800">💡 계획된 예상 일정에서 선택하거나 주소 검색하기</label>
+                        <button type="button" onclick="openKakaoAddressPopup('act')" class="bg-amber-400 text-slate-900 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer">
+                            카카오 주소검색
+                        </button>
+                    </div>
                     <select id="act-preset-select" onchange="fillFromExpected()" class="w-full border border-emerald-300 rounded-lg px-3 py-2 text-sm bg-white">
                         <option value="">-- 예상 방문지 목록에서 선택하세요 --</option>
                     </select>
@@ -444,15 +500,24 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">실제 방문 장소명</label>
                             <input type="text" id="act-place" placeholder="예: 돌집식당" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">실제 사용 금액 (원, 환급은 -입력)</label>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">전화번호 (선택)</label>
+                            <input type="tel" id="act-phone" placeholder="예: 043-422-2842" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">실제 사용 금액 (원)</label>
                             <input type="number" id="act-expense" value="0" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-emerald-700">
                         </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">방문지 주소 (선택)</label>
+                        <input type="text" id="act-address" placeholder="도로명 또는 지번 주소" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
                     </div>
 
                     <div>
@@ -472,46 +537,16 @@
             </div>
 
             <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                <h3 class="font-bold text-slate-800 mb-3 text-sm">가계부 지출 상세 내역 (항목 클릭 시 지도 동선 확인)</h3>
+                <h3 class="font-bold text-slate-800 mb-3 text-sm">가계부 지출 상세 내역</h3>
                 <div id="actual-manage-list" class="space-y-2.5"></div>
             </div>
         </section>
 
         <!-- ------------------------------------------ -->
-        <!-- 탭 4: 차량·인원 배정 및 필수 예약 체크리스트  -->
+        <!-- 탭 5: 차량·인원 배정 및 장보기 체크리스트     -->
         <!-- ------------------------------------------ -->
         <section id="tab-cars" class="space-y-4 hidden">
             
-            <!-- 필수 예약 및 전화연결 체크리스트 -->
-            <div class="bg-amber-50 p-5 rounded-xl shadow-sm border border-amber-200 space-y-3">
-                <h3 class="font-bold text-amber-900 text-base flex items-center gap-1.5">
-                    <i class="fa-solid fa-clipboard-check text-amber-600"></i> 여행 전 필수 예약·확인 바로가기
-                </h3>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-                    <div class="bg-white p-3 rounded-xl border border-amber-100 flex justify-between items-center">
-                        <div>
-                            <p class="font-bold text-slate-800">1일차 점심: 돌집식당</p>
-                            <p class="text-slate-500">곤드레마늘정식 8인 예약</p>
-                        </div>
-                        <a href="tel:043-422-2842" class="bg-amber-500 text-white px-3 py-1.5 rounded-lg font-bold shrink-0"><i class="fa-solid fa-phone mr-1"></i>전화</a>
-                    </div>
-                    <div class="bg-white p-3 rounded-xl border border-amber-100 flex justify-between items-center">
-                        <div>
-                            <p class="font-bold text-slate-800">1일차 장보기: 하나로마트 가곡점</p>
-                            <p class="text-slate-500">삼겹살 3.2kg 전날 미리 주문</p>
-                        </div>
-                        <a href="tel:043-422-8030" class="bg-amber-500 text-white px-3 py-1.5 rounded-lg font-bold shrink-0"><i class="fa-solid fa-phone mr-1"></i>전화</a>
-                    </div>
-                    <div class="bg-white p-3 rounded-xl border border-amber-100 flex justify-between items-center">
-                        <div>
-                            <p class="font-bold text-slate-800">2일차 점심: 느티나무횟집</p>
-                            <p class="text-slate-500">송어비빔회 점심 예약제 필수</p>
-                        </div>
-                        <a href="tel:043-647-0089" class="bg-amber-500 text-white px-3 py-1.5 rounded-lg font-bold shrink-0"><i class="fa-solid fa-phone mr-1"></i>전화</a>
-                    </div>
-                </div>
-            </div>
-
             <!-- 차량 관리 폼 -->
             <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-3">
                 <div class="flex justify-between items-center">
@@ -533,22 +568,51 @@
                 <h3 class="font-bold text-slate-800 mb-3 text-sm">현재 배정된 차량 및 탑승자 명단</h3>
                 <div id="car-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
             </div>
+
+            <!-- 숙소 바비큐 장보기 체크리스트 -->
+            <div class="bg-amber-50 p-5 rounded-xl shadow-sm border border-amber-200 space-y-3">
+                <h3 class="font-bold text-amber-900 text-base flex items-center gap-1.5">
+                    <i class="fa-solid fa-cart-shopping text-amber-600"></i> 바비큐 장보기 & 필수 예약 체크리스트
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <label class="bg-white p-3 rounded-xl border border-amber-100 flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 accent-amber-600">
+                        <span><b>국산 냉장 삼겹살 3.2kg</b> (1인 400g 기준 · 약 92,800원)</span>
+                    </label>
+                    <label class="bg-white p-3 rounded-xl border border-amber-100 flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 accent-amber-600">
+                        <span><b>쌈채소 & 구이채소</b> (상추, 깻잎, 버섯, 마늘, 김치 · 약 38,000원)</span>
+                    </label>
+                    <label class="bg-white p-3 rounded-xl border border-amber-100 flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 accent-amber-600">
+                        <span><b>햇반 8개 & 라면 5개 & 쌈장·소금</b> (약 22,000원)</span>
+                    </label>
+                    <label class="bg-white p-3 rounded-xl border border-amber-100 flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 accent-amber-600">
+                        <span><b>음료·생수 & 일회용품</b> (콜라, 생수, 종이컵, 접시 · 약 33,000원)</span>
+                    </label>
+                </div>
+            </div>
         </section>
 
     </main>
 
     <!-- ========================================== -->
-    <!-- UI 제어, 상태 토글, 회비 계산, 지도 스크립트  -->
+    <!-- UI 제어, 주소검색, 대안장소, 지도 스크립트    -->
     <!-- ========================================== -->
     <script>
         let currentTripId = null;
         let currentMemberCount = 8;
-        let mapTl, mapExp, mapAct;
-        let expMarker, actMarker;
-        let tlLayers = [];
+        let mapPlan, mapVisit, mapExp, mapAct;
+        let expMarker, actMarker, myGpsMarker;
+        let planLayers = [], visitLayers = [];
         let tripsData = [], expectedData = [], actualData = [], carsData = [];
         let selectedDayFilter = 'all';
-        let mapLineMode = 'standard';
+
+        // 스마트폰 백업 시 Permission denied 방지를 위한 사전 생성 엑셀 캐시
+        window.cachedBackupFile = null;
+        window.cachedBackupBlob = null;
+        window.cachedBackupFileName = "단체여행_백업.xlsx";
 
         function addDiagLog(msg, isError = false) {
             const box = document.getElementById('diagnostic-panel');
@@ -588,6 +652,7 @@
             document.getElementById('btn-back').classList.add('hidden');
             document.getElementById('header-trip-title').innerText = "여행 일정 목록";
             document.getElementById('header-trip-dates').classList.add('hidden');
+            if (window.prepareBackupCache) window.prepareBackupCache();
         }
 
         function selectTrip(tripId) {
@@ -605,9 +670,7 @@
             dateEl.innerText = `${trip.startDate || ''} ~ ${trip.endDate || ''} · ${currentMemberCount}인`;
             dateEl.classList.remove('hidden');
 
-            mapLineMode = 'standard';
-            updateMapModeUI();
-            switchTab('timeline');
+            switchTab('plan');
             if (window.subscribeTripData) window.subscribeTripData(tripId);
         }
 
@@ -634,16 +697,25 @@
             document.getElementById('trip-cancel-btn').classList.add('hidden');
         };
 
+        // 5개 탭 전환 제어 (타임라인 계획 / 타임라인 방문 분리)
         function switchTab(tabId) {
-            ['timeline', 'expected', 'actual', 'cars'].forEach(id => {
+            ['plan', 'visit', 'expected', 'actual', 'cars'].forEach(id => {
                 document.getElementById(`tab-${id}`).classList.add('hidden');
-                document.getElementById(`btn-tab-${id}`).className = "flex-1 min-w-[75px] py-3 text-center font-semibold text-slate-500 cursor-pointer";
+                document.getElementById(`btn-tab-${id}`).className = "flex-1 min-w-[80px] py-3 text-center font-semibold text-slate-500 cursor-pointer";
             });
             document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-            document.getElementById(`btn-tab-${tabId}`).className = "flex-1 min-w-[75px] py-3 text-center font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 cursor-pointer";
+            document.getElementById(`btn-tab-${tabId}`).className = "flex-1 min-w-[80px] py-3 text-center font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 cursor-pointer";
+
+            const filterBar = document.getElementById('common-day-filter-bar');
+            if (tabId === 'plan' || tabId === 'visit') {
+                filterBar.classList.remove('hidden');
+            } else {
+                filterBar.classList.add('hidden');
+            }
             
             setTimeout(() => {
-                if (tabId === 'timeline' && mapTl) { mapTl.invalidateSize(); renderTimelineMap(); }
+                if (tabId === 'plan' && mapPlan) { mapPlan.invalidateSize(); renderTimelineMaps(); }
+                if (tabId === 'visit' && mapVisit) { mapVisit.invalidateSize(); renderTimelineMaps(); }
                 if (tabId === 'expected' && mapExp) mapExp.invalidateSize();
                 if (tabId === 'actual' && mapAct) mapAct.invalidateSize();
             }, 200);
@@ -657,53 +729,134 @@
                     : "px-3 py-1.5 rounded-md text-slate-600 cursor-pointer";
             });
             renderAllViews();
-            renderTimelineMap();
+            renderTimelineMaps();
         }
 
-        window.toggleMapLineMode = function(forceMode) {
-            if (forceMode) {
-                mapLineMode = forceMode;
-            } else {
-                mapLineMode = (mapLineMode === 'standard') ? 'highlightCompleted' : 'standard';
-            }
-            updateMapModeUI();
-            renderTimelineMap();
-        };
-
-        function updateMapModeUI() {
-            const btn = document.getElementById('btn-map-mode');
-            const label = document.getElementById('map-mode-label');
-            const desc = document.getElementById('map-mode-desc');
-            if (!btn || !label || !desc) return;
-
-            if (mapLineMode === 'standard') {
-                btn.className = "bg-slate-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1";
-                label.innerText = "기본 동선 모드 (완료=점선)";
-                desc.innerHTML = `* 현재 <b>기본 모드</b>: 방문전 구간은 실선, <b>방문완료 구간은 점선</b>으로 표시됩니다. 완료된 일정을 누르면 <b>방문=굵은선 / 예정=점선</b> 모드로 전환됩니다.`;
-            } else {
-                btn.className = "bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1 shadow-sm";
-                label.innerText = "방문완료 강조 모드 (방문=굵은선 / 예정=점선)";
-                desc.innerHTML = `* 현재 <b class="text-emerald-700">방문완료 강조 모드</b>: <b>실제 방문완료한 곳은 굵은 실선</b>으로, <b>방문 예정인 곳은 점선</b>으로 표시됩니다.`;
-            }
-        }
-
-        window.focusCompletedOnTimelineMap = function(lat, lng, placeName) {
-            switchTab('timeline');
-            toggleMapLineMode('highlightCompleted');
-            const mapCard = document.getElementById('timeline-map-card');
+        // 방문완료 일정 클릭 시 -> 타임라인(방문) 탭으로 이동하여 방문=굵은선, 예정=점선 지도로 포커스
+        window.focusCompletedOnVisitMap = function(lat, lng, placeName) {
+            switchTab('visit');
+            const mapCard = document.getElementById('visit-map-card');
             if (mapCard) mapCard.scrollIntoView({ behavior: 'smooth' });
 
             setTimeout(() => {
-                if (mapTl && lat && lng) {
-                    mapTl.setView([lat, lng], 13, { animate: true });
+                if (mapVisit && lat && lng) {
+                    mapVisit.setView([lat, lng], 13, { animate: true });
                     L.popup()
                         .setLatLng([lat, lng])
-                        .setContent(`<div class="text-xs font-bold text-emerald-700">✅ [방문완료] ${placeName}</div><div class="text-[11px] text-slate-600">방문한 구간은 굵은 선, 예정 구간은 점선으로 표시됩니다.</div>`)
-                        .openOn(mapTl);
+                        .setContent(`<div class="text-xs font-bold text-emerald-700">✅ [방문완료] ${placeName}</div><div class="text-[11px] text-slate-600">방문완료 구간은 굵은 실선, 예정 구간은 점선으로 표시됩니다.</div>`)
+                        .openOn(mapVisit);
                 }
             }, 300);
         };
 
+        // 내 현재 위치(GPS) 지도에 표시
+        window.locateMyGPS = function() {
+            if (!navigator.geolocation) {
+                alert('이 브라우저에서는 GPS 위치 기능을 지원하지 않습니다.');
+                return;
+            }
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                const targetMap = !document.getElementById('tab-visit').classList.contains('hidden') ? mapVisit : mapPlan;
+                if (targetMap) {
+                    if (myGpsMarker) targetMap.removeLayer(myGpsMarker);
+                    myGpsMarker = L.circleMarker([lat, lng], { radius: 9, fillColor: "#ef4444", color: "#fff", weight: 3, fillOpacity: 1 })
+                        .addTo(targetMap).bindPopup("📍 내 현재 위치").openPopup();
+                    targetMap.setView([lat, lng], 13);
+                }
+            }, () => {
+                alert('위치 권한을 허용해 주시면 현재 위치를 지도에서 확인할 수 있습니다.');
+            });
+        };
+
+        // ====================================================
+        // 방법 1 + 방법 3 결합: 카카오 도로명 주소 검색 + 양방향 지오코딩
+        // ====================================================
+        window.openKakaoAddressPopup = function(target) {
+            if (typeof daum === 'undefined' || !daum.Postcode) {
+                alert('주소 검색 모듈을 불러오는 중입니다. 잠시 후 다시 눌러주세요.');
+                return;
+            }
+            new daum.Postcode({
+                oncomplete: async function(data) {
+                    const fullAddr = data.roadAddress || data.jibunAddress || data.address;
+                    const buildingName = data.buildingName || '';
+                    if (target === 'exp') {
+                        document.getElementById('exp-address').value = fullAddr;
+                        if (!document.getElementById('exp-place-name').value && buildingName) {
+                            document.getElementById('exp-place-name').value = buildingName;
+                        }
+                        await geocodeFromAddressInput('exp');
+                    } else {
+                        document.getElementById('act-address').value = fullAddr;
+                        if (!document.getElementById('act-place').value && buildingName) {
+                            document.getElementById('act-place').value = buildingName;
+                        }
+                        await geocodeFromAddressInput('act');
+                    }
+                }
+            }).open();
+        };
+
+        // 입력된 주소 문자열로 위도·경도 좌표 자동 찾기
+        window.geocodeFromAddressInput = async function(target) {
+            const addrInput = document.getElementById(target === 'exp' ? 'exp-address' : 'act-address');
+            const queryStr = addrInput.value.trim();
+            if (!queryStr) { alert('주소를 먼저 입력하거나 검색해 주세요.'); return; }
+
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryStr)}&countrycodes=kr&limit=1`);
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    const lat = Number(data[0].lat).toFixed(6);
+                    const lng = Number(data[0].lon).toFixed(6);
+                    if (target === 'exp') {
+                        document.getElementById('exp-lat').value = lat;
+                        document.getElementById('exp-lng').value = lng;
+                        if (mapExp) {
+                            mapExp.setView([lat, lng], 14);
+                            if (expMarker) mapExp.removeLayer(expMarker);
+                            expMarker = L.marker([lat, lng]).addTo(mapExp).bindPopup(queryStr).openPopup();
+                        }
+                    } else {
+                        document.getElementById('act-lat').value = lat;
+                        document.getElementById('act-lng').value = lng;
+                        if (mapAct) {
+                            mapAct.setView([lat, lng], 14);
+                            if (actMarker) mapAct.removeLayer(actMarker);
+                            actMarker = L.marker([lat, lng]).addTo(mapAct).bindPopup(queryStr).openPopup();
+                        }
+                    }
+                } else {
+                    alert('해당 주소의 세부 좌표를 자동으로 찾지 못했습니다. 아래 지도를 터치해 위치를 찍어주세요.');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        };
+
+        // 지도 터치 시 위도·경도로부터 한국 도로명/지번 주소 자동 역변환(Reverse Geocoding)
+        async function reverseGeocodeToAddress(lat, lng, target) {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ko`);
+                const data = await res.json();
+                if (data && data.display_name) {
+                    // 한국식 주소 순서로 깔끔하게 정리
+                    const parts = data.display_name.split(', ').reverse().filter(p => p !== '대한민국' && !/^\d{5}$/.test(p));
+                    const cleanAddr = parts.join(' ');
+                    if (target === 'exp') {
+                        document.getElementById('exp-address').value = cleanAddr;
+                    } else {
+                        document.getElementById('act-address').value = cleanAddr;
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // 키워드로 장소 검색 시 주소 + 좌표 동시 입력
         window.searchPlaceCoord = async function(target) {
             const inputId = target === 'exp' ? 'exp-search-keyword' : 'act-search-keyword';
             const resultDiv = document.getElementById(target === 'exp' ? 'exp-search-results' : 'act-search-results');
@@ -714,18 +867,20 @@
             resultDiv.innerHTML = `<p class="text-xs text-blue-600 py-1">🔍 '${keyword}' 검색 중...</p>`;
 
             try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(keyword)}&countrycodes=kr&limit=5`);
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(keyword)}&countrycodes=kr&limit=5&accept-language=ko`);
                 const data = await res.json();
                 if (!data || data.length === 0) {
-                    resultDiv.innerHTML = `<p class="text-xs text-red-500 py-1">검색 결과가 없습니다. 아래 지도를 직접 터치해 위치를 찍어주세요.</p>`;
+                    resultDiv.innerHTML = `<p class="text-xs text-red-500 py-1">검색 결과가 없습니다. [카카오 도로명 주소검색]을 이용하거나 지도를 터치해 주세요.</p>`;
                     return;
                 }
                 let html = '';
                 data.forEach((place) => {
                     const shortName = place.display_name.split(',')[0];
+                    const parts = place.display_name.split(', ').reverse().filter(p => p !== '대한민국' && !/^\d{5}$/.test(p));
+                    const fullKorAddr = parts.join(' ');
                     html += `
-                    <div onclick="applySearchedCoord('${target}', '${shortName.replace(/'/g, "")}', ${place.lat}, ${place.lon})" class="p-2 bg-white hover:bg-blue-50 border border-slate-200 rounded-lg cursor-pointer text-xs flex justify-between items-center">
-                        <span class="truncate pr-2"><b>${shortName}</b> <span class="text-slate-400 text-[11px]">(${place.display_name})</span></span>
+                    <div onclick="applySearchedCoord('${target}', '${shortName.replace(/'/g, "")}', '${fullKorAddr.replace(/'/g, "")}', ${place.lat}, ${place.lon})" class="p-2 bg-white hover:bg-blue-50 border border-slate-200 rounded-lg cursor-pointer text-xs flex justify-between items-center">
+                        <span class="truncate pr-2"><b>${shortName}</b> <span class="text-slate-500 text-[11px]">(${fullKorAddr})</span></span>
                         <span class="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold shrink-0">선택</span>
                     </div>`;
                 });
@@ -735,11 +890,12 @@
             }
         };
 
-        window.applySearchedCoord = function(target, placeName, lat, lng) {
+        window.applySearchedCoord = function(target, placeName, fullAddr, lat, lng) {
             const fixedLat = Number(lat).toFixed(6);
             const fixedLng = Number(lng).toFixed(6);
             if (target === 'exp') {
                 if (!document.getElementById('exp-place-name').value) document.getElementById('exp-place-name').value = placeName;
+                document.getElementById('exp-address').value = fullAddr;
                 document.getElementById('exp-lat').value = fixedLat;
                 document.getElementById('exp-lng').value = fixedLng;
                 document.getElementById('exp-search-results').classList.add('hidden');
@@ -750,6 +906,7 @@
                 }
             } else {
                 if (!document.getElementById('act-place').value) document.getElementById('act-place').value = placeName;
+                document.getElementById('act-address').value = fullAddr;
                 document.getElementById('act-lat').value = fixedLat;
                 document.getElementById('act-lng').value = fixedLng;
                 document.getElementById('act-search-results').classList.add('hidden');
@@ -761,7 +918,63 @@
             }
         };
 
-        // 요청사항 3 & 4 반영: 제목은 가로 한 줄 전체폭으로, 다음 줄에 [방문/지도/리뷰/수정/삭제] 단추 배치!
+        // 주소 클립보드 복사
+        window.copyAddressText = function(addr) {
+            if (!addr) return;
+            navigator.clipboard.writeText(addr).then(() => {
+                alert(`주소가 복사되었습니다!\n[${addr}]\n내비게이션 앱에 붙여넣기 하세요.`);
+            }).catch(() => {
+                prompt('아래 주소를 복사하세요:', addr);
+            });
+        };
+
+        // ====================================================
+        // 모든 여행에서 자유롭게 사용 가능한 [대안 장소] 동적 입력 행
+        // ====================================================
+        window.addAlternativeRow = function(altData = {}) {
+            const container = document.getElementById('exp-alternatives-container');
+            const div = document.createElement('div');
+            div.className = "alt-item-row bg-white p-3 rounded-xl border border-indigo-200 space-y-2 relative";
+            div.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="text-[11px] font-bold text-indigo-700">🔄 대안 후보 장소</span>
+                    <button type="button" onclick="this.closest('.alt-item-row').remove()" class="text-red-500 text-xs font-bold cursor-pointer">삭제 ✕</button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <input type="text" placeholder="대안 장소명 (예: 서울식당)" value="${altData.name || ''}" class="alt-name border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs">
+                    <input type="tel" placeholder="전화번호 (예: 043-422-2842)" value="${altData.phone || ''}" class="alt-phone border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs">
+                    <input type="number" placeholder="예상금액 (원)" value="${altData.budget !== undefined ? altData.budget : 0}" class="alt-budget border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <input type="text" placeholder="도로명/지번 주소" value="${altData.address || ''}" class="alt-address border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs">
+                    <input type="text" placeholder="메모 (예: 마늘떡갈비 정식)" value="${altData.memo || ''}" class="alt-memo border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs">
+                </div>
+                <input type="hidden" value="${altData.lat || ''}" class="alt-lat">
+                <input type="hidden" value="${altData.lng || ''}" class="alt-lng">
+            `;
+            container.appendChild(div);
+        };
+
+        function collectAlternativesFromForm() {
+            const rows = document.querySelectorAll('#exp-alternatives-container .alt-item-row');
+            const list = [];
+            rows.forEach(r => {
+                const name = r.querySelector('.alt-name').value.trim();
+                if (!name) return;
+                list.push({
+                    name,
+                    phone: r.querySelector('.alt-phone').value.trim(),
+                    budget: Number(r.querySelector('.alt-budget').value || 0),
+                    address: r.querySelector('.alt-address').value.trim(),
+                    memo: r.querySelector('.alt-memo').value.trim(),
+                    lat: r.querySelector('.alt-lat').value ? Number(r.querySelector('.alt-lat').value) : null,
+                    lng: r.querySelector('.alt-lng').value ? Number(r.querySelector('.alt-lng').value) : null
+                });
+            });
+            return list;
+        }
+
+        // 타임라인 및 가계부 회비 정산 렌더링
         function renderAllViews() {
             const sortedExp = sortByDayAndTime(expectedData);
             const sortedAct = sortByDayAndTime(actualData);
@@ -798,9 +1011,9 @@
 
             const completedCount = filteredExp.filter(x => x.visited).length;
             document.getElementById('exp-count-badge').innerText = `총 ${filteredExp.length}곳 (완료 ${completedCount})`;
-            document.getElementById('act-count-badge').innerText = `지출 ${filteredAct.length}건`;
+            document.getElementById('act-count-badge').innerText = `방문·지출 ${filteredAct.length}건`;
 
-            // 1. 예상 일정 타임라인 렌더링 (세로 찌그러짐 방지를 위해 3단 상하 레이아웃 적용)
+            // 1. 예상 일정 타임라인 렌더링 (제목 1줄 + 주소/전화/대안교체 + 하단 버튼줄)
             const expGroups = {};
             filteredExp.forEach(item => {
                 const d = item.day || 1;
@@ -833,8 +1046,27 @@
                              <i class="fa-regular fa-circle"></i> 방문전
                            </button>`;
 
-                    const navMapUrl = `https://map.naver.com/p/search/${encodeURIComponent(item.place_name)}`;
+                    const navMapUrl = `https://map.naver.com/p/search/${encodeURIComponent(item.address || item.place_name)}`;
                     const navReviewUrl = `https://search.naver.com/search.naver?where=view&query=${encodeURIComponent(item.place_name + ' 후기 리뷰')}`;
+                    const phoneBtnHtml = item.phone
+                        ? `<a href="tel:${item.phone}" class="bg-white hover:bg-slate-100 border border-blue-300 text-blue-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
+                             <i class="fa-solid fa-phone"></i> 전화
+                           </a>`
+                        : '';
+
+                    // 대안 장소 1초 스왑 버튼 렌더링
+                    let altButtonsHtml = '';
+                    if (Array.isArray(item.alternatives) && item.alternatives.length > 0) {
+                        altButtonsHtml = `<div class="flex flex-wrap items-center gap-1.5 pt-1">
+                            <span class="text-[11px] font-bold text-indigo-700"><i class="fa-solid fa-repeat mr-0.5"></i>대안 교체:</span>`;
+                        item.alternatives.forEach((alt, idx) => {
+                            altButtonsHtml += `
+                            <button type="button" onclick="swapWithAlternative('${item.id}', ${idx})" class="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer transition">
+                                🔄 ${alt.name} (${Number(alt.budget || 0).toLocaleString()}원)으로 변경
+                            </button>`;
+                        });
+                        altButtonsHtml += `</div>`;
+                    }
 
                     expTimelineHtml += `
                     <div class="relative pl-5">
@@ -844,20 +1076,29 @@
                             <div class="flex justify-between items-center gap-1">
                                 <div class="flex items-center gap-1.5">
                                     <span class="text-xs font-extrabold text-blue-700 bg-blue-100 px-2 py-0.5 rounded"><i class="fa-regular fa-clock mr-1"></i>${item.time || '시간미정'}</span>
-                                    ${isVisited ? `<button type="button" onclick="focusCompletedOnTimelineMap(${item.lat}, ${item.lng}, '${(item.place_name || '').replace(/'/g, "")}')" class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded cursor-pointer">✓ 완료 (지도동선)</button>` : ''}
+                                    ${isVisited ? `<button type="button" onclick="focusCompletedOnVisitMap(${item.lat}, ${item.lng}, '${(item.place_name || '').replace(/'/g, "")}')" class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded cursor-pointer">✓ 방문완료 (방문지도보기)</button>` : ''}
                                 </div>
                                 <span class="text-xs font-bold text-slate-700">예상 ${Number(item.budget || 0).toLocaleString()}원</span>
                             </div>
 
-                            <!-- 2줄: 제목 한 줄 전체폭 표시 + 메모 -->
-                            <div onclick="${isVisited ? `focusCompletedOnTimelineMap(${item.lat}, ${item.lng}, '${(item.place_name || '').replace(/'/g, "")}')` : ''}" class="w-full ${isVisited ? 'cursor-pointer' : ''}">
+                            <!-- 2줄: 제목 한 줄 전체폭 + 주소/전화번호/메모/대안장소 -->
+                            <div onclick="${isVisited ? `focusCompletedOnVisitMap(${item.lat}, ${item.lng}, '${(item.place_name || '').replace(/'/g, "")}')` : ''}" class="w-full space-y-1 ${isVisited ? 'cursor-pointer' : ''}">
                                 <h4 class="font-bold text-slate-800 text-sm sm:text-base truncate w-full">${item.category ? `[${item.category}] ` : ''}${item.place_name}</h4>
-                                ${item.memo ? `<p class="text-xs text-slate-500 mt-0.5 leading-relaxed break-words">${item.memo}</p>` : ''}
+                                ${item.address ? `
+                                <div class="flex items-center gap-1.5 text-xs text-slate-600">
+                                    <i class="fa-solid fa-location-dot text-slate-400"></i>
+                                    <span class="truncate">${item.address}</span>
+                                    <button type="button" onclick="event.stopPropagation(); copyAddressText('${item.address.replace(/'/g, "")}')" class="text-[10px] bg-white border border-slate-300 px-1.5 py-0.2 rounded text-slate-700 font-semibold shrink-0 cursor-pointer">복사</button>
+                                </div>` : ''}
+                                ${item.phone ? `<p class="text-xs text-blue-700 font-semibold"><i class="fa-solid fa-phone mr-1"></i>${item.phone}</p>` : ''}
+                                ${item.memo ? `<p class="text-xs text-slate-500 leading-relaxed break-words">${item.memo}</p>` : ''}
+                                ${altButtonsHtml}
                             </div>
 
-                            <!-- 3줄: 방문, 지도, 리뷰, 수정, 삭제 단추 나란히 배치 -->
+                            <!-- 3줄: 방문, 전화, 지도, 리뷰, 수정, 삭제 단추 나란히 배치 -->
                             <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-200/60">
                                 ${visitBtnHtml}
+                                ${phoneBtnHtml}
                                 <a href="${navMapUrl}" target="_blank" class="bg-white hover:bg-slate-100 border border-slate-300 text-emerald-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
                                     <i class="fa-solid fa-location-dot"></i> 지도
                                 </a>
@@ -875,7 +1116,7 @@
             document.getElementById('expected-timeline-list').innerHTML = expTimelineHtml || '<p class="text-xs text-slate-400 py-4 text-center">등록된 예상 일정이 없습니다.</p>';
             document.getElementById('expected-manage-list').innerHTML = expTimelineHtml || '<p class="text-xs text-slate-400 py-4 text-center">등록된 일정이 없습니다.</p>';
 
-            // 2. 실제 방문·가계부 타임라인 렌더링 (동일하게 제목 한줄 + 버튼 아랫줄 배치)
+            // 2. 실제 방문·가계부 타임라인 렌더링
             const actGroups = {};
             filteredAct.forEach(item => {
                 const d = item.day || 1;
@@ -896,10 +1137,15 @@
                 actGroups[day].forEach(item => {
                     const hasCoord = item.lat && item.lng;
                     const clickAttr = hasCoord
-                        ? `onclick="focusCompletedOnTimelineMap(${item.lat}, ${item.lng}, '${(item.place || '').replace(/'/g, "")}')"`
-                        : `onclick="toggleMapLineMode('highlightCompleted'); document.getElementById('timeline-map-card').scrollIntoView({behavior:'smooth'});"`;
-                    const navMapUrl = `https://map.naver.com/p/search/${encodeURIComponent(item.place)}`;
+                        ? `onclick="focusCompletedOnVisitMap(${item.lat}, ${item.lng}, '${(item.place || '').replace(/'/g, "")}')"`
+                        : `onclick="switchTab('visit'); document.getElementById('visit-map-card').scrollIntoView({behavior:'smooth'});"`;
+                    const navMapUrl = `https://map.naver.com/p/search/${encodeURIComponent(item.address || item.place)}`;
                     const navReviewUrl = `https://search.naver.com/search.naver?where=view&query=${encodeURIComponent(item.place + ' 후기 리뷰')}`;
+                    const phoneBtnHtml = item.phone
+                        ? `<a href="tel:${item.phone}" class="bg-white border border-blue-300 text-blue-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
+                             <i class="fa-solid fa-phone"></i> 전화
+                           </a>`
+                        : '';
 
                     actTimelineHtml += `
                     <div class="relative pl-5">
@@ -911,17 +1157,20 @@
                                 <span class="text-xs font-extrabold text-emerald-700">${Number(item.expense || 0).toLocaleString()}원</span>
                             </div>
 
-                            <!-- 2줄: 제목 한줄 + 행동 내역 -->
-                            <div ${clickAttr} class="cursor-pointer w-full">
+                            <!-- 2줄: 제목 한줄 + 주소/전화/행동 내역 -->
+                            <div ${clickAttr} class="cursor-pointer w-full space-y-1">
                                 <h4 class="font-bold text-slate-800 text-sm sm:text-base truncate w-full">${item.place}</h4>
-                                <p class="text-xs text-slate-600 mt-0.5 leading-relaxed break-words">${item.action || ''}</p>
+                                ${item.address ? `<p class="text-xs text-slate-500 truncate"><i class="fa-solid fa-location-dot mr-1"></i>${item.address}</p>` : ''}
+                                ${item.phone ? `<p class="text-xs text-blue-700 font-semibold"><i class="fa-solid fa-phone mr-1"></i>${item.phone}</p>` : ''}
+                                <p class="text-xs text-slate-600 leading-relaxed break-words">${item.action || ''}</p>
                             </div>
 
-                            <!-- 3줄: 동선지도보기, 네이버지도, 리뷰, 수정, 삭제 -->
+                            <!-- 3줄: 동선확인, 전화, 지도, 리뷰, 수정, 삭제 -->
                             <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-emerald-200/60">
                                 <button type="button" ${clickAttr} class="bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer flex items-center gap-1">
-                                    <i class="fa-solid fa-route"></i> 동선확인
+                                    <i class="fa-solid fa-route"></i> 방문지도확인
                                 </button>
+                                ${phoneBtnHtml}
                                 <a href="${navMapUrl}" target="_blank" class="bg-white border border-slate-300 text-emerald-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
                                     <i class="fa-solid fa-location-dot"></i> 지도
                                 </a>
@@ -936,7 +1185,7 @@
                 });
                 actTimelineHtml += `</div></div>`;
             });
-            document.getElementById('actual-timeline-list').innerHTML = actTimelineHtml || '<p class="text-xs text-slate-400 py-4 text-center">예상 일정의 [방문전] 버튼을 누르면 [방문완료]로 바뀌며 이곳에도 자동으로 기록됩니다!</p>';
+            document.getElementById('actual-timeline-list').innerHTML = actTimelineHtml || '<p class="text-xs text-slate-400 py-4 text-center">타임라인(계획)에서 [방문전] 버튼을 누르면 [방문완료]로 바뀌며 이곳에도 자동으로 기록됩니다!</p>';
             document.getElementById('actual-manage-list').innerHTML = actTimelineHtml || '<p class="text-xs text-slate-400 py-4 text-center">기록된 지출 내역이 없습니다.</p>';
 
             let presetHtml = '<option value="">-- 예상 방문지 목록에서 선택하세요 --</option>';
@@ -982,6 +1231,8 @@
             const normT = normalizeTime(item.time);
             document.getElementById('act-time').value = normT !== '99:99' ? normT : '12:00';
             document.getElementById('act-place').value = item.place_name || '';
+            document.getElementById('act-phone').value = item.phone || '';
+            document.getElementById('act-address').value = item.address || '';
             document.getElementById('act-expense').value = item.budget || 0;
             document.getElementById('act-action').value = item.memo || `${item.place_name} 방문`;
             document.getElementById('act-lat').value = item.lat || '';
@@ -998,10 +1249,19 @@
             document.getElementById('exp-time').value = normT !== '99:99' ? normT : '10:00';
             document.getElementById('exp-category').value = item.category || '관광';
             document.getElementById('exp-place-name').value = item.place_name || '';
+            document.getElementById('exp-phone').value = item.phone || '';
+            document.getElementById('exp-address').value = item.address || '';
             document.getElementById('exp-budget').value = item.budget || 0;
             document.getElementById('exp-memo').value = item.memo || '';
             document.getElementById('exp-lat').value = item.lat || '';
             document.getElementById('exp-lng').value = item.lng || '';
+
+            const altContainer = document.getElementById('exp-alternatives-container');
+            altContainer.innerHTML = '';
+            if (Array.isArray(item.alternatives)) {
+                item.alternatives.forEach(alt => addAlternativeRow(alt));
+            }
+
             document.getElementById('exp-form-title').innerText = `✏️ [${item.place_name}] 일정 수정하기`;
             document.getElementById('exp-submit-btn').innerText = "일정 수정 완료";
             document.getElementById('exp-cancel-btn').classList.remove('hidden');
@@ -1011,7 +1271,8 @@
         window.resetExpForm = function() {
             document.getElementById('expected-form').reset();
             document.getElementById('exp-edit-id').value = '';
-            document.getElementById('exp-form-title').innerText = "➕ 새로운 예상 일정 추가하기";
+            document.getElementById('exp-alternatives-container').innerHTML = '';
+            document.getElementById('exp-form-title').innerText = "➕ 예상 일정 추가 / 수정하기";
             document.getElementById('exp-submit-btn').innerText = "예상 일정 저장하기";
             document.getElementById('exp-cancel-btn').classList.add('hidden');
         };
@@ -1026,6 +1287,8 @@
             document.getElementById('act-time').value = normT !== '99:99' ? normT : '12:00';
             document.getElementById('act-traveler').value = item.traveler || '총무(공통)';
             document.getElementById('act-place').value = item.place || '';
+            document.getElementById('act-phone').value = item.phone || '';
+            document.getElementById('act-address').value = item.address || '';
             document.getElementById('act-expense').value = item.expense || 0;
             document.getElementById('act-action').value = item.action || '';
             document.getElementById('act-lat').value = item.lat || '';
@@ -1083,10 +1346,11 @@
             }
         }
 
-        function renderTimelineMap() {
-            if (!mapTl) return;
-            tlLayers.forEach(l => mapTl.removeLayer(l));
-            tlLayers = [];
+        // 단일 지도 렌더링 헬퍼 ('standard': 완료=점선 / 'highlightCompleted': 완료=굵은실선, 예정=점선)
+        function drawMapRoute(targetMap, layersArray, mode) {
+            if (!targetMap) return;
+            layersArray.forEach(l => targetMap.removeLayer(l));
+            layersArray.length = 0;
             const bounds = [];
 
             const sortedExp = sortByDayAndTime(expectedData).filter(item => {
@@ -1105,14 +1369,16 @@
                         color: "#fff",
                         weight: isVisited ? 3 : 2,
                         fillOpacity: 0.95
-                    }).addTo(mapTl).bindPopup(`
+                    }).addTo(targetMap).bindPopup(`
                         <div class="text-xs space-y-1">
                             <div class="font-bold text-slate-800">[${item.day || 1}일차 · ${item.time || ''}] ${item.place_name}</div>
+                            ${item.address ? `<div class="text-slate-500">${item.address}</div>` : ''}
+                            ${item.phone ? `<div class="text-blue-600 font-semibold">📞 ${item.phone}</div>` : ''}
                             <div>상태: <b class="${isVisited ? 'text-emerald-600' : 'text-blue-600'}">${isVisited ? '✓ 방문완료' : '방문전(예정)'}</b></div>
                             <div>예산: ${Number(item.budget || 0).toLocaleString()}원</div>
                         </div>
                     `);
-                    tlLayers.push(m);
+                    layersArray.push(m);
                     bounds.push([item.lat, item.lng]);
                 }
             });
@@ -1128,7 +1394,7 @@
                     const isSegmentVisited = Boolean(p1.visited);
 
                     let lineOptions = {};
-                    if (mapLineMode === 'standard') {
+                    if (mode === 'standard') {
                         lineOptions = {
                             color: segColor,
                             weight: 4,
@@ -1144,7 +1410,7 @@
                         };
                     }
 
-                    const polyline = L.polyline([[p1.lat, p1.lng], [p2.lat, p2.lng]], lineOptions).addTo(mapTl);
+                    const polyline = L.polyline([[p1.lat, p1.lng], [p2.lat, p2.lng]], lineOptions).addTo(targetMap);
                     polyline.bindPopup(`
                         <div class="text-xs space-y-1">
                             <div class="font-bold text-blue-700">🚗 구간 이동 정보 (${p1.day || 1}일차)</div>
@@ -1154,34 +1420,48 @@
                             <div>상태: <b>${isSegmentVisited ? '방문완료 구간' : '방문예정 구간'}</b></div>
                         </div>
                     `);
-                    tlLayers.push(polyline);
+                    layersArray.push(polyline);
                 }
             }
 
-            if (bounds.length > 0) mapTl.fitBounds(bounds, { padding: [30, 30] });
+            if (bounds.length > 0) targetMap.fitBounds(bounds, { padding: [30, 30] });
+        }
+
+        function renderTimelineMaps() {
+            drawMapRoute(mapPlan, planLayers, 'standard');
+            drawMapRoute(mapVisit, visitLayers, 'highlightCompleted');
         }
 
         window.addEventListener('DOMContentLoaded', () => {
             const center = [36.9997, 128.3435];
-            mapTl = L.map('map-timeline').setView(center, 10);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapTl);
+            mapPlan = L.map('map-plan').setView(center, 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapPlan);
+
+            mapVisit = L.map('map-visit').setView(center, 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapVisit);
 
             mapExp = L.map('map-expected').setView(center, 10);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapExp);
             mapExp.on('click', (e) => {
-                document.getElementById('exp-lat').value = e.latlng.lat.toFixed(6);
-                document.getElementById('exp-lng').value = e.latlng.lng.toFixed(6);
+                const lat = e.latlng.lat.toFixed(6);
+                const lng = e.latlng.lng.toFixed(6);
+                document.getElementById('exp-lat').value = lat;
+                document.getElementById('exp-lng').value = lng;
                 if (expMarker) mapExp.removeLayer(expMarker);
-                expMarker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(mapExp).bindPopup('선택한 일정 위치').openPopup();
+                expMarker = L.marker([lat, lng]).addTo(mapExp).bindPopup('선택한 일정 위치').openPopup();
+                reverseGeocodeToAddress(lat, lng, 'exp');
             });
 
             mapAct = L.map('map-actual').setView(center, 10);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapAct);
             mapAct.on('click', (e) => {
-                document.getElementById('act-lat').value = e.latlng.lat.toFixed(6);
-                document.getElementById('act-lng').value = e.latlng.lng.toFixed(6);
+                const lat = e.latlng.lat.toFixed(6);
+                const lng = e.latlng.lng.toFixed(6);
+                document.getElementById('act-lat').value = lat;
+                document.getElementById('act-lng').value = lng;
                 if (actMarker) mapAct.removeLayer(actMarker);
-                actMarker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(mapAct).bindPopup('실제 방문 위치').openPopup();
+                actMarker = L.marker([lat, lng]).addTo(mapAct).bindPopup('실제 방문 위치').openPopup();
+                reverseGeocodeToAddress(lat, lng, 'act');
             });
         });
     </script>
@@ -1212,24 +1492,14 @@
             window.db = db;
 
             // ====================================================
-            // 요청사항 2: 엑셀(.xlsx) 백업 (스마트폰/PC/구글드라이브)
+            // 백그라운드 엑셀 캐시 빌더 (Permission denied 원천 방지!)
             // ====================================================
-            window.exportExcelBackup = async function(targetMode) {
-                if (typeof XLSX === 'undefined') {
-                    alert('엑셀 라이브러리를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
-                    return;
-                }
+            window.prepareBackupCache = async function() {
+                if (typeof XLSX === 'undefined') return;
+                const badge = document.getElementById('backup-ready-badge');
                 try {
                     const tripsSnap = await getDocs(collection(db, "trips"));
-                    if (tripsSnap.empty) {
-                        alert('백업할 여행 데이터가 없습니다.');
-                        return;
-                    }
-
-                    const tripsRows = [];
-                    const expRows = [];
-                    const actRows = [];
-                    const carRows = [];
+                    const tripsRows = [], expRows = [], actRows = [], carRows = [];
 
                     for (const tDoc of tripsSnap.docs) {
                         const tData = tDoc.data();
@@ -1252,11 +1522,14 @@
                                 시간: x.time || '',
                                 구분: x.category || '',
                                 장소명: x.place_name || '',
+                                전화번호: x.phone || '',
+                                주소: x.address || '',
                                 예상예산: Number(x.budget || 0),
                                 메모: x.memo || '',
                                 위도: x.lat || '',
                                 경도: x.lng || '',
-                                방문완료여부: x.visited ? 'Y' : 'N'
+                                방문완료여부: x.visited ? 'Y' : 'N',
+                                대안장소JSON: Array.isArray(x.alternatives) && x.alternatives.length ? JSON.stringify(x.alternatives) : ''
                             });
                         });
 
@@ -1270,6 +1543,8 @@
                                 시간: x.time || '',
                                 결제자: x.traveler || '',
                                 방문장소: x.place || '',
+                                전화번호: x.phone || '',
+                                주소: x.address || '',
                                 실제지출금액: Number(x.expense || 0),
                                 상세내역: x.action || '',
                                 위도: x.lat || '',
@@ -1300,48 +1575,81 @@
                     const fileName = `단체여행_백업_${todayStr}.xlsx`;
                     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
                     const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                    const fileObj = new File([blob], fileName, { type: blob.type });
 
-                    // 1) 스마트폰 공유 창(구글 드라이브 앱, 카카오톡 등 바로 전송)
-                    if (targetMode === 'mobile' && navigator.canShare && navigator.canShare({ files: [fileObj] })) {
-                        await navigator.share({
-                            title: '단체 여행 엑셀 백업',
-                            text: '스마트폰 또는 구글 드라이브 앱에 엑셀 백업 파일을 저장하세요.',
-                            files: [fileObj]
-                        });
-                        return;
-                    }
+                    window.cachedBackupBlob = blob;
+                    window.cachedBackupFileName = fileName;
+                    try {
+                        window.cachedBackupFile = new File([blob], fileName, { type: blob.type });
+                    } catch (_) {}
 
-                    // 2) PC 및 기본 파일 다운로드
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = fileName;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-
-                    // 3) 구글 드라이브 모드인 경우 안내 및 드라이브 열기
-                    if (targetMode === 'gdrive') {
-                        if (confirm(`'${fileName}' 엑셀 파일이 기기에 다운로드되었습니다!\n지금 구글 드라이브 화면을 열어 파일을 업로드하시겠습니까?\n(스마트폰에서는 [스마트폰 백업] 버튼을 누른 뒤 [Drive에 저장]을 선택하면 더 간편합니다.)`)) {
-                            window.open('https://drive.google.com/drive/my-drive', '_blank');
-                        }
-                    } else if (targetMode === 'mobile') {
-                        alert(`'${fileName}' 엑셀 파일이 스마트폰 다운로드 폴더에 저장되었습니다!`);
-                    }
-                } catch (err) {
-                    alert('백업 중 오류가 발생했습니다: ' + err.message);
+                    if (badge) badge.innerText = "✓ 즉시 백업 준비완료";
+                } catch (e) {
+                    console.error("백업 캐시 생성 실패:", e);
                 }
             };
 
-            // ====================================================
-            // 요청사항 2: 백업된 엑셀(.xlsx) 파일 읽어 복원하기
-            // ====================================================
+            // 다운로드 헬퍼
+            function triggerDirectDownload(blob, fileName) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }
+
+            // 엑셀 백업 실행 (Permission denied 발생 시 에러 없이 즉시 다운로드 폴더로 전환!)
+            window.exportExcelBackup = async function(targetMode) {
+                // 아직 캐시가 없으면 즉시 생성
+                if (!window.cachedBackupBlob) {
+                    await window.prepareBackupCache();
+                }
+                if (!window.cachedBackupBlob) {
+                    alert('백업할 여행 데이터가 없습니다.');
+                    return;
+                }
+
+                const blob = window.cachedBackupBlob;
+                const fileName = window.cachedBackupFileName;
+                const fileObj = window.cachedBackupFile;
+
+                // 스마트폰 모드: 사용자 제스처 유실 없이 즉시 navigator.share 호출 시도
+                if (targetMode === 'mobile' && fileObj && navigator.canShare && navigator.canShare({ files: [fileObj] })) {
+                    try {
+                        await navigator.share({
+                            title: '단체 여행 엑셀 백업',
+                            files: [fileObj]
+                        });
+                        return;
+                    } catch (shareErr) {
+                        // 사용자가 취소한 경우(AbortError)는 조용히 종료
+                        if (shareErr.name === 'AbortError') return;
+                        // Permission denied 등 브라우저 보안 제한 시 에러 창 대신 즉시 다운로드로 자동 전환!
+                        triggerDirectDownload(blob, fileName);
+                        alert(`스마트폰 브라우저 보안 정책으로 인해 공유창 대신 내 스마트폰 [다운로드 폴더]에 '${fileName}' 파일이 바로 저장되었습니다!`);
+                        return;
+                    }
+                }
+
+                // 기본 다운로드 실행
+                triggerDirectDownload(blob, fileName);
+
+                if (targetMode === 'gdrive') {
+                    if (confirm(`'${fileName}' 엑셀 파일이 기기에 저장되었습니다!\n이어서 구글 드라이브 화면을 열어 업로드하시겠습니까?`)) {
+                        window.open('https://drive.google.com/drive/my-drive', '_blank');
+                    }
+                } else if (targetMode === 'mobile') {
+                    alert(`스마트폰 [다운로드 폴더]에 '${fileName}' 엑셀 백업 파일이 저장되었습니다!`);
+                }
+            };
+
+            // 백업된 엑셀(.xlsx) 파일 읽어 완벽 복원하기 (주소, 전화번호, 대안장소 모두 포함)
             window.restoreFromExcelFile = function(event) {
                 const file = event.target.files[0];
                 if (!file) return;
-                if (!confirm(`선택하신 [${file.name}] 엑셀 파일의 데이터를 데이터베이스로 복원하시겠습니까?`)) {
+                if (!confirm(`선택하신 [${file.name}] 엑셀 파일의 모든 데이터를 데이터베이스로 복원하시겠습니까?`)) {
                     event.target.value = '';
                     return;
                 }
@@ -1377,16 +1685,23 @@
                         for (const eRow of expSheet) {
                             const targetTripId = idMap[eRow.여행ID];
                             if (!targetTripId || !eRow.장소명) continue;
+                            let parsedAlts = [];
+                            if (eRow.대안장소JSON) {
+                                try { parsedAlts = JSON.parse(eRow.대안장소JSON); } catch (_) {}
+                            }
                             await addDoc(collection(db, "trips", targetTripId, "expected_places"), {
                                 day: Number(eRow.일차 || 1),
                                 time: String(eRow.시간 || '10:00'),
                                 category: String(eRow.구분 || '관광'),
                                 place_name: String(eRow.장소명),
+                                phone: String(eRow.전화번호 || ''),
+                                address: String(eRow.주소 || ''),
                                 budget: Number(eRow.예상예산 || 0),
                                 memo: String(eRow.메모 || ''),
                                 lat: Number(eRow.위도 || 36.9997),
                                 lng: Number(eRow.경도 || 128.3435),
-                                visited: String(eRow.방문완료여부).toUpperCase() === 'Y'
+                                visited: String(eRow.방문완료여부).toUpperCase() === 'Y',
+                                alternatives: parsedAlts
                             });
                         }
 
@@ -1398,6 +1713,8 @@
                                 time: String(aRow.시간 || '12:00'),
                                 traveler: String(aRow.결제자 || '총무(공통)'),
                                 place: String(aRow.방문장소),
+                                phone: String(aRow.전화번호 || ''),
+                                address: String(aRow.주소 || ''),
                                 expense: Number(aRow.실제지출금액 || 0),
                                 action: String(aRow.상세내역 || ''),
                                 lat: aRow.위도 ? Number(aRow.위도) : null,
@@ -1415,6 +1732,7 @@
                             });
                         }
 
+                        await window.prepareBackupCache();
                         alert('엑셀 백업 파일로부터 모든 여행 데이터가 성공적으로 복원되었습니다!');
                     } catch (err) {
                         alert('복원 중 오류가 발생했습니다: ' + err.message);
@@ -1423,6 +1741,55 @@
                     }
                 };
                 reader.readAsArrayBuffer(file);
+            };
+
+            // 대안 장소와 본 일정 1초 맞교체(Swap) 함수
+            window.swapWithAlternative = async function(expId, altIdx) {
+                if (!currentTripId) return;
+                const item = expectedData.find(x => x.id === expId);
+                if (!item || !Array.isArray(item.alternatives) || !item.alternatives[altIdx]) return;
+
+                const chosenAlt = item.alternatives[altIdx];
+                if (!confirm(`[${item.place_name}] 일정을 대안 장소인 [${chosenAlt.name}](으)로 변경하시겠습니까?\n(기존 장소는 대안 목록으로 이동합니다)`)) return;
+
+                // 기존 본 일정을 대안 객체로 변환
+                const oldMainAsAlt = {
+                    name: item.place_name || '',
+                    phone: item.phone || '',
+                    address: item.address || '',
+                    budget: Number(item.budget || 0),
+                    memo: item.memo || '',
+                    lat: item.lat || null,
+                    lng: item.lng || null
+                };
+
+                const updatedAlts = [...item.alternatives];
+                updatedAlts[altIdx] = oldMainAsAlt;
+
+                // 만약 대안 장소에 좌표가 비어있고 주소만 있다면 자동으로 좌표 조회
+                let nextLat = chosenAlt.lat || item.lat;
+                let nextLng = chosenAlt.lng || item.lng;
+                if ((!chosenAlt.lat || !chosenAlt.lng) && chosenAlt.address) {
+                    try {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(chosenAlt.address)}&countrycodes=kr&limit=1`);
+                        const geo = await res.json();
+                        if (geo && geo.length > 0) {
+                            nextLat = Number(geo[0].lat);
+                            nextLng = Number(geo[0].lon);
+                        }
+                    } catch (_) {}
+                }
+
+                await updateDoc(doc(db, "trips", currentTripId, "expected_places", expId), {
+                    place_name: chosenAlt.name,
+                    phone: chosenAlt.phone || '',
+                    address: chosenAlt.address || '',
+                    budget: Number(chosenAlt.budget || 0),
+                    memo: chosenAlt.memo || '',
+                    lat: Number(nextLat),
+                    lng: Number(nextLng),
+                    alternatives: updatedAlts
+                });
             };
 
             // 방문전 <-> 방문완료 상태 토글
@@ -1445,6 +1812,8 @@
                             time: item.time || "12:00",
                             traveler: "총무(공통)",
                             place: item.place_name,
+                            phone: item.phone || '',
+                            address: item.address || '',
                             expense: Number(item.budget || 0),
                             action: item.memo || `${item.place_name} 방문 완료`,
                             lat: item.lat || null,
@@ -1469,6 +1838,8 @@
                     time: "08:30",
                     traveler: "총무(공통)",
                     place: "차량 2대 교통비 정액",
+                    phone: "",
+                    address: "경기도 용인시 수지구 죽전동",
                     expense: 150000,
                     action: "팰리세이드 운전자(이승호) 10만원 + 테슬라 운전자(박성희) 5만원 정액 지급",
                     lat: 37.3248,
@@ -1498,6 +1869,7 @@
                 }
             };
 
+            // 단양·청풍호 기본일정 생성 (실제 도로명 주소 + 전화번호 + 대안 식당/카페 완벽 포함!)
             async function createDanyangStandardTrip() {
                 const tripRef = await addDoc(collection(db, "trips"), {
                     name: "단양·영월·청풍호 1박 2일",
@@ -1513,22 +1885,35 @@
                 ];
 
                 const initialPlaces = [
-                    { day: 1, time: "08:30", category: "출발/귀가", place_name: "용인 죽전 출발", budget: 150000, lat: 37.3248, lng: 127.1077, memo: "차량 2대 교통비 정액 (팰리세이드 10만 + 전기차 5만)", visited: false },
-                    { day: 1, time: "09:55", category: "휴게소", place_name: "천등산휴게소 (제천방향)", budget: 0, lat: 37.0785, lng: 127.9123, memo: "간식 및 전기차 충전 가능", visited: false },
-                    { day: 1, time: "10:55", category: "관광", place_name: "도담삼봉", budget: 4500, lat: 36.9997, lng: 128.3435, memo: "단양 대표 인증샷 / 주차비(소형 3,000 + 전기차 1,500)", visited: false },
-                    { day: 1, time: "11:45", category: "식당", place_name: "단양구경시장·돌집식당", budget: 201000, lat: 36.9822, lng: 128.3688, memo: "곤드레마늘정식 8인(16만) + 시장 마늘만두·닭강정 포장(4.1만)", visited: false },
-                    { day: 1, time: "13:05", category: "관광", place_name: "만천하스카이워크", budget: 24000, lat: 36.9708, lng: 128.3389, memo: "전망대 입장료 3,000원×8명 (무료 셔틀 이동)", visited: false },
-                    { day: 1, time: "15:25", category: "카페", place_name: "카페 산", budget: 56000, lat: 37.0094, lng: 128.3995, memo: "해발 600m 패러글라이딩 전망 카페 (음료 8잔)", visited: false },
-                    { day: 1, time: "16:40", category: "장보기", place_name: "하나로마트 가곡점", budget: 185800, lat: 37.0315, lng: 128.3965, memo: "바비큐용 삼겹살 3.2kg, 채소, 음료 장보기", visited: false },
-                    { day: 1, time: "17:55", category: "숙소", place_name: "더릴지즈 in 캠블리", budget: 256468, lat: 37.1835, lng: 128.4618, memo: "201호 결제완료 / 18:30~ 바비큐 및 자쿠지", visited: false },
-                    { day: 2, time: "11:10", category: "관광", place_name: "옥순봉 출렁다리", budget: 24000, lat: 36.9427, lng: 128.2036, memo: "10:00 숙소 출발 / 입장료 3,000원×8명 (지역화폐 환급)", visited: false },
-                    { day: 2, time: "12:40", category: "식당", place_name: "느티나무횟집", budget: 200000, lat: 37.0016, lng: 128.1742, memo: "청풍호 송어비빔회 8인 예약 필수 (043-647-0089)", visited: false },
-                    { day: 2, time: "13:50", category: "관광", place_name: "청풍호반케이블카", budget: 144000, lat: 37.0039, lng: 128.1755, memo: "물태리역~비봉산 왕복 대인 18,000원×8명", visited: false },
-                    { day: 2, time: "15:50", category: "카페", place_name: "콘크리트월", budget: 56000, lat: 37.0583, lng: 128.1585, memo: "서리태크림라떼 등 음료 8잔 / 이후 19:00경 죽전 귀가", visited: false }
+                    { day: 1, time: "08:30", category: "출발/귀가", place_name: "용인 죽전 출발", phone: "", address: "경기도 용인시 수지구 죽전동", budget: 150000, lat: 37.3248, lng: 127.1077, memo: "차량 2대 교통비 정액 (팰리세이드 10만 + 전기차 5만)", visited: false, alternatives: [] },
+                    { day: 1, time: "09:55", category: "휴게소", place_name: "천등산휴게소 (제천방향)", phone: "", address: "충북 충주시 산척면 평택제천고속도로 106", budget: 0, lat: 37.0785, lng: 127.9123, memo: "커피·간식 및 전기차 충전 가능", visited: false, alternatives: [] },
+                    { day: 1, time: "10:55", category: "관광", place_name: "도담삼봉", phone: "", address: "충북 단양군 매포읍 삼봉로 644", budget: 4500, lat: 36.9997, lng: 128.3435, memo: "단양 대표 인증샷 / 주차비(소형 3,000 + 전기차 1,500)", visited: false, alternatives: [] },
+                    { day: 1, time: "11:45", category: "식당", place_name: "단양구경시장·돌집식당", phone: "043-422-2842", address: "충북 단양군 단양읍 중앙2로 11", budget: 201000, lat: 36.9822, lng: 128.3688, memo: "곤드레마늘정식 8인(16만) + 시장 마늘만두·닭강정 포장(4.1만)", visited: false, alternatives: [
+                        { name: "서울식당 (대안)", phone: "0507-1459-2808", address: "충북 단양군 단양읍 고수동굴길 4-10", budget: 136000, memo: "마늘수제떡갈비+산채한정식 17,000원 (300석 규모)", lat: 36.9865, lng: 128.3792 }
+                    ] },
+                    { day: 1, time: "13:05", category: "관광", place_name: "만천하스카이워크", phone: "", address: "충북 단양군 적성면 옷바위길 10", budget: 24000, lat: 36.9708, lng: 128.3389, memo: "전망대 입장료 3,000원×8명 (주차 후 무료 셔틀 이동)", visited: false, alternatives: [] },
+                    { day: 1, time: "15:25", category: "카페", place_name: "카페 산", phone: "", address: "충북 단양군 가곡면 두산길 196-86", budget: 56000, lat: 37.0094, lng: 128.3995, memo: "해발 600m 패러글라이딩 활공장 옆 전망 카페 (음료 8잔)", visited: false, alternatives: [
+                        { name: "만천하 스카이라운지 카페 (대안)", phone: "", address: "충북 단양군 적성면 옷바위길 60-186", budget: 56000, memo: "만천하 단지 안 3~4층 전망 카페", lat: 36.9712, lng: 128.3395 }
+                    ] },
+                    { day: 1, time: "16:40", category: "장보기", place_name: "단양소백농협 하나로마트 가곡점", phone: "043-422-8030", address: "충북 단양군 가곡면 남한강로 504", budget: 185800, lat: 37.0315, lng: 128.3965, memo: "바비큐용 삼겹살 3.2kg 전날 전화 주문 필수 (18:00 마감)", visited: false, alternatives: [
+                        { name: "단양농협 하나로마트 본점 (대안)", phone: "043-421-5959", address: "충북 단양군 단양읍 삼봉로 287", budget: 185800, memo: "21:00까지 영업 / 가곡점 재고 없을 시 이용", lat: 36.9845, lng: 128.3680 }
+                    ] },
+                    { day: 1, time: "17:55", category: "숙소", place_name: "더릴지즈 in 캠블리", phone: "", address: "강원 영월군 영월읍", budget: 256468, lat: 37.1835, lng: 128.4618, memo: "201호 결제완료 / 18:30~ 바비큐 및 자쿠지", visited: false, alternatives: [] },
+                    { day: 2, time: "11:10", category: "관광", place_name: "옥순봉 출렁다리", phone: "", address: "충북 제천시 수산면 옥순봉로 342", budget: 24000, lat: 36.9427, lng: 128.2036, memo: "10:00 숙소 출발 / 입장료 3,000원×8명 (지역화폐 환급)", visited: false, alternatives: [] },
+                    { day: 2, time: "12:40", category: "식당", place_name: "느티나무횟집", phone: "043-647-0089", address: "충북 제천시 청풍면 배시론로 4", budget: 200000, lat: 37.0016, lng: 128.1742, memo: "청풍호 송어비빔회 1인 25,000원 (8명 사전 전화예약 필수)", visited: false, alternatives: [
+                        { name: "청풍 황금떡갈비 (대안)", phone: "0507-1347-6303", address: "충북 제천시 청풍면 청풍호로 1682", budget: 192000, memo: "울금떡갈비정식 24,000원 / 불고기버섯전골 22,000원", lat: 37.0025, lng: 128.1760 },
+                        { name: "청풍 떡갈비 (대안)", phone: "043-644-1600", address: "충북 제천시 금성면 청풍호로 1643", budget: 144000, memo: "런치스페셜·단체메뉴 18,000원 (예산 절약용)", lat: 37.0510, lng: 128.1620 }
+                    ] },
+                    { day: 2, time: "13:50", category: "관광", place_name: "청풍호반케이블카", phone: "", address: "충북 제천시 청풍면 문화재길 166", budget: 144000, lat: 37.0039, lng: 128.1755, memo: "물태리역~비봉산 왕복 대인 18,000원×8명 (온라인 예매 권장)", visited: false, alternatives: [] },
+                    { day: 2, time: "15:50", category: "카페", place_name: "콘크리트월", phone: "", address: "충북 제천시 금성면 청풍호로 1566", budget: 56000, lat: 37.0583, lng: 128.1585, memo: "서리태크림라떼 등 음료 8잔 / 이후 19:00경 죽전 귀가", visited: false, alternatives: [
+                        { name: "커피라끄 (대안)", phone: "0507-1344-9741", address: "충북 제천시 금성면 청풍호로 1226", budget: 56000, memo: "대형 호수뷰 카페 / 제천 사과빵 유명", lat: 37.0380, lng: 128.1650 },
+                        { name: "카페너른 (대안)", phone: "0507-1357-8283", address: "충북 제천시 청풍면 청풍호로 1684", budget: 56000, memo: "케이블카 바로 근처 이동 최소화용", lat: 37.0030, lng: 128.1765 }
+                    ] }
                 ];
 
                 for (const c of initialCars) await addDoc(collection(db, "trips", tripId, "cars"), c);
                 for (const p of initialPlaces) await addDoc(collection(db, "trips", tripId, "expected_places"), p);
+                await window.prepareBackupCache();
                 return tripId;
             }
 
@@ -1562,6 +1947,7 @@
                     </div>`;
                 });
                 document.getElementById('trip-cards-container').innerHTML = cardsHtml || '<p class="text-xs text-slate-400 py-4 text-center">등록된 여행이 없습니다. 아래에서 새 여행을 만들어보세요.</p>';
+                window.prepareBackupCache();
             });
 
             document.getElementById('trip-form').addEventListener('submit', async (e) => {
@@ -1586,7 +1972,7 @@
             };
 
             document.getElementById('btn-create-danyang').onclick = async function() {
-                if (!confirm('단양·영월·청풍호 1박 2일 샘플 일정을 생성하시겠습니까?')) return;
+                if (!confirm('단양·영월·청풍호 1박 2일 샘플 일정(주소·전화번호·대안식당 포함)을 생성하시겠습니까?')) return;
                 const tripId = await createDanyangStandardTrip();
                 selectTrip(tripId);
             };
@@ -1600,13 +1986,15 @@
                     expectedData = [];
                     snapshot.forEach((docSnap) => expectedData.push({ id: docSnap.id, ...docSnap.data() }));
                     renderAllViews();
-                    renderTimelineMap();
+                    renderTimelineMaps();
+                    window.prepareBackupCache();
                 });
 
                 unsubscribeAct = onSnapshot(query(collection(db, "trips", tripId, "actual_visits")), (snapshot) => {
                     actualData = [];
                     snapshot.forEach((docSnap) => actualData.push({ id: docSnap.id, ...docSnap.data() }));
                     renderAllViews();
+                    window.prepareBackupCache();
                 });
 
                 unsubscribeCars = onSnapshot(query(collection(db, "trips", tripId, "cars")), (snapshot) => {
@@ -1629,6 +2017,7 @@
                         </div>`;
                     });
                     document.getElementById('car-list').innerHTML = html || '<p class="text-xs text-slate-400 col-span-2 py-3 text-center">등록된 차량 배정 정보가 없습니다.</p>';
+                    window.prepareBackupCache();
                 });
             };
 
@@ -1642,16 +2031,19 @@
                     time: document.getElementById('exp-time').value,
                     category: document.getElementById('exp-category').value,
                     place_name: document.getElementById('exp-place-name').value.trim(),
+                    phone: document.getElementById('exp-phone').value.trim(),
+                    address: document.getElementById('exp-address').value.trim(),
                     budget: Number(document.getElementById('exp-budget').value || 0),
                     memo: document.getElementById('exp-memo').value.trim(),
                     lat: Number(document.getElementById('exp-lat').value),
                     lng: Number(document.getElementById('exp-lng').value),
-                    visited: existing ? Boolean(existing.visited) : false
+                    visited: existing ? Boolean(existing.visited) : false,
+                    alternatives: collectAlternativesFromForm()
                 };
                 if (editId) await updateDoc(doc(db, "trips", currentTripId, "expected_places", editId), payload);
                 else await addDoc(collection(db, "trips", currentTripId, "expected_places"), payload);
                 resetExpForm();
-                switchTab('timeline');
+                switchTab('plan');
             });
 
             document.getElementById('actual-form').addEventListener('submit', async (e) => {
@@ -1663,6 +2055,8 @@
                     time: document.getElementById('act-time').value,
                     traveler: document.getElementById('act-traveler').value.trim(),
                     place: document.getElementById('act-place').value.trim(),
+                    phone: document.getElementById('act-phone').value.trim(),
+                    address: document.getElementById('act-address').value.trim(),
                     expense: Number(document.getElementById('act-expense').value || 0),
                     action: document.getElementById('act-action').value.trim(),
                     lat: document.getElementById('act-lat').value ? Number(document.getElementById('act-lat').value) : null,
@@ -1671,7 +2065,7 @@
                 if (editId) await updateDoc(doc(db, "trips", currentTripId, "actual_visits", editId), payload);
                 else await addDoc(collection(db, "trips", currentTripId, "actual_visits"), payload);
                 resetActForm();
-                switchTab('timeline');
+                switchTab('visit');
             });
 
             document.getElementById('car-form').addEventListener('submit', async (e) => {
