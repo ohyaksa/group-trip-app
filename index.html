@@ -10,7 +10,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        #map-timeline, #map-expected, #map-actual, #map-dashboard { height: 300px; border-radius: 0.5rem; z-index: 10; }
+        #map-timeline, #map-expected, #map-actual { height: 280px; border-radius: 0.5rem; z-index: 10; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -20,7 +20,7 @@
     <header class="bg-blue-600 text-white shadow-md sticky top-0 z-50">
         <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center gap-2">
-                <button onclick="goTripSelector()" id="btn-back" class="hidden bg-blue-700 px-2.5 py-1 rounded-lg text-xs font-bold"><i class="fa-solid fa-arrow-left mr-1"></i> 목록</button>
+                <button onclick="goTripSelector()" id="btn-back" class="hidden bg-blue-700 active:bg-blue-900 px-3 py-1 rounded-lg text-xs font-bold"><i class="fa-solid fa-arrow-left mr-1"></i> 목록</button>
                 <h1 id="header-trip-title" class="text-base font-bold">여행 일정 목록</h1>
             </div>
             <span id="sync-status" class="text-xs bg-emerald-500 px-2.5 py-1 rounded-full text-white font-semibold">연결됨</span>
@@ -30,13 +30,15 @@
     <!-- 0. 여행 선택 화면 -->
     <div id="trip-selector-screen" class="max-w-4xl mx-auto px-4 py-6 w-full space-y-4">
         <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
-            <div class="flex justify-between items-center">
-                <h2 class="text-lg font-bold text-slate-800">내 여행 일정 목록</h2>
-                <button onclick="createTestTrip()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-sm">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800">내 여행 일정 목록</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">아래 여행 항목을 터치하면 해당 일정으로 입장합니다.</p>
+                </div>
+                <button type="button" id="btn-create-danyang" class="w-full sm:w-auto bg-indigo-600 active:bg-indigo-800 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm cursor-pointer z-20">
                     <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> 단양 여행 일정 생성
                 </button>
             </div>
-            <p class="text-xs text-slate-500">아래 여행 카드를 터치하면 해당 일정으로 입장합니다.</p>
             <div id="trip-cards-container" class="space-y-2.5 pt-2"></div>
         </div>
     </div>
@@ -73,7 +75,7 @@
                         <input type="text" id="exp-lat" placeholder="위도" required class="w-1/2 border rounded-lg px-3 py-2 text-xs bg-slate-50">
                         <input type="text" id="exp-lng" placeholder="경도" required class="w-1/2 border rounded-lg px-3 py-2 text-xs bg-slate-50">
                     </div>
-                    <button type="submit" class="bg-blue-600 text-white py-2 rounded-lg text-sm font-bold">일정 저장</button>
+                    <button type="submit" class="bg-blue-600 active:bg-blue-800 text-white py-2 rounded-lg text-sm font-bold">일정 저장</button>
                 </form>
             </div>
             <div class="bg-white p-5 rounded-xl shadow-sm border"><div id="expected-list" class="space-y-2"></div></div>
@@ -92,7 +94,7 @@
                         <input type="text" id="act-lat" placeholder="위도" class="w-1/2 border rounded-lg px-3 py-2 text-xs bg-slate-50">
                         <input type="text" id="act-lng" placeholder="경도" class="w-1/2 border rounded-lg px-3 py-2 text-xs bg-slate-50">
                     </div>
-                    <button type="submit" class="bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-bold">지출 저장</button>
+                    <button type="submit" class="bg-emerald-600 active:bg-emerald-800 text-white py-2.5 rounded-lg text-sm font-bold">지출 저장</button>
                 </form>
             </div>
             <div class="bg-white p-5 rounded-xl shadow-sm border"><div id="actual-list" class="space-y-2"></div></div>
@@ -113,6 +115,7 @@
             document.getElementById('main-app-screen').classList.add('hidden');
             document.getElementById('btn-back').classList.add('hidden');
             document.getElementById('header-trip-title').innerText = "여행 일정 목록";
+            if (mapTl) setTimeout(() => mapTl.invalidateSize(), 200);
         }
 
         function selectTrip(tripId, tripName) {
@@ -122,7 +125,7 @@
             document.getElementById('btn-back').classList.remove('hidden');
             document.getElementById('header-trip-title').innerText = tripName;
             switchTab('timeline');
-            subscribeTripData(tripId);
+            if (window.subscribeTripData) window.subscribeTripData(tripId);
         }
 
         function switchTab(tabId) {
@@ -143,7 +146,7 @@
         function renderTimelines() {
             let expHtml = '';
             expectedData.forEach(item => {
-                expHtml += `<div class="p-3 bg-slate-50 border rounded-lg flex justify-between items-center text-xs"><div><b>${item.place_name}</b><p class="text-slate-500">예산: ${Number(item.budget || 0).toLocaleString()}원</p></div><button onclick="deleteSubItem('expected_places', '${item.id}')" class="text-red-500">삭제</button></div>`;
+                expHtml += `<div class="p-3 bg-slate-50 border rounded-lg flex justify-between items-center text-xs"><div><b>${item.place_name}</b><p class="text-slate-500">예산: ${Number(item.budget || 0).toLocaleString()}원</p></div><button type="button" onclick="deleteSubItem('expected_places', '${item.id}')" class="text-red-500 px-2 py-1">삭제</button></div>`;
             });
             document.getElementById('expected-timeline-list').innerHTML = expHtml || '<p class="text-xs text-slate-400">예상 일정이 없습니다.</p>';
             document.getElementById('expected-list').innerHTML = expHtml;
@@ -196,4 +199,109 @@
 
         const firebaseConfig = {
             apiKey: "AIzaSyBVXAi7WTQJ0sm7FXOjWwAMzmnvw1wSt0M",
-            authDomain: "group-
+            authDomain: "group-trip-app-754ca.firebaseapp.com",
+            projectId: "group-trip-app-754ca",
+            storageBucket: "group-trip-app-754ca.firebasestorage.app",
+            messagingSenderId: "686842634804",
+            appId: "1:686842634804:web:52b428c33b50167c312061",
+            measurementId: "G-QP2ZYPK8MG"
+        };
+
+        let unsubscribeExp = null, unsubscribeAct = null;
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            window.db = db;
+
+            // 여행 목록 불러오기 및 클릭 이벤트 바인딩 (이벤트 버블링 차단 및 확실한 터치 반응)
+            onSnapshot(query(collection(db, "trips")), (snapshot) => {
+                let cardsHtml = '';
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    cardsHtml += `
+                    <div class="trip-card bg-slate-50 active:bg-blue-100 border border-slate-200 p-4 rounded-xl flex justify-between items-center shadow-sm cursor-pointer transition" data-id="${docSnap.id}" data-name="${data.name || '여행'}">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-sm pointer-events-none">${data.name}</h3>
+                            <p class="text-xs text-slate-500 pointer-events-none">${data.startDate || ''} ~ ${data.endDate || ''}</p>
+                        </div>
+                        <span class="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold pointer-events-none">입장하기</span>
+                    </div>`;
+                });
+                document.getElementById('trip-cards-container').innerHTML = cardsHtml || '<p class="text-xs text-slate-400">등록된 여행이 없습니다.</p>';
+                
+                // 카드 클릭 이벤트 직접 할당
+                document.querySelectorAll('.trip-card').forEach(card => {
+                    card.onclick = function() {
+                        const tripId = this.getAttribute('data-id');
+                        const tripName = this.getAttribute('data-name');
+                        selectTrip(tripId, tripName);
+                    };
+                });
+            });
+
+            // 단양 여행 일정 생성 버튼 이벤트 핸들러 명시적 연결
+            document.getElementById('btn-create-danyang').onclick = async function() {
+                try {
+                    const docRef = await addDoc(collection(db, "trips"), { name: "단양·영월·청풍호 1박 2일", startDate: "2026-10-23", endDate: "2026-10-24" });
+                    selectTrip(docRef.id, "단양·영월·청풍호 1박 2일");
+                } catch (e) {
+                    alert('생성 실패: ' + e.message);
+                }
+            };
+
+            window.subscribeTripData = function(tripId) {
+                if (unsubscribeExp) unsubscribeExp();
+                if (unsubscribeAct) unsubscribeAct();
+
+                unsubscribeExp = onSnapshot(query(collection(db, "trips", tripId, "expected_places")), (snapshot) => {
+                    expectedData = [];
+                    snapshot.forEach((docSnap) => expectedData.push({ id: docSnap.id, ...docSnap.data() }));
+                    renderTimelines();
+                    renderTimelineMap();
+                });
+
+                unsubscribeAct = onSnapshot(query(collection(db, "trips", tripId, "actual_visits")), (snapshot) => {
+                    actualData = [];
+                    snapshot.forEach((docSnap) => actualData.push({ id: docSnap.id, ...docSnap.data() }));
+                    renderTimelines();
+                });
+            };
+
+            document.getElementById('expected-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!currentTripId) return;
+                await addDoc(collection(db, "trips", currentTripId, "expected_places"), {
+                    place_name: document.getElementById('exp-place-name').value,
+                    budget: Number(document.getElementById('exp-budget').value),
+                    lat: Number(document.getElementById('exp-lat').value),
+                    lng: Number(document.getElementById('exp-lng').value)
+                });
+                document.getElementById('expected-form').reset();
+            });
+
+            document.getElementById('actual-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!currentTripId) return;
+                await addDoc(collection(db, "trips", currentTripId, "actual_visits"), {
+                    place: document.getElementById('act-place').value,
+                    expense: Number(document.getElementById('act-expense').value),
+                    action: document.getElementById('act-action').value,
+                    lat: Number(document.getElementById('act-lat').value),
+                    lng: Number(document.getElementById('act-lng').value)
+                });
+                document.getElementById('actual-form').reset();
+            });
+
+            window.deleteSubItem = async function(subCol, id) {
+                if (confirm('삭제하시겠습니까?') && currentTripId) {
+                    await deleteDoc(doc(db, "trips", currentTripId, subCol, id));
+                }
+            };
+
+        } catch (e) {
+            console.error(e);
+        }
+    </script>
+</body>
+</html>
