@@ -1046,4 +1046,1321 @@
 
         async function loadDefaultChecklistTemplate() {
             if (!currentTripId || !db) return;
-            if (!confirm('현재 여행
+            if (!confirm('현재 여행에 기본 여행 준비물·먹거리·구입품목 세트를 추가하시겠습니까?')) return;
+
+            const defaults = [
+                { major: "prep", minor: "공통 필수품", title: "아이스박스 및 보냉팩", person: "공통(총무)", price: 0, memo: "장보기 고기·음료 보관용", checked: false },
+                { major: "prep", minor: "공통 필수품", title: "멀티탭 및 휴대폰 충전기", person: "공통(총무)", price: 0, memo: "숙소 공용 사용", checked: false },
+                { major: "prep", minor: "상비약·구급함", title: "소화제·진통제·밴드·멀미약", person: "공통(총무)", price: 0, memo: "비상 상비약 챙기기", checked: false },
+                { major: "prep", minor: "전자·촬영장비", title: "카메라 및 삼각대/셀카봉", person: "공통(총무)", price: 0, memo: "단체 사진 촬영용", checked: false },
+                { major: "food", minor: "주식·김치·반찬", title: "집김치 및 기본 반찬", person: "공통(총무)", price: 0, memo: "바비큐 때 곁들일 김치", checked: false },
+                { major: "food", minor: "간식·음료·주류", title: "차량 이동중 먹을 간식·커피", person: "공통(총무)", price: 0, memo: "출발 전 준비", checked: false },
+                { major: "buy", minor: "현지 마트 장보기", title: "바비큐용 삼겹살·목살", person: "공통(총무)", price: 92800, memo: "인원수 맞춰 구매", checked: false },
+                { major: "buy", minor: "현지 마트 장보기", title: "쌈채소·버섯·양파·마늘·쌈장", person: "공통(총무)", price: 38000, memo: "구이용 채소 일체", checked: false },
+                { major: "buy", minor: "현지 마트 장보기", title: "햇반·라면·생수·음료·일회용품", person: "공통(총무)", price: 55000, memo: "숙소 저녁 및 아침용", checked: false },
+                { major: "etc", minor: "식당·매표 사전예약", title: "주요 식당 단체석 사전 전화 예약", person: "공통(총무)", price: 0, memo: "방문 전 예약 확인", checked: false },
+                { major: "etc", minor: "숙소 확인사항", title: "숙소 체크인 시간 및 바비큐 그릴 비용 확인", person: "공통(총무)", price: 0, memo: "도착 전 통화", checked: false }
+            ];
+
+            for (const d of defaults) {
+                await db.collection("trips").doc(currentTripId).collection("checklists").add(d);
+            }
+            alert('기본 준비물 템플릿이 추가되었습니다!');
+        }
+
+        function focusCompletedOnVisitMap(lat, lng, placeName) {
+            switchTab('visit');
+            const mapCard = document.getElementById('visit-map-card');
+            if (mapCard) mapCard.scrollIntoView({ behavior: 'smooth' });
+
+            setTimeout(() => {
+                if (mapVisit && lat && lng) {
+                    mapVisit.setView([lat, lng], 13, { animate: true });
+                    L.popup()
+                        .setLatLng([lat, lng])
+                        .setContent(`<div class="text-xs font-bold text-emerald-700">✅ [방문완료] ${placeName}</div><div class="text-[11px] text-slate-600">방문완료 구간은 굵은 실선, 예정 구간은 점선으로 표시됩니다.</div>`)
+                        .openOn(mapVisit);
+                }
+            }, 300);
+        }
+
+        function locateMyGPS() {
+            if (!navigator.geolocation) {
+                alert('이 브라우저에서는 GPS 기능을 지원하지 않습니다.');
+                return;
+            }
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                const targetMap = !document.getElementById('tab-visit').classList.contains('hidden') ? mapVisit : mapPlan;
+                if (targetMap) {
+                    if (myGpsMarker) targetMap.removeLayer(myGpsMarker);
+                    myGpsMarker = L.circleMarker([lat, lng], { radius: 9, fillColor: "#ef4444", color: "#fff", weight: 3, fillOpacity: 1 })
+                        .addTo(targetMap).bindPopup("📍 내 현재 위치").openPopup();
+                    targetMap.setView([lat, lng], 13);
+                }
+            }, () => alert('위치 권한을 허용해 주세요.'));
+        }
+
+        function openKakaoAddressPopup(target) {
+            if (typeof daum === 'undefined' || !daum.Postcode) {
+                alert('주소 검색 모듈을 불러오는 중입니다.');
+                return;
+            }
+            new daum.Postcode({
+                oncomplete: async function(data) {
+                    const fullAddr = data.roadAddress || data.jibunAddress || data.address;
+                    const buildingName = data.buildingName || '';
+                    if (target === 'exp') {
+                        document.getElementById('exp-address').value = fullAddr;
+                        if (!document.getElementById('exp-place-name').value && buildingName) {
+                            document.getElementById('exp-place-name').value = buildingName;
+                        }
+                        await geocodeFromAddressInput('exp');
+                    } else {
+                        document.getElementById('act-address').value = fullAddr;
+                        if (!document.getElementById('act-place').value && buildingName) {
+                            document.getElementById('act-place').value = buildingName;
+                        }
+                        await geocodeFromAddressInput('act');
+                    }
+                }
+            }).open();
+        }
+
+        async function geocodeFromAddressInput(target) {
+            const addrInput = document.getElementById(target === 'exp' ? 'exp-address' : 'act-address');
+            const queryStr = addrInput.value.trim();
+            if (!queryStr) { alert('주소를 먼저 입력해 주세요.'); return; }
+
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryStr)}&countrycodes=kr&limit=1`);
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    const lat = Number(data[0].lat).toFixed(6);
+                    const lng = Number(data[0].lon).toFixed(6);
+                    if (target === 'exp') {
+                        document.getElementById('exp-lat').value = lat;
+                        document.getElementById('exp-lng').value = lng;
+                        if (mapExp) {
+                            mapExp.setView([lat, lng], 14);
+                            if (expMarker) mapExp.removeLayer(expMarker);
+                            expMarker = L.marker([lat, lng]).addTo(mapExp).bindPopup(queryStr).openPopup();
+                        }
+                    } else {
+                        document.getElementById('act-lat').value = lat;
+                        document.getElementById('act-lng').value = lng;
+                        if (mapAct) {
+                            mapAct.setView([lat, lng], 14);
+                            if (actMarker) mapAct.removeLayer(actMarker);
+                            actMarker = L.marker([lat, lng]).addTo(mapAct).bindPopup(queryStr).openPopup();
+                        }
+                    }
+                } else {
+                    alert('세부 좌표를 자동으로 찾지 못했습니다. 아래 지도를 직접 터치해 위치를 찍어주세요.');
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function reverseGeocodeToAddress(lat, lng, target) {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ko`);
+                const data = await res.json();
+                if (data && data.display_name) {
+                    const parts = data.display_name.split(', ').reverse().filter(p => p !== '대한민국' && !/^\d{5}$/.test(p));
+                    const cleanAddr = parts.join(' ');
+                    if (target === 'exp') document.getElementById('exp-address').value = cleanAddr;
+                    else document.getElementById('act-address').value = cleanAddr;
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function searchPlaceCoord(target) {
+            const inputId = target === 'exp' ? 'exp-search-keyword' : 'act-search-keyword';
+            const resultDiv = document.getElementById(target === 'exp' ? 'exp-search-results' : 'act-search-results');
+            const keyword = document.getElementById(inputId).value.trim();
+            if (!keyword) { alert('검색할 장소명을 입력해 주세요!'); return; }
+
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = `<p class="text-xs text-blue-600 py-1">🔍 '${keyword}' 검색 중...</p>`;
+
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(keyword)}&countrycodes=kr&limit=5&accept-language=ko`);
+                const data = await res.json();
+                if (!data || data.length === 0) {
+                    resultDiv.innerHTML = `<p class="text-xs text-red-500 py-1">결과가 없습니다. [카카오 도로명 주소검색]을 이용하거나 지도를 터치해 주세요.</p>`;
+                    return;
+                }
+                let html = '';
+                data.forEach((place) => {
+                    const shortName = place.display_name.split(',')[0];
+                    const parts = place.display_name.split(', ').reverse().filter(p => p !== '대한민국' && !/^\d{5}$/.test(p));
+                    const fullKorAddr = parts.join(' ');
+                    html += `
+                    <div onclick="applySearchedCoord('${target}', '${shortName.replace(/'/g, "")}', '${fullKorAddr.replace(/'/g, "")}', ${place.lat}, ${place.lon})" class="p-2 bg-white hover:bg-blue-50 border border-slate-200 rounded-lg cursor-pointer text-xs flex justify-between items-center">
+                        <span class="truncate pr-2"><b>${shortName}</b> <span class="text-slate-500 text-[11px]">(${fullKorAddr})</span></span>
+                        <span class="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold shrink-0">선택</span>
+                    </div>`;
+                });
+                resultDiv.innerHTML = html;
+            } catch (e) {
+                resultDiv.innerHTML = `<p class="text-xs text-red-500">검색 실패: 지도를 직접 터치해 주세요.</p>`;
+            }
+        }
+
+        function applySearchedCoord(target, placeName, fullAddr, lat, lng) {
+            const fixedLat = Number(lat).toFixed(6);
+            const fixedLng = Number(lng).toFixed(6);
+            if (target === 'exp') {
+                if (!document.getElementById('exp-place-name').value) document.getElementById('exp-place-name').value = placeName;
+                document.getElementById('exp-address').value = fullAddr;
+                document.getElementById('exp-lat').value = fixedLat;
+                document.getElementById('exp-lng').value = fixedLng;
+                document.getElementById('exp-search-results').classList.add('hidden');
+                if (mapExp) {
+                    mapExp.setView([fixedLat, fixedLng], 14);
+                    if (expMarker) mapExp.removeLayer(expMarker);
+                    expMarker = L.marker([fixedLat, fixedLng]).addTo(mapExp).bindPopup(placeName).openPopup();
+                }
+            }
+        }
+
+        function copyAddressText(addr) {
+            if (!addr) return;
+            navigator.clipboard.writeText(addr).then(() => {
+                alert(`주소가 복사되었습니다!\n[${addr}]`);
+            }).catch(() => prompt('주소를 복사하세요:', addr));
+        }
+
+        function addAlternativeRow(altData = {}) {
+            const container = document.getElementById('exp-alternatives-container');
+            const div = document.createElement('div');
+            div.className = "alt-item-row bg-white p-3 rounded-xl border border-indigo-200 space-y-2 relative";
+            div.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="text-[11px] font-bold text-indigo-700">🔄 대안 후보 장소</span>
+                    <button type="button" onclick="this.closest('.alt-item-row').remove()" class="text-red-500 text-xs font-bold cursor-pointer">삭제 ✕</button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <input type="text" placeholder="대안 장소명 (예: 서울식당)" value="${altData.name || ''}" class="alt-name border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs">
+                    <input type="tel" placeholder="전화번호" value="${altData.phone || ''}" class="alt-phone border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs">
+                    <input type="number" placeholder="예상금액 (원)" value="${altData.budget !== undefined ? altData.budget : 0}" class="alt-budget border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <input type="text" placeholder="도로명/지번 주소" value="${altData.address || ''}" class="alt-address border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs">
+                    <input type="text" placeholder="메모" value="${altData.memo || ''}" class="alt-memo border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs">
+                </div>
+                <input type="hidden" value="${altData.lat || ''}" class="alt-lat">
+                <input type="hidden" value="${altData.lng || ''}" class="alt-lng">
+            `;
+            container.appendChild(div);
+        }
+
+        function collectAlternativesFromForm() {
+            const rows = document.querySelectorAll('#exp-alternatives-container .alt-item-row');
+            const list = [];
+            rows.forEach(r => {
+                const name = r.querySelector('.alt-name').value.trim();
+                if (!name) return;
+                list.push({
+                    name,
+                    phone: r.querySelector('.alt-phone').value.trim(),
+                    budget: Number(r.querySelector('.alt-budget').value || 0),
+                    address: r.querySelector('.alt-address').value.trim(),
+                    memo: r.querySelector('.alt-memo').value.trim(),
+                    lat: r.querySelector('.alt-lat').value ? Number(r.querySelector('.alt-lat').value) : null,
+                    lng: r.querySelector('.alt-lng').value ? Number(r.querySelector('.alt-lng').value) : null
+                });
+            });
+            return list;
+        }
+
+        function renderAllViews() {
+            const sortedExp = sortByDayAndTime(expectedData);
+            const sortedAct = sortByDayAndTime(actualData);
+
+            const totalExp = sortedExp.reduce((s, x) => s + Number(x.budget || 0), 0);
+            const totalAct = sortedAct.reduce((s, x) => s + Number(x.expense || 0), 0);
+            const diff = totalExp - totalAct;
+            const members = Math.max(1, Number(currentMemberCount || 8));
+
+            const expPerPerson = Math.round(totalExp / members);
+            const actPerPersonExact = Math.round(totalAct / members);
+            const actPerPersonRoundUp100 = Math.ceil(totalAct / members / 100) * 100;
+
+            document.getElementById('calc-exp-total').innerText = totalExp.toLocaleString() + '원';
+            document.getElementById('calc-exp-per').innerText = `1인 예상 약 ${expPerPerson.toLocaleString()}원`;
+            document.getElementById('calc-act-total').innerText = totalAct.toLocaleString() + '원';
+            document.getElementById('calc-diff-text').innerText = diff >= 0 ? `예산 여유 +${diff.toLocaleString()}원` : `예산 초과 ${diff.toLocaleString()}원`;
+            document.getElementById('calc-per-person-exact').innerText = actPerPersonExact.toLocaleString() + '원';
+            document.getElementById('calc-per-person-round').innerText = `100원단위 올림: ${actPerPersonRoundUp100.toLocaleString()}원`;
+
+            const filteredExp = sortedExp.filter(item => {
+                if (selectedDayFilter === 'all') return true;
+                if (selectedDayFilter === '3') return Number(item.day || 1) >= 3;
+                return String(item.day || 1) === selectedDayFilter;
+            });
+
+            const filteredAct = sortedAct.filter(item => {
+                if (selectedDayFilter === 'all') return true;
+                if (selectedDayFilter === '3') return Number(item.day || 1) >= 3;
+                return String(item.day || 1) === selectedDayFilter;
+            });
+
+            const completedCount = filteredExp.filter(x => x.visited).length;
+            document.getElementById('exp-count-badge').innerText = `총 ${filteredExp.length}곳 (완료 ${completedCount})`;
+            document.getElementById('act-count-badge').innerText = `방문·지출 ${filteredAct.length}건`;
+
+            const expGroups = {};
+            filteredExp.forEach(item => {
+                const d = item.day || 1;
+                if (!expGroups[d]) expGroups[d] = [];
+                expGroups[d].push(item);
+            });
+
+            let expTimelineHtml = '';
+            Object.keys(expGroups).sort((a,b) => Number(a)-Number(b)).forEach(day => {
+                expTimelineHtml += `
+                <div class="space-y-2">
+                    <div class="bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex justify-between items-center">
+                        <span>📅 ${day}일차 예상 일정</span>
+                        <span>${expGroups[day].length}곳</span>
+                    </div>
+                    <div class="relative border-l-2 border-blue-200 ml-3 space-y-3 py-1">`;
+                
+                expGroups[day].forEach(item => {
+                    const isVisited = Boolean(item.visited);
+                    const t = normalizeTime(item.time);
+                    const isPM = parseInt(t.split(':')[0], 10) >= 12;
+                    const dotColor = isVisited ? 'bg-emerald-600' : (day == 1 ? (isPM ? 'bg-purple-600' : 'bg-blue-600') : (isPM ? 'bg-amber-500' : 'bg-emerald-600'));
+                    
+                    const visitBtnHtml = isVisited
+                        ? `<button type="button" onclick="toggleVisitStatus('${item.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-600 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer shadow-sm transition flex items-center gap-1">
+                             <i class="fa-solid fa-check"></i> 방문완료
+                           </button>`
+                        : `<button type="button" onclick="toggleVisitStatus('${item.id}')" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer shadow-sm transition flex items-center gap-1">
+                             <i class="fa-regular fa-circle"></i> 방문전
+                           </button>`;
+
+                    const navMapUrl = `https://map.naver.com/p/search/${encodeURIComponent(item.address || item.place_name)}`;
+                    const navReviewUrl = `https://search.naver.com/search.naver?where=view&query=${encodeURIComponent(item.place_name + ' 후기 리뷰')}`;
+                    const phoneBtnHtml = item.phone
+                        ? `<a href="tel:${item.phone}" class="bg-white hover:bg-slate-100 border border-blue-300 text-blue-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
+                             <i class="fa-solid fa-phone"></i> 전화
+                           </a>`
+                        : '';
+
+                    let altButtonsHtml = '';
+                    if (Array.isArray(item.alternatives) && item.alternatives.length > 0) {
+                        altButtonsHtml = `<div class="flex flex-wrap items-center gap-1.5 pt-1">
+                            <span class="text-[11px] font-bold text-indigo-700"><i class="fa-solid fa-repeat mr-0.5"></i>대안 교체:</span>`;
+                        item.alternatives.forEach((alt, idx) => {
+                            altButtonsHtml += `
+                            <button type="button" onclick="swapWithAlternative('${item.id}', ${idx})" class="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer transition">
+                                🔄 ${alt.name} (${Number(alt.budget || 0).toLocaleString()}원)
+                            </button>`;
+                        });
+                        altButtonsHtml += `</div>`;
+                    }
+
+                    expTimelineHtml += `
+                    <div class="relative pl-5">
+                        <span class="absolute -left-[7px] top-3 w-3 h-3 rounded-full ${dotColor} ring-2 ring-white"></span>
+                        <div class="${isVisited ? 'bg-emerald-50/50 border-emerald-200' : 'bg-slate-50 border-slate-200/80'} p-3.5 rounded-xl border space-y-2 transition">
+                            <div class="flex justify-between items-center gap-1">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-xs font-extrabold text-blue-700 bg-blue-100 px-2 py-0.5 rounded"><i class="fa-regular fa-clock mr-1"></i>${item.time || '시간미정'}</span>
+                                    ${isVisited ? `<button type="button" onclick="focusCompletedOnVisitMap(${item.lat}, ${item.lng}, '${(item.place_name || '').replace(/'/g, "")}')" class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded cursor-pointer">✓ 방문지도보기</button>` : ''}
+                                </div>
+                                <span class="text-xs font-bold text-slate-700">예상 ${Number(item.budget || 0).toLocaleString()}원</span>
+                            </div>
+
+                            <div onclick="${isVisited ? `focusCompletedOnVisitMap(${item.lat}, ${item.lng}, '${(item.place_name || '').replace(/'/g, "")}')` : ''}" class="w-full space-y-1 ${isVisited ? 'cursor-pointer' : ''}">
+                                <h4 class="font-bold text-slate-800 text-sm sm:text-base truncate w-full">${item.category ? `[${item.category}] ` : ''}${item.place_name}</h4>
+                                ${item.address ? `
+                                <div class="flex items-center gap-1.5 text-xs text-slate-600">
+                                    <i class="fa-solid fa-location-dot text-slate-400"></i>
+                                    <span class="truncate">${item.address}</span>
+                                    <button type="button" onclick="event.stopPropagation(); copyAddressText('${item.address.replace(/'/g, "")}')" class="text-[10px] bg-white border border-slate-300 px-1.5 py-0.2 rounded text-slate-700 font-semibold shrink-0 cursor-pointer">복사</button>
+                                </div>` : ''}
+                                ${item.phone ? `<p class="text-xs text-blue-700 font-semibold"><i class="fa-solid fa-phone mr-1"></i>${item.phone}</p>` : ''}
+                                ${item.memo ? `<p class="text-xs text-slate-500 leading-relaxed break-words">${item.memo}</p>` : ''}
+                                ${altButtonsHtml}
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-200/60">
+                                ${visitBtnHtml}
+                                ${phoneBtnHtml}
+                                <a href="${navMapUrl}" target="_blank" class="bg-white hover:bg-slate-100 border border-slate-300 text-emerald-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
+                                    <i class="fa-solid fa-location-dot"></i> 지도
+                                </a>
+                                <a href="${navReviewUrl}" target="_blank" class="bg-white hover:bg-slate-100 border border-amber-300 text-amber-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
+                                    <i class="fa-solid fa-star text-amber-500"></i> 리뷰
+                                </a>
+                                <button type="button" onclick="editExp('${item.id}')" class="ml-auto bg-white hover:bg-slate-100 border border-slate-300 text-blue-600 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">수정</button>
+                                <button type="button" onclick="deleteSubItem('expected_places', '${item.id}')" class="bg-white hover:bg-slate-100 border border-slate-300 text-red-500 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">삭제</button>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                expTimelineHtml += `</div></div>`;
+            });
+            document.getElementById('expected-timeline-list').innerHTML = expTimelineHtml || '<p class="text-xs text-slate-400 py-4 text-center">등록된 예상 일정이 없습니다.</p>';
+            document.getElementById('expected-manage-list').innerHTML = expTimelineHtml || '<p class="text-xs text-slate-400 py-4 text-center">등록된 일정이 없습니다.</p>';
+
+            const actGroups = {};
+            filteredAct.forEach(item => {
+                const d = item.day || 1;
+                if (!actGroups[d]) actGroups[d] = [];
+                actGroups[d].push(item);
+            });
+
+            let actTimelineHtml = '';
+            Object.keys(actGroups).sort((a,b) => Number(a)-Number(b)).forEach(day => {
+                actTimelineHtml += `
+                <div class="space-y-2">
+                    <div class="bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex justify-between items-center">
+                        <span>🧾 ${day}일차 방문완료 및 가계부</span>
+                        <span>${actGroups[day].length}건</span>
+                    </div>
+                    <div class="relative border-l-2 border-emerald-200 ml-3 space-y-3 py-1">`;
+                
+                actGroups[day].forEach(item => {
+                    const hasCoord = item.lat && item.lng;
+                    const clickAttr = hasCoord
+                        ? `onclick="focusCompletedOnVisitMap(${item.lat}, ${item.lng}, '${(item.place || '').replace(/'/g, "")}')"`
+                        : `onclick="switchTab('visit'); document.getElementById('visit-map-card').scrollIntoView({behavior:'smooth'});"`;
+                    const navMapUrl = `https://map.naver.com/p/search/${encodeURIComponent(item.address || item.place)}`;
+                    const navReviewUrl = `https://search.naver.com/search.naver?where=view&query=${encodeURIComponent(item.place + ' 후기 리뷰')}`;
+                    const phoneBtnHtml = item.phone
+                        ? `<a href="tel:${item.phone}" class="bg-white border border-blue-300 text-blue-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
+                             <i class="fa-solid fa-phone"></i> 전화
+                           </a>`
+                        : '';
+
+                    actTimelineHtml += `
+                    <div class="relative pl-5">
+                        <span class="absolute -left-[7px] top-3 w-3 h-3 rounded-full bg-emerald-600 ring-2 ring-white"></span>
+                        <div class="bg-emerald-50/40 hover:bg-emerald-50 p-3.5 rounded-xl border border-emerald-200/80 space-y-2 transition">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded"><i class="fa-regular fa-clock mr-1"></i>${item.time || ''} · ${item.traveler || '공통'}</span>
+                                <span class="text-xs font-extrabold text-emerald-700">${Number(item.expense || 0).toLocaleString()}원</span>
+                            </div>
+
+                            <div ${clickAttr} class="cursor-pointer w-full space-y-1">
+                                <h4 class="font-bold text-slate-800 text-sm sm:text-base truncate w-full">${item.place}</h4>
+                                ${item.address ? `<p class="text-xs text-slate-500 truncate"><i class="fa-solid fa-location-dot mr-1"></i>${item.address}</p>` : ''}
+                                ${item.phone ? `<p class="text-xs text-blue-700 font-semibold"><i class="fa-solid fa-phone mr-1"></i>${item.phone}</p>` : ''}
+                                <p class="text-xs text-slate-600 leading-relaxed break-words">${item.action || ''}</p>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-emerald-200/60">
+                                <button type="button" ${clickAttr} class="bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer flex items-center gap-1">
+                                    <i class="fa-solid fa-route"></i> 방문지도확인
+                                </button>
+                                ${phoneBtnHtml}
+                                <a href="${navMapUrl}" target="_blank" class="bg-white border border-slate-300 text-emerald-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
+                                    <i class="fa-solid fa-location-dot"></i> 지도
+                                </a>
+                                <a href="${navReviewUrl}" target="_blank" class="bg-white border border-amber-300 text-amber-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
+                                    <i class="fa-solid fa-star text-amber-500"></i> 리뷰
+                                </a>
+                                <button type="button" onclick="editAct('${item.id}')" class="ml-auto bg-white border border-slate-300 text-blue-600 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">수정</button>
+                                <button type="button" onclick="deleteSubItem('actual_visits', '${item.id}')" class="bg-white border border-slate-300 text-red-500 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">삭제</button>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                actTimelineHtml += `</div></div>`;
+            });
+            document.getElementById('actual-timeline-list').innerHTML = actTimelineHtml || '<p class="text-xs text-slate-400 py-4 text-center">타임라인(계획)에서 [방문전] 버튼을 누르면 [방문완료]로 바뀌며 이곳에 기록됩니다!</p>';
+            document.getElementById('actual-manage-list').innerHTML = actTimelineHtml || '<p class="text-xs text-slate-400 py-4 text-center">기록된 지출 내역이 없습니다.</p>';
+
+            let presetHtml = '<option value="">-- 예상 방문지 목록에서 선택하세요 --</option>';
+            sortedExp.forEach(item => {
+                presetHtml += `<option value="${item.id}">[${item.day || 1}일차 ${item.time || ''}] ${item.place_name} (예산: ${Number(item.budget || 0).toLocaleString()}원)</option>`;
+            });
+            document.getElementById('act-preset-select').innerHTML = presetHtml;
+        }
+
+        function copySettlementReport() {
+            const trip = tripsData.find(t => t.id === currentTripId);
+            const sortedAct = sortByDayAndTime(actualData);
+            const totalAct = sortedAct.reduce((s, x) => s + Number(x.expense || 0), 0);
+            const members = Math.max(1, Number(currentMemberCount || 8));
+            const exactPer = Math.round(totalAct / members);
+            const roundPer = Math.ceil(totalAct / members / 100) * 100;
+
+            let text = `📋 [${trip ? trip.name : '단체 여행'}] 가계부 정산 내역\n`;
+            text += `• 일정: ${trip ? trip.startDate : ''} ~ ${trip ? trip.endDate : ''} (${members}명)\n`;
+            text += `--------------------------\n`;
+            sortedAct.forEach(item => {
+                text += `[${item.day || 1}일차] ${item.place}: ${Number(item.expense || 0).toLocaleString()}원 (${item.traveler || '공통'})\n`;
+            });
+            text += `--------------------------\n`;
+            text += `💰 총 실제 사용금액: ${totalAct.toLocaleString()}원\n`;
+            text += `👤 1인당 납부 회비 (1/${members}): ${exactPer.toLocaleString()}원\n`;
+            text += `✨ 100원 단위 올림 시: ${roundPer.toLocaleString()}원`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert('카카오톡 공유용 정산 내역이 복사되었습니다!');
+            }).catch(() => prompt('아래 내용을 복사하세요:', text));
+        }
+
+        function fillFromExpected() {
+            const expId = document.getElementById('act-preset-select').value;
+            const item = expectedData.find(x => x.id === expId);
+            if (!item) return;
+            document.getElementById('act-day').value = item.day || 1;
+            const normT = normalizeTime(item.time);
+            document.getElementById('act-time').value = normT !== '99:99' ? normT : '12:00';
+            document.getElementById('act-place').value = item.place_name || '';
+            document.getElementById('act-phone').value = item.phone || '';
+            document.getElementById('act-address').value = item.address || '';
+            document.getElementById('act-expense').value = item.budget || 0;
+            document.getElementById('act-action').value = item.memo || `${item.place_name} 방문`;
+            document.getElementById('act-lat').value = item.lat || '';
+            document.getElementById('act-lng').value = item.lng || '';
+        }
+
+        function editExp(id) {
+            const item = expectedData.find(x => x.id === id);
+            if (!item) return;
+            switchTab('expected');
+            document.getElementById('exp-edit-id').value = item.id;
+            document.getElementById('exp-day').value = item.day || 1;
+            const normT = normalizeTime(item.time);
+            document.getElementById('exp-time').value = normT !== '99:99' ? normT : '10:00';
+            document.getElementById('exp-category').value = item.category || '관광';
+            document.getElementById('exp-place-name').value = item.place_name || '';
+            document.getElementById('exp-phone').value = item.phone || '';
+            document.getElementById('exp-address').value = item.address || '';
+            document.getElementById('exp-budget').value = item.budget || 0;
+            document.getElementById('exp-memo').value = item.memo || '';
+            document.getElementById('exp-lat').value = item.lat || '';
+            document.getElementById('exp-lng').value = item.lng || '';
+
+            const altContainer = document.getElementById('exp-alternatives-container');
+            altContainer.innerHTML = '';
+            if (Array.isArray(item.alternatives)) {
+                item.alternatives.forEach(alt => addAlternativeRow(alt));
+            }
+
+            document.getElementById('exp-form-title').innerText = `✏️ [${item.place_name}] 일정 수정하기`;
+            document.getElementById('exp-submit-btn').innerText = "일정 수정 완료";
+            document.getElementById('exp-cancel-btn').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetExpForm() {
+            document.getElementById('expected-form').reset();
+            document.getElementById('exp-edit-id').value = '';
+            document.getElementById('exp-alternatives-container').innerHTML = '';
+            document.getElementById('exp-form-title').innerText = "➕ 예상 일정 추가 / 수정하기";
+            document.getElementById('exp-submit-btn').innerText = "예상 일정 저장하기";
+            document.getElementById('exp-cancel-btn').classList.add('hidden');
+        }
+
+        function editAct(id) {
+            const item = actualData.find(x => x.id === id);
+            if (!item) return;
+            switchTab('actual');
+            document.getElementById('act-edit-id').value = item.id;
+            document.getElementById('act-day').value = item.day || 1;
+            const normT = normalizeTime(item.time);
+            document.getElementById('act-time').value = normT !== '99:99' ? normT : '12:00';
+            document.getElementById('act-traveler').value = item.traveler || '총무(공통)';
+            document.getElementById('act-place').value = item.place || '';
+            document.getElementById('act-phone').value = item.phone || '';
+            document.getElementById('act-address').value = item.address || '';
+            document.getElementById('act-expense').value = item.expense || 0;
+            document.getElementById('act-action').value = item.action || '';
+            document.getElementById('act-lat').value = item.lat || '';
+            document.getElementById('act-lng').value = item.lng || '';
+            document.getElementById('act-form-title').innerText = `✏️ [${item.place}] 방문·지출 수정하기`;
+            document.getElementById('act-submit-btn').innerText = "수정 완료";
+            document.getElementById('act-cancel-btn').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetActForm() {
+            document.getElementById('actual-form').reset();
+            document.getElementById('act-edit-id').value = '';
+            document.getElementById('act-form-title').innerText = "🧾 실제 방문 및 지출 내역 입력";
+            document.getElementById('act-submit-btn').innerText = "가계부 지출 내역 저장하기";
+            document.getElementById('act-cancel-btn').classList.add('hidden');
+        }
+
+        function editCar(id) {
+            const item = carsData.find(x => x.id === id);
+            if (!item) return;
+            document.getElementById('car-edit-id').value = item.id;
+            document.getElementById('car-code').value = item.carCode || 'A차량';
+            document.getElementById('car-name').value = item.carName || '';
+            document.getElementById('car-driver').value = item.driver || '';
+            document.getElementById('car-members').value = item.members || '';
+            document.getElementById('car-form-title').innerText = "✏️ 차량 배치 수정";
+            document.getElementById('car-submit-btn').innerText = "차량 수정 완료";
+            document.getElementById('car-cancel-btn').classList.remove('hidden');
+        }
+
+        function resetCarForm() {
+            document.getElementById('car-form').reset();
+            document.getElementById('car-edit-id').value = '';
+            document.getElementById('car-form-title').innerText = "🚗 차량 배치 (운전자·탑승자 명단)";
+            document.getElementById('car-submit-btn').innerText = "+ 차량 배치 저장";
+            document.getElementById('car-cancel-btn').classList.add('hidden');
+        }
+
+        function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * (Math.PI/180);
+            const dLon = (lon2 - lon1) * (Math.PI/180);
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * (Math.PI/180)) * Math.cos(lat2 * (Math.PI/180)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+        }
+
+        function getSegmentColor(day, timeStr) {
+            const norm = normalizeTime(timeStr);
+            const hour = norm !== '99:99' ? parseInt(norm.split(':')[0], 10) : 12;
+            const isPM = hour >= 12;
+            if (Number(day || 1) === 1) return isPM ? '#9333ea' : '#2563eb';
+            return isPM ? '#d97706' : '#059669';
+        }
+
+        function drawMapRoute(targetMap, layersArray, mode) {
+            if (!targetMap) return;
+            layersArray.forEach(l => targetMap.removeLayer(l));
+            layersArray.length = 0;
+            const bounds = [];
+
+            const sortedExp = sortByDayAndTime(expectedData).filter(item => {
+                if (selectedDayFilter === 'all') return true;
+                if (selectedDayFilter === '3') return Number(item.day || 1) >= 3;
+                return String(item.day || 1) === selectedDayFilter;
+            });
+
+            sortedExp.forEach((item) => {
+                if (item.lat && item.lng) {
+                    const baseColor = getSegmentColor(item.day, item.time);
+                    const isVisited = Boolean(item.visited);
+                    const m = L.circleMarker([item.lat, item.lng], {
+                        radius: isVisited ? 9 : 7,
+                        fillColor: isVisited ? '#059669' : baseColor,
+                        color: "#fff",
+                        weight: isVisited ? 3 : 2,
+                        fillOpacity: 0.95
+                    }).addTo(targetMap).bindPopup(`
+                        <div class="text-xs space-y-1">
+                            <div class="font-bold text-slate-800">[${item.day || 1}일차 · ${item.time || ''}] ${item.place_name}</div>
+                            ${item.address ? `<div class="text-slate-500">${item.address}</div>` : ''}
+                            ${item.phone ? `<div class="text-blue-600 font-semibold">📞 ${item.phone}</div>` : ''}
+                            <div>상태: <b class="${isVisited ? 'text-emerald-600' : 'text-blue-600'}">${isVisited ? '✓ 방문완료' : '방문전(예정)'}</b></div>
+                            <div>예산: ${Number(item.budget || 0).toLocaleString()}원</div>
+                        </div>
+                    `);
+                    layersArray.push(m);
+                    bounds.push([item.lat, item.lng]);
+                }
+            });
+
+            for (let i = 0; i < sortedExp.length - 1; i++) {
+                const p1 = sortedExp[i];
+                const p2 = sortedExp[i + 1];
+                if (p1.lat && p1.lng && p2.lat && p2.lng) {
+                    const distKm = getDistanceFromLatLonInKm(p1.lat, p1.lng, p2.lat, p2.lng);
+                    const roadDistKm = distKm * 1.3;
+                    const estMinutes = Math.max(5, Math.round((roadDistKm / 55) * 60));
+                    const segColor = getSegmentColor(p1.day, p1.time);
+                    const isSegmentVisited = Boolean(p1.visited);
+
+                    const lineOptions = (mode === 'standard')
+                        ? { color: segColor, weight: 4, opacity: 0.85, dashArray: isSegmentVisited ? '6, 8' : null }
+                        : { color: segColor, weight: isSegmentVisited ? 7 : 3, opacity: isSegmentVisited ? 0.95 : 0.65, dashArray: isSegmentVisited ? null : '6, 8' };
+
+                    const polyline = L.polyline([[p1.lat, p1.lng], [p2.lat, p2.lng]], lineOptions).addTo(targetMap);
+                    polyline.bindPopup(`
+                        <div class="text-xs space-y-1">
+                            <div class="font-bold text-blue-700">🚗 구간 이동 정보 (${p1.day || 1}일차)</div>
+                            <div><b>${p1.place_name}</b> ➔ <b>${p2.place_name}</b></div>
+                            <div>📏 예상 이동거리: <b>약 ${roadDistKm.toFixed(1)} km</b> (직선 ${distKm.toFixed(1)}km)</div>
+                            <div>⏱️ 예상 소요시간: <b>약 ${estMinutes}분</b></div>
+                            <div>상태: <b>${isSegmentVisited ? '방문완료 구간' : '방문예정 구간'}</b></div>
+                        </div>
+                    `);
+                    layersArray.push(polyline);
+                }
+            }
+
+            if (bounds.length > 0) targetMap.fitBounds(bounds, { padding: [30, 30] });
+        }
+
+        function renderTimelineMaps() {
+            drawMapRoute(mapPlan, planLayers, 'standard');
+            drawMapRoute(mapVisit, visitLayers, 'highlightCompleted');
+        }
+
+        function renderTripCards() {
+            let cardsHtml = '';
+            tripsData.sort((a, b) => (a.startDate || '').localeCompare(b.startDate || ''));
+            tripsData.forEach((trip) => {
+                cardsHtml += `
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-3 shadow-sm">
+                    <div onclick="selectTrip('${trip.id}')" class="cursor-pointer flex-1">
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-bold text-slate-800 text-base hover:text-blue-600 transition">${trip.name || '제목 없음'}</h3>
+                            <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">${trip.memberCount || 8}인</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-0.5"><i class="fa-regular fa-calendar mr-1"></i>${trip.startDate || '날짜미정'} ~ ${trip.endDate || '날짜미정'}</p>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button type="button" onclick="selectTrip('${trip.id}')" class="flex-1 sm:flex-none bg-blue-600 active:bg-blue-800 text-white px-4 py-2 rounded-lg text-xs font-bold cursor-pointer">입장하기</button>
+                        <button type="button" onclick="editTripInfo('${trip.id}')" class="bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold cursor-pointer">수정</button>
+                        <button type="button" onclick="deleteTrip('${trip.id}')" class="bg-white border border-red-200 text-red-600 px-3 py-2 rounded-lg text-xs font-bold cursor-pointer">삭제</button>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('trip-cards-container').innerHTML = cardsHtml || '<p class="text-xs text-slate-400 py-4 text-center">등록된 여행이 없습니다. 아래에서 새 여행을 만들어보세요.</p>';
+        }
+
+        async function forceReloadDB() {
+            if (!db) return;
+            setSyncBadge("새로고침중...", "bg-amber-500");
+            try {
+                const snap = await db.collection("trips").get();
+                tripsData = [];
+                snap.forEach(d => tripsData.push({ id: d.id, ...d.data() }));
+                renderTripCards();
+                if (currentTripId) subscribeTripData(currentTripId);
+                setSyncBadge("연결됨", "bg-emerald-500");
+            } catch (e) {
+                setSyncBadge("오류", "bg-red-600");
+                showError("DB 조회 실패: " + e.message);
+            }
+        }
+
+        function subscribeTripData(tripId) {
+            if (!db) return;
+            if (unsubExp) unsubExp();
+            if (unsubAct) unsubAct();
+            if (unsubCars) unsubCars();
+            if (unsubChk) unsubChk();
+
+            unsubExp = db.collection("trips").doc(tripId).collection("expected_places").onSnapshot((snap) => {
+                expectedData = [];
+                snap.forEach(d => expectedData.push({ id: d.id, ...d.data() }));
+                renderAllViews();
+                renderTimelineMaps();
+                onChangeChkMajor();
+            });
+
+            unsubAct = db.collection("trips").doc(tripId).collection("actual_visits").onSnapshot((snap) => {
+                actualData = [];
+                snap.forEach(d => actualData.push({ id: d.id, ...d.data() }));
+                renderAllViews();
+            });
+
+            unsubCars = db.collection("trips").doc(tripId).collection("cars").onSnapshot((snap) => {
+                carsData = [];
+                let html = '';
+                snap.forEach(d => {
+                    const data = d.data();
+                    carsData.push({ id: d.id, ...data });
+                    html += `
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-start gap-2">
+                        <div class="space-y-1 text-xs">
+                            <span class="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-extrabold">${data.carCode || '차량'}</span>
+                            <h4 class="font-bold text-slate-800 text-sm mt-1"><i class="fa-solid fa-car-side text-blue-600 mr-1"></i>${data.carName}</h4>
+                            <p class="text-slate-600"><b class="text-blue-700">운전자:</b> ${data.driver}</p>
+                            <p class="text-slate-600"><b>탑승자:</b> ${data.members}</p>
+                        </div>
+                        <div class="flex gap-1 shrink-0">
+                            <button type="button" onclick="editCar('${d.id}')" class="bg-white border border-slate-300 text-blue-600 px-2.5 py-1 rounded text-xs font-bold cursor-pointer">수정</button>
+                            <button type="button" onclick="deleteSubItem('cars', '${d.id}')" class="bg-white border border-slate-300 text-red-500 px-2.5 py-1 rounded text-xs font-bold cursor-pointer">삭제</button>
+                        </div>
+                    </div>`;
+                });
+                document.getElementById('car-list').innerHTML = html || '<p class="text-xs text-slate-400 col-span-2 py-3 text-center">등록된 차량 배치가 없습니다. 위에서 A차량, B차량을 등록해보세요.</p>';
+                syncParticipantDropdowns();
+            });
+
+            unsubChk = db.collection("trips").doc(tripId).collection("checklists").onSnapshot((snap) => {
+                checklistData = [];
+                snap.forEach(d => checklistData.push({ id: d.id, ...d.data() }));
+                renderChecklistAll();
+            });
+        }
+
+        async function swapWithAlternative(expId, altIdx) {
+            if (!currentTripId || !db) return;
+            const item = expectedData.find(x => x.id === expId);
+            if (!item || !Array.isArray(item.alternatives) || !item.alternatives[altIdx]) return;
+
+            const chosenAlt = item.alternatives[altIdx];
+            if (!confirm(`[${item.place_name}] 일정을 대안 장소인 [${chosenAlt.name}](으)로 교체하시겠습니까?`)) return;
+
+            const oldMainAsAlt = {
+                name: item.place_name || '',
+                phone: item.phone || '',
+                address: item.address || '',
+                budget: Number(item.budget || 0),
+                memo: item.memo || '',
+                lat: item.lat || null,
+                lng: item.lng || null
+            };
+
+            const updatedAlts = [...item.alternatives];
+            updatedAlts[altIdx] = oldMainAsAlt;
+
+            let nextLat = chosenAlt.lat || item.lat;
+            let nextLng = chosenAlt.lng || item.lng;
+            if ((!chosenAlt.lat || !chosenAlt.lng) && chosenAlt.address) {
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(chosenAlt.address)}&countrycodes=kr&limit=1`);
+                    const geo = await res.json();
+                    if (geo && geo.length > 0) {
+                        nextLat = Number(geo[0].lat);
+                        nextLng = Number(geo[0].lon);
+                    }
+                } catch (_) {}
+            }
+
+            await db.collection("trips").doc(currentTripId).collection("expected_places").doc(expId).update({
+                place_name: chosenAlt.name,
+                phone: chosenAlt.phone || '',
+                address: chosenAlt.address || '',
+                budget: Number(chosenAlt.budget || 0),
+                memo: chosenAlt.memo || '',
+                lat: Number(nextLat),
+                lng: Number(nextLng),
+                alternatives: updatedAlts
+            });
+        }
+
+        async function toggleVisitStatus(expId) {
+            if (!currentTripId || !db) return;
+            const item = expectedData.find(x => x.id === expId);
+            if (!item) return;
+
+            const nextVisitedState = !item.visited;
+            await db.collection("trips").doc(currentTripId).collection("expected_places").doc(expId).update({
+                visited: nextVisitedState
+            });
+
+            if (nextVisitedState) {
+                const alreadyInAct = actualData.some(a => a.linkedExpId === expId || a.place === item.place_name);
+                if (!alreadyInAct) {
+                    await db.collection("trips").doc(currentTripId).collection("actual_visits").add({
+                        linkedExpId: expId,
+                        day: Number(item.day || 1),
+                        time: item.time || "12:00",
+                        traveler: "총무(공통)",
+                        place: item.place_name,
+                        phone: item.phone || '',
+                        address: item.address || '',
+                        expense: Number(item.budget || 0),
+                        action: item.memo || `${item.place_name} 방문 완료`,
+                        lat: item.lat || null,
+                        lng: item.lng || null
+                    });
+                }
+            }
+        }
+
+        async function updateMemberCount(val) {
+            currentMemberCount = Math.max(1, Number(val || 8));
+            renderAllViews();
+            if (currentTripId && db) {
+                await db.collection("trips").doc(currentTripId).update({ memberCount: currentMemberCount });
+            }
+        }
+
+        async function deleteTrip(tripId) {
+            if (!db) return;
+            const trip = tripsData.find(t => t.id === tripId);
+            if (confirm(`[${trip ? trip.name : '이 여행'}] 일정을 삭제하시겠습니까?`)) {
+                await db.collection("trips").doc(tripId).delete();
+            }
+        }
+
+        async function deleteSubItem(subCol, id) {
+            if (confirm('이 항목을 정말 삭제하시겠습니까?') && currentTripId && db) {
+                await db.collection("trips").doc(currentTripId).collection(subCol).doc(id).delete();
+            }
+        }
+
+        async function prepareBackupCache() {
+            if (typeof XLSX === 'undefined' || !db) return;
+            try {
+                const tripsSnap = await db.collection("trips").get();
+                const tripsRows = [], expRows = [], actRows = [], carRows = [], chkRows = [];
+
+                for (const tDoc of tripsSnap.docs) {
+                    const tData = tDoc.data();
+                    const tId = tDoc.id;
+                    tripsRows.push({
+                        여행ID: tId,
+                        여행제목: tData.name || '',
+                        참여인원: tData.memberCount || 8,
+                        시작일: tData.startDate || '',
+                        종료일: tData.endDate || ''
+                    });
+
+                    const eSnap = await db.collection("trips").doc(tId).collection("expected_places").get();
+                    eSnap.forEach(d => {
+                        const x = d.data();
+                        expRows.push({
+                            여행ID: tId,
+                            여행제목: tData.name || '',
+                            일차: x.day || 1,
+                            시간: x.time || '',
+                            구분: x.category || '',
+                            장소명: x.place_name || '',
+                            전화번호: x.phone || '',
+                            주소: x.address || '',
+                            예상예산: Number(x.budget || 0),
+                            메모: x.memo || '',
+                            위도: x.lat || '',
+                            경도: x.lng || '',
+                            방문완료여부: x.visited ? 'Y' : 'N',
+                            대안장소JSON: Array.isArray(x.alternatives) && x.alternatives.length ? JSON.stringify(x.alternatives) : ''
+                        });
+                    });
+
+                    const aSnap = await db.collection("trips").doc(tId).collection("actual_visits").get();
+                    aSnap.forEach(d => {
+                        const x = d.data();
+                        actRows.push({
+                            여행ID: tId,
+                            여행제목: tData.name || '',
+                            일차: x.day || 1,
+                            시간: x.time || '',
+                            결제자: x.traveler || '',
+                            방문장소: x.place || '',
+                            전화번호: x.phone || '',
+                            주소: x.address || '',
+                            실제지출금액: Number(x.expense || 0),
+                            상세내역: x.action || '',
+                            위도: x.lat || '',
+                            경도: x.lng || ''
+                        });
+                    });
+
+                    const cSnap = await db.collection("trips").doc(tId).collection("cars").get();
+                    cSnap.forEach(d => {
+                        const x = d.data();
+                        carRows.push({
+                            여행ID: tId,
+                            여행제목: tData.name || '',
+                            차량구분: x.carCode || 'A차량',
+                            차량명: x.carName || '',
+                            운전자: x.driver || '',
+                            동승자: x.members || ''
+                        });
+                    });
+
+                    const kSnap = await db.collection("trips").doc(tId).collection("checklists").get();
+                    kSnap.forEach(d => {
+                        const x = d.data();
+                        chkRows.push({
+                            여행ID: tId,
+                            여행제목: tData.name || '',
+                            대분류코드: x.major || 'prep',
+                            소분류및장소: x.minor || '',
+                            품목내용: x.title || '',
+                            담당자및구입자: x.person || '',
+                            금액: Number(x.price || 0),
+                            메모: x.memo || '',
+                            완료여부: x.checked ? 'Y' : 'N'
+                        });
+                    });
+                }
+
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(tripsRows.length ? tripsRows : [{안내:'데이터없음'}]), "여행목록");
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(expRows.length ? expRows : [{안내:'데이터없음'}]), "예상일정");
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(actRows.length ? actRows : [{안내:'데이터없음'}]), "실제가계부");
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(carRows.length ? carRows : [{안내:'데이터없음'}]), "차량배정");
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(chkRows.length ? chkRows : [{안내:'데이터없음'}]), "체크리스트");
+
+                const todayStr = new Date().toISOString().slice(0, 10);
+                const fileName = `단체여행_백업_${todayStr}.xlsx`;
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+                window.cachedBackupBlob = blob;
+                window.cachedBackupFileName = fileName;
+                try { window.cachedBackupFile = new File([blob], fileName, { type: blob.type }); } catch (_) {}
+            } catch (e) { console.error(e); }
+        }
+
+        function triggerDirectDownload(blob, fileName) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        async function exportExcelBackup(targetMode) {
+            if (!window.cachedBackupBlob) await prepareBackupCache();
+            if (!window.cachedBackupBlob) { alert('백업할 데이터가 없습니다.'); return; }
+
+            const blob = window.cachedBackupBlob;
+            const fileName = window.cachedBackupFileName;
+            const fileObj = window.cachedBackupFile;
+
+            if (targetMode === 'mobile' && fileObj && navigator.canShare && navigator.canShare({ files: [fileObj] })) {
+                try {
+                    await navigator.share({ title: '단체 여행 엑셀 백업', files: [fileObj] });
+                    return;
+                } catch (shareErr) {
+                    if (shareErr.name === 'AbortError') return;
+                    triggerDirectDownload(blob, fileName);
+                    alert(`내 스마트폰 [다운로드 폴더]에 '${fileName}' 파일이 바로 저장되었습니다!`);
+                    return;
+                }
+            }
+
+            triggerDirectDownload(blob, fileName);
+            if (targetMode === 'gdrive') {
+                if (confirm(`'${fileName}' 파일이 기기에 저장되었습니다!\n이어서 구글 드라이브를 열어 업로드하시겠습니까?`)) {
+                    window.open('https://drive.google.com/drive/my-drive', '_blank');
+                }
+            } else if (targetMode === 'mobile') {
+                alert(`스마트폰 [다운로드 폴더]에 '${fileName}' 백업 파일이 저장되었습니다!`);
+            }
+        }
+
+        function restoreFromExcelFile(event) {
+            const file = event.target.files[0];
+            if (!file || !db) return;
+            if (!confirm(`[${file.name}] 엑셀 파일의 모든 여행·가계부·체크리스트 데이터를 복원하시겠습니까?`)) {
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const wb = XLSX.read(data, { type: 'array' });
+
+                    const tripsSheet = wb.Sheets["여행목록"] ? XLSX.utils.sheet_to_json(wb.Sheets["여행목록"]) : [];
+                    const expSheet = wb.Sheets["예상일정"] ? XLSX.utils.sheet_to_json(wb.Sheets["예상일정"]) : [];
+                    const actSheet = wb.Sheets["실제가계부"] ? XLSX.utils.sheet_to_json(wb.Sheets["실제가계부"]) : [];
+                    const carSheet = wb.Sheets["차량배정"] ? XLSX.utils.sheet_to_json(wb.Sheets["차량배정"]) : [];
+                    const chkSheet = wb.Sheets["체크리스트"] ? XLSX.utils.sheet_to_json(wb.Sheets["체크리스트"]) : [];
+
+                    if (!tripsSheet.length || !tripsSheet[0].여행제목) {
+                        alert('올바른 여행 백업 엑셀 파일이 아닙니다.');
+                        return;
+                    }
+
+                    const idMap = {};
+                    for (const tRow of tripsSheet) {
+                        if (!tRow.여행제목) continue;
+                        const newTripRef = await db.collection("trips").add({
+                            name: String(tRow.여행제목),
+                            memberCount: Number(tRow.참여인원 || 8),
+                            startDate: String(tRow.시작일 || ''),
+                            endDate: String(tRow.종료일 || '')
+                        });
+                        idMap[tRow.여행ID] = newTripRef.id;
+                    }
+
+                    for (const eRow of expSheet) {
+                        const targetTripId = idMap[eRow.여행ID];
+                        if (!targetTripId || !eRow.장소명) continue;
+                        let parsedAlts = [];
+                        if (eRow.대안장소JSON) {
+                            try { parsedAlts = JSON.parse(eRow.대안장소JSON); } catch (_) {}
+                        }
+                        await db.collection("trips").doc(targetTripId).collection("expected_places").add({
+                            day: Number(eRow.일차 || 1),
+                            time: String(eRow.시간 || '10:00'),
+                            category: String(eRow.구분 || '관광'),
+                            place_name: String(eRow.장소명),
+                            phone: String(eRow.전화번호 || ''),
+                            address: String(eRow.주소 || ''),
+                            budget: Number(eRow.예상예산 || 0),
+                            memo: String(eRow.메모 || ''),
+                            lat: Number(eRow.위도 || 36.9997),
+                            lng: Number(eRow.경도 || 128.3435),
+                            visited: String(eRow.방문완료여부).toUpperCase() === 'Y',
+                            alternatives: parsedAlts
+                        });
+                    }
+
+                    for (const aRow of actSheet) {
+                        const targetTripId = idMap[aRow.여행ID];
+                        if (!targetTripId || !aRow.방문장소) continue;
+                        await db.collection("trips").doc(targetTripId).collection("actual_visits").add({
+                            day: Number(aRow.일차 || 1),
+                            time: String(aRow.시간 || '12:00'),
+                            traveler: String(aRow.결제자 || '총무(공통)'),
+                            place: String(aRow.방문장소),
+                            phone: String(aRow.전화번호 || ''),
+                            address: String(aRow.주소 || ''),
+                            expense: Number(aRow.실제지출금액 || 0),
+                            action: String(aRow.상세내역 || ''),
+                            lat: aRow.위도 ? Number(aRow.위도) : null,
+                            lng: aRow.경도 ? Number(aRow.경도) : null
+                        });
+                    }
+
+                    for (const cRow of carSheet) {
+                        const targetTripId = idMap[cRow.여행ID];
+                        if (!targetTripId || !cRow.차량명) continue;
+                        await db.collection("trips").doc(targetTripId).collection("cars").add({
+                            carCode: String(cRow.차량구분 || 'A차량'),
+                            carName: String(cRow.차량명),
+                            driver: String(cRow.운전자 || ''),
+                            members: String(cRow.동승자 || '')
+                        });
+                    }
+
+                    for (const kRow of chkSheet) {
+                        const targetTripId = idMap[kRow.여행ID];
+                        if (!targetTripId || !kRow.품목내용) continue;
+                        await db.collection("trips").doc(targetTripId).collection("checklists").add({
+                            major: String(kRow.대분류코드 || 'prep'),
+                            minor: String(kRow.소분류및장소 || '기본'),
+                            title: String(kRow.품목내용),
+                            person: String(kRow.담당자및구입자 || '공통(총무)'),
+                            price: Number(kRow.금액 || 0),
+                            memo: String(kRow.메모 || ''),
+                            checked: String(kRow.완료여부).toUpperCase() === 'Y'
+                        });
+                    }
+
+                    await prepareBackupCache();
+                    alert('엑셀 백업 파일로부터 모든 여행 일정 및 체크리스트가 성공적으로 복원되었습니다!');
+                } catch (err) {
+                    alert('복원 오류: ' + err.message);
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        async function createDanyangStandardTrip() {
+            const tripRef = await db.collection("trips").add({
+                name: "단양·영월·청풍호 1박 2일",
+                memberCount: 8,
+                startDate: "2026-10-23",
+                endDate: "2026-10-24"
+            });
+            const tripId = tripRef.id;
+
+            const initialCars = [
+                { carCode: "A차량 (1호차)", carName: "테슬라 차량", driver: "박성희", members: "오찬욱, 박경민, 이현진" },
+                { carCode: "B차량 (2호차)", carName: "펠리세이드", driver: "이승호", members: "김봉준, 윤병규, 신의수" }
+            ];
+
+            const initialPlaces = [
+                { day: 1, time: "08:30", category: "출발/귀가", place_name: "용인 죽전 출발", phone: "", address: "경기도 용인시 수지구 죽전동", budget: 150000, lat: 37.3248, lng: 127.1077, memo: "차량 2대 교통비 정액 (팰리세이드 10만 + 전기차 5만)", visited: false, alternatives: [] },
+                { day: 1, time: "09:55", category: "휴게소", place_name: "천등산휴게소 (제천방향)", phone: "", address: "충북 충주시 산척면 평택제천고속도로 106", budget: 0, lat: 37.0785, lng: 127.9123, memo: "커피·간식 및 전기차 충전 가능", visited: false, alternatives: [] },
+                { day: 1, time: "10:55", category: "관광", place_name: "도담삼봉", phone: "", address: "충북 단양군 매포읍 삼봉로 644", budget: 4500, lat: 36.9997, lng: 128.3435, memo: "단양 대표 인증샷 / 주차비(소형 3,000 + 전기차 1,500)", visited: false, alternatives: [] },
+                { day: 1, time: "11:45", category: "식당", place_name: "단양구경시장·돌집식당", phone: "043-422-2842", address: "충북 단양군 단양읍 중앙2로 11", budget: 201000, lat: 36.9822, lng: 128.3688, memo: "곤드레마늘정식 8인(16만) + 시장 마늘만두·닭강정 포장(4.1만)", visited: false, alternatives: [
+                    { name: "서울식당 (대안)", phone: "0507-1459-2808", address: "충북 단양군 단양읍 고수동굴길 4-10", budget: 136000, memo: "마늘수제떡갈비+산채한정식 17,000원", lat: 36.9865, lng: 128.3792 }
+                ] },
+                { day: 1, time: "13:05", category: "관광", place_name: "만천하스카이워크", phone: "", address: "충북 단양군 적성면 옷바위길 10", budget: 24000, lat: 36.9708, lng: 128.3389, memo: "전망대 입장료 3,000원×8명 (무료 셔틀 이동)", visited: false, alternatives: [] },
+                { day: 1, time: "15:25", category: "카페", place_name: "카페 산", phone: "", address: "충북 단양군 가곡면 두산길 196-86", budget: 56000, lat: 37.0094, lng: 128.3995, memo: "해발 600m 전망 카페 (음료 8잔)", visited: false, alternatives: [
+                    { name: "만천하 스카이라운지 (대안)", phone: "", address: "충북 단양군 적성면 옷바위길 60-186", budget: 56000, memo: "만천하 단지 내 카페", lat: 36.9712, lng: 128.3395 }
+                ] },
+                { day: 1, time: "16:40", category: "장보기", place_name: "하나로마트 가곡점", phone: "043-422-8030", address: "충북 단양군 가곡면 남한강로 504", budget: 185800, lat: 37.0315, lng: 128.3965, memo: "바비큐 삼겹살 3.2kg 전날 전화 주문 필수", visited: false, alternatives: [
+                    { name: "단양농협 하나로마트 본점 (대안)", phone: "043-421-5959", address: "충북 단양군 단양읍 삼봉로 287", budget: 185800, memo: "21:00까지 영업", lat: 36.9845, lng: 128.3680 }
+                ] },
+                { day: 1, time: "17:55", category: "숙소", place_name: "더릴지즈 in 캠블리", phone: "", address: "강원 영월군 영월읍", budget: 256468, lat: 37.1835, lng: 128.4618, memo: "201호 결제완료 / 18:30~ 바비큐 및 자쿠지", visited: false, alternatives: [] },
+                { day: 2, time: "11:10", category: "관광", place_name: "옥순봉 출렁다리", phone: "", address: "충북 제천시 수산면 옥순봉로 342", budget: 24000, lat: 36.9427, lng: 128.2036, memo: "입장료 3,000원×8명 (지역화폐 환급)", visited: false, alternatives: [] },
+                { day: 2, time: "12:40", category: "식당", place_name: "느티나무횟집", phone: "043-647-0089", address: "충북 제천시 청풍면 배시론로 4", budget: 200000, lat: 37.0016, lng: 128.1742, memo: "송어비빔회 8명 사전 전화예약 필수", visited: false, alternatives: [
+                    { name: "청풍 황금떡갈비 (대안)", phone: "0507-1347-6303", address: "충북 제천시 청풍면 청풍호로 1682", budget: 192000, memo: "울금떡갈비정식", lat: 37.0025, lng: 128.1760 }
+                ] },
+                { day: 2, time: "13:50", category: "관광", place_name: "청풍호반케이블카", phone: "", address: "충북 제천시 청풍면 문화재길 166", budget: 144000, lat: 37.0039, lng: 128.1755, memo: "왕복 대인 18,000원×8명 (온라인 예매 권장)", visited: false, alternatives: [] },
+                { day: 2, time: "15:50", category: "카페", place_name: "콘크리트월", phone: "", address: "충북 제천시 금성면 청풍호로 1566", budget: 56000, lat: 37.0583, lng: 128.1585, memo: "서리태크림라떼 등 음료 8잔", visited: false, alternatives: [
+                    { name: "커피라끄 (대안)", phone: "0507-1344-9741", address: "충북 제천시 금성면 청풍호로 1226", budget: 56000, memo: "대형 호수뷰 카페", lat: 37.0380, lng: 128.1650 }
+                ] }
+            ];
+
+            const initialChecklists = [
+                { major: "prep", minor: "공통 필수품", title: "아이스박스 및 얼음팩", person: "이승호", price: 0, memo: "하나로마트 삼겹살 보관 이동용", checked: false },
+                { major: "prep", minor: "상비약·구급함", title: "비상 상비약 (소화제·진통제·밴드)", person: "오찬욱", price: 0, memo: "약국 상비약 준비", checked: false },
+                { major: "prep", minor: "전자·촬영장비", title: "카메라 및 충전기·멀티탭", person: "박성희", price: 0, memo: "단체 사진 촬영", checked: false },
+                { major: "food", minor: "주식·김치·반찬", title: "다음날 아침용 북엇국·누룽지·과일", person: "공통(총무)", price: 0, memo: "2일차 숙소 아침식사", checked: false },
+                { major: "buy", minor: "단양구경시장", title: "마늘만두 3팩 & 흑마늘 닭강정 1개", person: "공통(총무)", price: 41000, memo: "숙소 바비큐 곁들임용 포장", checked: false },
+                { major: "buy", minor: "하나로마트 가곡점", title: "국산 냉장 삼겹살 3.2kg (1인 400g)", person: "공통(총무)", price: 92800, memo: "043-422-8030 전날 전화주문", checked: false },
+                { major: "buy", minor: "하나로마트 가곡점", title: "쌈채소·구이채소·김치·쌈장", person: "공통(총무)", price: 45000, memo: "상추, 깻잎, 버섯, 마늘", checked: false },
+                { major: "buy", minor: "하나로마트 가곡점", title: "햇반 8개·라면 5개·음료·일회용품", person: "공통(총무)", price: 48000, memo: "콜라, 생수, 종이컵, 호일", checked: false },
+                { major: "etc", minor: "식당·매표 사전예약", title: "돌집식당 (043-422-2842) 8인 예약", person: "공통(총무)", price: 0, memo: "곤드레마늘정식 통일 주문", checked: false },
+                { major: "etc", minor: "식당·매표 사전예약", title: "느티나무횟집 (043-647-0089) 점심 예약", person: "공통(총무)", price: 0, memo: "점심 예약제 필수", checked: false },
+                { major: "etc", minor: "식당·매표 사전예약", title: "청풍호반케이블카 토요일 온라인 예매", person: "공통(총무)", price: 0, memo: "주말 혼잡 대비 사전예매", checked: false }
+            ];
+
+            for (const c of initialCars) await db.collection("trips").doc(tripId).collection("cars").add(c);
+            for (const p of initialPlaces) await db.collection("trips").doc(tripId).collection("expected_places").add(p);
+            for (const k of initialChecklists) await db.collection("trips").doc(tripId).collection("checklists").add(k);
+            return tripId;
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const center = [36.9997, 128.3435];
+            mapPlan = L.map('map-plan').setView(center, 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapPlan);
+
+            mapVisit = L.map('map-visit').setView(center, 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapVisit);
+
+            mapExp = L.map('map-expected').setView(center, 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapExp);
+            mapExp.on('click', (e) => {
+                const lat = e.latlng.lat.toFixed(6), lng = e.latlng.lng.toFixed(6);
+                document.getElementById('exp-lat').value = lat;
+                document.getElementById('exp-lng').value = lng;
+                if (expMarker) mapExp.removeLayer(expMarker);
+                expMarker = L.marker([lat, lng]).addTo(mapExp).bindPopup('선택한 일정 위치').openPopup();
+                reverseGeocodeToAddress(lat, lng, 'exp');
+            });
+
+            mapAct = L.map('map-actual').setView(center, 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapAct);
+            mapAct.on('click', (e) => {
+                const lat = e.latlng.lat.toFixed(6), lng = e.latlng.lng.toFixed(6);
+                document.getElementById('act-lat').value = lat;
+                document.getElementById('act-lng').value = lng;
+                if (actMarker) mapAct.removeLayer(actMarker);
+                actMarker = L.marker([lat, lng]).addTo(mapAct).bindPopup('실제 방문 위치').openPopup();
+                reverseGeocodeToAddress(lat, lng, 'act');
+            });
+
+            // Firebase Compat 초기화 (충돌 옵션 제거 완료!)
+            try {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+
+                forceReloadDB();
+
+                db.collection("trips").onSnapshot((snap) => {
+                    setSyncBadge("연결됨", "bg-emerald-500");
+                    tripsData = [];
+                    snap.forEach(d => tripsData.push({ id: d.id, ...d.data() }));
+                    renderTripCards();
+                }, (err) => {
+                    setSyncBadge("연결오류", "bg-red-600");
+                    showError("실시간 동기화 오류: " + err.message);
+                });
+            } catch (err) {
+                setSyncBadge("초기화오류", "bg-red-600");
+                showError("Firebase 초기화 오류: " + err.message);
+            }
+
+            document.getElementById('trip-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!db) return;
+                const editId = document.getElementById('trip-edit-id').value;
+                const payload = {
+                    name: document.getElementById('trip-name').value.trim(),
+                    memberCount: Number(document.getElementById('trip-count').value || 8),
+                    startDate: document.getElementById('trip-start').value,
+                    endDate: document.getElementById('trip-end').value
+                };
+                if (editId) await db.collection("trips").doc(editId).update(payload);
+                else await db.collection("trips").add(payload);
+                resetTripForm();
+            });
+
+            document.getElementById('btn-create-danyang').onclick = async function() {
+                if (!db) return;
+                if (!confirm('단양·영월·청풍호 1박 2일 샘플(일정·차량·5대분류 체크리스트 포함)을 생성하시겠습니까?')) return;
+                const tripId = await createDanyangStandardTrip();
+                selectTrip(tripId);
+            };
+
+            document.getElementById('expected-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!currentTripId || !db) return;
+                const editId = document.getElementById('exp-edit-id').value;
+                const existing = expectedData.find(x => x.id === editId);
+                const payload = {
+                    day: Number(document.getElementById('exp-day').value),
+                    time: document.getElementById('exp-time').value,
+                    category: document.getElementById('exp-category').value,
+                    place_name: document.getElementById('exp-place-name').value.trim(),
+                    phone: document.getElementById('exp-phone').value.trim(),
+                    address: document.getElementById('exp-address').value.trim(),
+                    budget: Number(document.getElementById('exp-budget').value || 0),
+                    memo: document.getElementById('exp-memo').value.trim(),
+                    lat: Number(document.getElementById('exp-lat').value),
+                    lng: Number(document.getElementById('exp-lng').value),
+                    visited: existing ? Boolean(existing.visited) : false,
+                    alternatives: collectAlternativesFromForm()
+                };
+                if (editId) await db.collection("trips").doc(currentTripId).collection("expected_places").doc(editId).update(payload);
+                else await db.collection("trips").doc(currentTripId).collection("expected_places").add(payload);
+                resetExpForm();
+                switchTab('plan');
+            });
+
+            document.getElementById('actual-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!currentTripId || !db) return;
+                const editId = document.getElementById('act-edit-id').value;
+                const payload = {
+                    day: Number(document.getElementById('act-day').value),
+                    time: document.getElementById('act-time').value,
+                    traveler: document.getElementById('act-traveler').value.trim(),
+                    place: document.getElementById('act-place').value.trim(),
+                    phone: document.getElementById('act-phone').value.trim(),
+                    address: document.getElementById('act-address').value.trim(),
+                    expense: Number(document.getElementById('act-expense').value || 0),
+                    action: document.getElementById('act-action').value.trim(),
+                    lat: document.getElementById('act-lat').value ? Number(document.getElementById('act-lat').value) : null,
+                    lng: document.getElementById('act-lng').value ? Number(document.getElementById('act-lng').value) : null
+                };
+                if (editId) await db.collection("trips").doc(currentTripId).collection("actual_visits").doc(editId).update(payload);
+                else await db.collection("trips").doc(currentTripId).collection("actual_visits").add(payload);
+                resetActForm();
+                switchTab('visit');
+            });
+
+            document.getElementById('car-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!currentTripId || !db) return;
+                const editId = document.getElementById('car-edit-id').value;
+                const payload = {
+                    carCode: document.getElementById('car-code').value.trim(),
+                    carName: document.getElementById('car-name').value.trim(),
+                    driver: document.getElementById('car-driver').value.trim(),
+                    members: document.getElementById('car-members').value.trim()
+                };
+                if (editId) await db.collection("trips").doc(currentTripId).collection("cars").doc(editId).update(payload);
+                else await db.collection("trips").doc(currentTripId).collection("cars").add(payload);
+                resetCarForm();
+            });
+
+            document.getElementById('chk-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!currentTripId || !db) return;
+                const editId = document.getElementById('chk-edit-id').value;
+                const existing = checklistData.find(x => x.id === editId);
+                const payload = {
+                    major: document.getElementById('chk-major').value,
+                    minor: document.getElementById('chk-minor').value.trim(),
+                    title: document.getElementById('chk-title').value.trim(),
+                    person: document.getElementById('chk-person').value,
+                    price: Number(document.getElementById('chk-price').value || 0),
+                    memo: document.getElementById('chk-memo').value.trim(),
+                    checked: existing ? Boolean(existing.checked) : false
+                };
+                if (editId) await db.collection("trips").doc(currentTripId).collection("checklists").doc(editId).update(payload);
+                else await db.collection("trips").doc(currentTripId).collection("checklists").add(payload);
+                resetChkForm();
+            });
+        });
+    </script>
+</body>
+</html>
