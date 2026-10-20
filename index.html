@@ -12,12 +12,12 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        #map-timeline, #map-expected, #map-actual { height: 300px; border-radius: 0.75rem; z-index: 10; }
+        #map-timeline, #map-expected, #map-actual { height: 320px; border-radius: 0.75rem; z-index: 10; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 
-    <!-- 전역 에러 감지기 (자바스크립트 문법/런타임 에러 발생 시 즉시 화면에 표시) -->
+    <!-- 전역 에러 감지기 -->
     <script>
         window.addEventListener('error', function(e) {
             const box = document.getElementById('diagnostic-panel');
@@ -60,9 +60,7 @@
         </div>
     </header>
 
-    <!-- ========================================== -->
-    <!-- 실시간 DB 연결 상태 & 에러 원인 진단 패널      -->
-    <!-- ========================================== -->
+    <!-- 실시간 DB 연결 상태 & 에러 원인 진단 패널 -->
     <div id="diagnostic-panel" class="bg-slate-900 text-slate-100 px-4 py-3 text-xs border-b border-slate-700">
         <div class="max-w-4xl mx-auto space-y-2">
             <div class="flex justify-between items-center">
@@ -71,12 +69,12 @@
                 </span>
                 <button type="button" onclick="document.getElementById('diagnostic-panel').classList.add('hidden')" class="text-slate-400 hover:text-white text-xs px-2 py-0.5 bg-slate-800 rounded">닫기 ✕</button>
             </div>
-            <div id="diagnostic-log" class="bg-slate-950 p-3 rounded-lg font-mono text-[11px] space-y-1 text-slate-300 max-h-48 overflow-y-auto">
+            <div id="diagnostic-log" class="bg-slate-950 p-3 rounded-lg font-mono text-[11px] space-y-1 text-slate-300 max-h-40 overflow-y-auto">
                 <div>⏳ [1단계] 웹페이지 기본 화면 로드 완료. Firebase 모듈 불러오는 중...</div>
             </div>
             <div class="flex flex-wrap gap-2 pt-1">
                 <button type="button" onclick="runManualDBTest()" class="bg-blue-600 active:bg-blue-800 text-white px-3 py-1.5 rounded-lg font-bold text-[11px] cursor-pointer">
-                    🔄 연결 강제 재시도 및 원인 테스트
+                    🔄 연결 강제 재시도
                 </button>
                 <button type="button" onclick="resetAndMigrateDB()" class="bg-rose-600 active:bg-rose-800 text-white px-3 py-1.5 rounded-lg font-bold text-[11px] cursor-pointer">
                     🧹 꼬인 DB 초기화 후 단양 일정 새로 세팅하기
@@ -89,7 +87,6 @@
     <!-- 0. 첫 화면: 여행 목록 선택 및 생성/수정/삭제 -->
     <!-- ========================================== -->
     <div id="trip-selector-screen" class="max-w-4xl mx-auto px-4 py-5 w-full space-y-5">
-        
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 border-b border-slate-100">
                 <div>
@@ -105,7 +102,6 @@
             </div>
         </div>
 
-        <!-- 새 여행 만들기 / 기존 여행 제목·날짜 수정 폼 -->
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
             <h2 id="trip-form-title" class="text-base font-bold text-slate-800 flex items-center gap-1.5">
                 <i class="fa-solid fa-circle-plus text-emerald-600"></i> 새로운 여행 직접 만들기
@@ -149,14 +145,16 @@
                 <i class="fa-solid fa-calendar-plus mr-1"></i>일정추가·수정
             </button>
             <button type="button" onclick="switchTab('actual')" id="btn-tab-actual" class="flex-1 min-w-[80px] py-3 text-center font-semibold text-slate-500 cursor-pointer">
-                <i class="fa-solid fa-receipt mr-1"></i>가계부·방문
+                <i class="fa-solid fa-receipt mr-1"></i>가계부·정산
             </button>
             <button type="button" onclick="switchTab('cars')" id="btn-tab-cars" class="flex-1 min-w-[80px] py-3 text-center font-semibold text-slate-500 cursor-pointer">
                 <i class="fa-solid fa-car mr-1"></i>차량·인원
             </button>
         </div>
 
-        <!-- 탭 1: 타임라인 -->
+        <!-- ------------------------------------------ -->
+        <!-- 탭 1: 타임라인 (점선/실선 지도 + 상태 토글)  -->
+        <!-- ------------------------------------------ -->
         <section id="tab-timeline" class="space-y-4">
             <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-2">
                 <div class="flex gap-1 bg-slate-100 p-1 rounded-lg text-xs font-bold">
@@ -166,65 +164,63 @@
                     <button type="button" onclick="setDayFilter('3')" id="filter-day-3" class="px-3 py-1.5 rounded-md text-slate-600 cursor-pointer">3일차+</button>
                 </div>
                 <button type="button" onclick="switchTab('expected')" class="bg-blue-600 active:bg-blue-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer">
-                    <i class="fa-solid fa-plus mr-1"></i>일정 추가하기
+                    <i class="fa-solid fa-plus mr-1"></i>일정 추가
                 </button>
             </div>
 
-            <!-- 지도 동선 -->
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-2.5">
+            <!-- 타임라인 지도 카드 -->
+            <div id="timeline-map-card" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-2.5">
                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1.5 text-xs">
-                    <h3 class="font-bold text-slate-800"><i class="fa-solid fa-route text-blue-600 mr-1"></i>지도상 타임라인 동선 (선 터치 시 이동거리·시간 팝업)</h3>
-                    <div class="flex gap-2.5 text-[11px] font-semibold flex-wrap">
-                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span>1일차 오전</span>
-                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-purple-600 inline-block"></span>1일차 오후</span>
-                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block"></span>2일차 오전</span>
-                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-600 inline-block"></span>2일차 오후</span>
+                    <h3 class="font-bold text-slate-800"><i class="fa-solid fa-route text-blue-600 mr-1"></i>타임라인 동선 지도 (일정이나 선을 터치해보세요!)</h3>
+                    <div class="flex gap-2 text-[11px] font-semibold flex-wrap items-center">
+                        <span class="px-2 py-0.5 bg-slate-100 rounded text-slate-700">━━ 굵은실선: 방문완료</span>
+                        <span class="px-2 py-0.5 bg-slate-100 rounded text-slate-500">┈┈ 점선: 방문예정</span>
                     </div>
+                </div>
+                <div class="flex gap-2.5 text-[11px] font-semibold flex-wrap pt-0.5">
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span>1일차 오전</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-purple-600 inline-block"></span>1일차 오후</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block"></span>2일차 오전</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-600 inline-block"></span>2일차 오후</span>
                 </div>
                 <div id="map-timeline"></div>
             </div>
 
-            <!-- 예산 요약 -->
-            <div class="grid grid-cols-3 gap-2">
-                <div class="bg-white p-3 rounded-xl border border-slate-200 text-center">
-                    <p class="text-[11px] text-slate-500">총 예상 예산</p>
-                    <p id="summary-exp-total" class="text-sm sm:text-base font-bold text-blue-600 mt-0.5">0원</p>
-                </div>
-                <div class="bg-white p-3 rounded-xl border border-slate-200 text-center">
-                    <p class="text-[11px] text-slate-500">총 실제 지출</p>
-                    <p id="summary-act-total" class="text-sm sm:text-base font-bold text-emerald-600 mt-0.5">0원</p>
-                </div>
-                <div class="bg-white p-3 rounded-xl border border-slate-200 text-center">
-                    <p class="text-[11px] text-slate-500">예산 잔액</p>
-                    <p id="summary-diff-total" class="text-sm sm:text-base font-bold text-slate-700 mt-0.5">0원</p>
-                </div>
-            </div>
-
             <!-- 타임라인 비교 리스트 -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- 예상 일정 타임라인 -->
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
                     <div class="flex justify-between items-center pb-2 border-b border-slate-100">
-                        <h3 class="font-bold text-blue-600 text-sm flex items-center gap-1.5">
-                            <i class="fa-regular fa-calendar-check"></i> 예상 일정 타임라인 (날짜·시간순)
-                        </h3>
-                        <span id="exp-count-badge" class="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-bold">0건</span>
+                        <div>
+                            <h3 class="font-bold text-blue-600 text-sm flex items-center gap-1.5">
+                                <i class="fa-regular fa-calendar-check"></i> 예상 일정 타임라인
+                            </h3>
+                            <p class="text-[11px] text-slate-400 mt-0.5">[방문전]을 누르면 [방문완료]로 바뀌고 지도 선이 굵어집니다.</p>
+                        </div>
+                        <span id="exp-count-badge" class="text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full font-bold shrink-0">0건</span>
                     </div>
                     <div id="expected-timeline-list" class="space-y-4"></div>
                 </div>
 
+                <!-- 실제 방문·가계부 타임라인 -->
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
                     <div class="flex justify-between items-center pb-2 border-b border-slate-100">
-                        <h3 class="font-bold text-emerald-600 text-sm flex items-center gap-1.5">
-                            <i class="fa-solid fa-shoe-prints"></i> 실제 방문·가계부 타임라인
-                        </h3>
-                        <span id="act-count-badge" class="text-xs bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full font-bold">0건</span>
+                        <div>
+                            <h3 class="font-bold text-emerald-600 text-sm flex items-center gap-1.5">
+                                <i class="fa-solid fa-shoe-prints"></i> 방문완료 및 지출 타임라인
+                            </h3>
+                            <p class="text-[11px] text-slate-400 mt-0.5">일정을 터치하면 상단 타임라인 지도에서 위치를 비춥니다.</p>
+                        </div>
+                        <span id="act-count-badge" class="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full font-bold shrink-0">0건</span>
                     </div>
                     <div id="actual-timeline-list" class="space-y-4"></div>
                 </div>
             </div>
         </section>
 
-        <!-- 탭 2: 예상 일정 추가·수정 -->
+        <!-- ------------------------------------------ -->
+        <!-- 탭 2: 예상 일정 추가·수정                    -->
+        <!-- ------------------------------------------ -->
         <section id="tab-expected" class="space-y-4 hidden">
             <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
                 <div class="flex justify-between items-center border-b border-slate-100 pb-2">
@@ -291,917 +287,4 @@
                     </div>
 
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="text" id="exp-lat" placeholder="위도 (지도 터치/검색)" required class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-slate-50">
-                        <input type="text" id="exp-lng" placeholder="경도 (지도 터치/검색)" required class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-slate-50">
-                    </div>
-
-                    <button type="submit" id="exp-submit-btn" class="w-full bg-blue-600 active:bg-blue-800 text-white py-3 rounded-xl text-sm font-bold cursor-pointer shadow-sm">
-                        일정 저장하기
-                    </button>
-                </form>
-            </div>
-
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                <h3 class="font-bold text-slate-800 mb-3 text-sm">등록된 예상 일정 목록</h3>
-                <div id="expected-manage-list" class="space-y-2.5"></div>
-            </div>
-        </section>
-
-        <!-- 탭 3: 실제 방문 및 가계부 -->
-        <section id="tab-actual" class="space-y-4 hidden">
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
-                <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <h3 id="act-form-title" class="font-bold text-slate-800 text-base">🧾 실제 방문 및 가계부 지출 기록</h3>
-                    <button type="button" onclick="resetActForm()" id="act-cancel-btn" class="hidden text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-lg font-bold cursor-pointer">수정 취소</button>
-                </div>
-
-                <div class="bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-200 space-y-2">
-                    <label class="block text-xs font-bold text-emerald-800">💡 계획된 예상 일정에서 선택해 자동 채우기</label>
-                    <select id="act-preset-select" onchange="fillFromExpected()" class="w-full border border-emerald-300 rounded-lg px-3 py-2 text-sm bg-white">
-                        <option value="">-- 예상 방문지 목록에서 선택하세요 --</option>
-                    </select>
-                    <div class="flex gap-2 pt-1">
-                        <input type="text" id="act-search-keyword" placeholder="또는 새로운 방문 장소명 검색" class="flex-1 border border-emerald-200 rounded-lg px-3 py-1.5 text-xs bg-white">
-                        <button type="button" onclick="searchPlaceCoord('act')" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 cursor-pointer">위치 검색</button>
-                    </div>
-                    <div id="act-search-results" class="hidden space-y-1 pt-1 max-h-32 overflow-y-auto"></div>
-                </div>
-
-                <div id="map-actual"></div>
-
-                <form id="actual-form" class="space-y-3">
-                    <input type="hidden" id="act-edit-id">
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">방문 일차</label>
-                            <select id="act-day" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white font-semibold">
-                                <option value="1">1일차</option>
-                                <option value="2">2일차</option>
-                                <option value="3">3일차</option>
-                                <option value="4">4일차</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">실제 방문 시간</label>
-                            <input type="time" id="act-time" value="12:00" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-semibold">
-                        </div>
-                        <div class="col-span-2 sm:col-span-1">
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">결제자 / 행동 주체</label>
-                            <input type="text" id="act-traveler" value="총무(공통)" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">실제 방문 장소명</label>
-                            <input type="text" id="act-place" placeholder="예: 돌집식당" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">실제 지출 금액 (원)</label>
-                            <input type="number" id="act-expense" value="0" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">방문한 곳의 행동 및 지출 내역</label>
-                        <textarea id="act-action" rows="2" placeholder="예: 곤드레마늘정식 8인분 식사" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></textarea>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="text" id="act-lat" placeholder="위도 (선택)" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-slate-50">
-                        <input type="text" id="act-lng" placeholder="경도 (선택)" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-slate-50">
-                    </div>
-
-                    <button type="submit" id="act-submit-btn" class="w-full bg-emerald-600 active:bg-emerald-800 text-white py-3 rounded-xl text-sm font-bold cursor-pointer shadow-sm">
-                        실제 방문·가계부 저장하기
-                    </button>
-                </form>
-            </div>
-
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                <h3 class="font-bold text-slate-800 mb-3 text-sm">실제 방문 및 지출 기록 목록</h3>
-                <div id="actual-manage-list" class="space-y-2.5"></div>
-            </div>
-        </section>
-
-        <!-- 탭 4: 차량 및 인원 -->
-        <section id="tab-cars" class="space-y-4 hidden">
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-3">
-                <div class="flex justify-between items-center">
-                    <h3 id="car-form-title" class="font-bold text-slate-800 text-base">🚗 탑승 차량 및 운전자·동승자 관리</h3>
-                    <button type="button" onclick="resetCarForm()" id="car-cancel-btn" class="hidden text-xs bg-slate-200 text-slate-700 px-3 py-1 rounded-lg font-bold cursor-pointer">취소</button>
-                </div>
-                <form id="car-form" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    <input type="hidden" id="car-edit-id">
-                    <input type="text" id="car-name" placeholder="차량명 (예: 테슬라 차량)" required class="border border-slate-300 rounded-lg px-3 py-2 text-sm">
-                    <input type="text" id="car-driver" placeholder="운전자 (예: 박성희)" required class="border border-slate-300 rounded-lg px-3 py-2 text-sm">
-                    <input type="text" id="car-members" placeholder="동승자 (예: 오찬욱, 박경민, 이현진)" required class="border border-slate-300 rounded-lg px-3 py-2 text-sm">
-                    <button type="submit" id="car-submit-btn" class="sm:col-span-3 bg-blue-600 active:bg-blue-800 text-white py-2.5 rounded-xl text-sm font-bold cursor-pointer">
-                        차량 배정 저장
-                    </button>
-                </form>
-            </div>
-
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                <h3 class="font-bold text-slate-800 mb-3 text-sm">현재 배정된 차량 및 탑승자 명단</h3>
-                <div id="car-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- ========================================== -->
-    <!-- UI 제어, 정렬, 지도 스크립트                 -->
-    <!-- ========================================== -->
-    <script>
-        let currentTripId = null;
-        let mapTl, mapExp, mapAct;
-        let expMarker, actMarker;
-        let tlLayers = [];
-        let tripsData = [], expectedData = [], actualData = [], carsData = [];
-        let selectedDayFilter = 'all';
-
-        function addDiagLog(msg, isError = false) {
-            const box = document.getElementById('diagnostic-panel');
-            const log = document.getElementById('diagnostic-log');
-            if (!log) return;
-            if (isError && box) box.classList.remove('hidden');
-            const color = isError ? 'text-red-300 font-bold' : 'text-emerald-300';
-            const time = new Date().toLocaleTimeString();
-            log.innerHTML += `<div class="${color}">[${time}] ${msg}</div>`;
-            log.scrollTop = log.scrollHeight;
-        }
-
-        function toggleDiagnosticPanel() {
-            document.getElementById('diagnostic-panel').classList.toggle('hidden');
-        }
-
-        function normalizeTime(timeStr) {
-            if (!timeStr) return "99:99";
-            const match = String(timeStr).match(/(\d{1,2}):(\d{2})/);
-            if (!match) return "99:99";
-            return match[1].padStart(2, '0') + ':' + match[2];
-        }
-
-        function sortByDayAndTime(list) {
-            return [...list].sort((a, b) => {
-                const dayA = Number(a.day || 1);
-                const dayB = Number(b.day || 1);
-                if (dayA !== dayB) return dayA - dayB;
-                return normalizeTime(a.time).localeCompare(normalizeTime(b.time));
-            });
-        }
-
-        function goTripSelector() {
-            currentTripId = null;
-            document.getElementById('trip-selector-screen').classList.remove('hidden');
-            document.getElementById('main-app-screen').classList.add('hidden');
-            document.getElementById('btn-back').classList.add('hidden');
-            document.getElementById('header-trip-title').innerText = "여행 일정 목록";
-            document.getElementById('header-trip-dates').classList.add('hidden');
-        }
-
-        function selectTrip(tripId) {
-            const trip = tripsData.find(t => t.id === tripId);
-            if (!trip) return;
-            currentTripId = tripId;
-            document.getElementById('trip-selector-screen').classList.add('hidden');
-            document.getElementById('main-app-screen').classList.remove('hidden');
-            document.getElementById('btn-back').classList.remove('hidden');
-            document.getElementById('header-trip-title').innerText = trip.name || '여행 일정';
-            const dateEl = document.getElementById('header-trip-dates');
-            dateEl.innerText = `${trip.startDate || ''} ~ ${trip.endDate || ''}`;
-            dateEl.classList.remove('hidden');
-
-            switchTab('timeline');
-            if (window.subscribeTripData) window.subscribeTripData(tripId);
-        }
-
-        window.editTripInfo = function(tripId) {
-            const trip = tripsData.find(t => t.id === tripId);
-            if (!trip) return;
-            document.getElementById('trip-edit-id').value = trip.id;
-            document.getElementById('trip-name').value = trip.name || '';
-            document.getElementById('trip-start').value = trip.startDate || '';
-            document.getElementById('trip-end').value = trip.endDate || '';
-            document.getElementById('trip-form-title').innerHTML = `<i class="fa-solid fa-pen text-blue-600"></i> 여행 제목 및 날짜 수정`;
-            document.getElementById('trip-submit-btn').innerText = "수정 저장";
-            document.getElementById('trip-cancel-btn').classList.remove('hidden');
-            document.getElementById('trip-form').scrollIntoView({ behavior: 'smooth' });
-        };
-
-        window.resetTripForm = function() {
-            document.getElementById('trip-form').reset();
-            document.getElementById('trip-edit-id').value = '';
-            document.getElementById('trip-form-title').innerHTML = `<i class="fa-solid fa-circle-plus text-emerald-600"></i> 새로운 여행 직접 만들기`;
-            document.getElementById('trip-submit-btn').innerText = "새 여행 저장";
-            document.getElementById('trip-cancel-btn').classList.add('hidden');
-        };
-
-        function switchTab(tabId) {
-            ['timeline', 'expected', 'actual', 'cars'].forEach(id => {
-                document.getElementById(`tab-${id}`).classList.add('hidden');
-                document.getElementById(`btn-tab-${id}`).className = "flex-1 min-w-[80px] py-3 text-center font-semibold text-slate-500 cursor-pointer";
-            });
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-            document.getElementById(`btn-tab-${tabId}`).className = "flex-1 min-w-[80px] py-3 text-center font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 cursor-pointer";
-            
-            setTimeout(() => {
-                if (tabId === 'timeline' && mapTl) { mapTl.invalidateSize(); renderTimelineMap(); }
-                if (tabId === 'expected' && mapExp) mapExp.invalidateSize();
-                if (tabId === 'actual' && mapAct) mapAct.invalidateSize();
-            }, 200);
-        }
-
-        function setDayFilter(day) {
-            selectedDayFilter = day;
-            ['all', '1', '2', '3'].forEach(d => {
-                document.getElementById(`filter-day-${d}`).className = (d === day)
-                    ? "px-3 py-1.5 rounded-md bg-white text-blue-600 shadow-sm cursor-pointer"
-                    : "px-3 py-1.5 rounded-md text-slate-600 cursor-pointer";
-            });
-            renderAllViews();
-            renderTimelineMap();
-        }
-
-        window.searchPlaceCoord = async function(target) {
-            const inputId = target === 'exp' ? 'exp-search-keyword' : 'act-search-keyword';
-            const resultDiv = document.getElementById(target === 'exp' ? 'exp-search-results' : 'act-search-results');
-            const keyword = document.getElementById(inputId).value.trim();
-            if (!keyword) { alert('검색할 장소 이름을 입력해 주세요!'); return; }
-
-            resultDiv.classList.remove('hidden');
-            resultDiv.innerHTML = `<p class="text-xs text-blue-600 py-1">🔍 '${keyword}' 검색 중...</p>`;
-
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(keyword)}&countrycodes=kr&limit=5`);
-                const data = await res.json();
-                if (!data || data.length === 0) {
-                    resultDiv.innerHTML = `<p class="text-xs text-red-500 py-1">검색 결과가 없습니다. 아래 지도를 직접 터치해 위치를 찍어주세요.</p>`;
-                    return;
-                }
-                let html = '';
-                data.forEach((place) => {
-                    const shortName = place.display_name.split(',')[0];
-                    html += `
-                    <div onclick="applySearchedCoord('${target}', '${shortName.replace(/'/g, "")}', ${place.lat}, ${place.lon})" class="p-2 bg-white hover:bg-blue-50 border border-slate-200 rounded-lg cursor-pointer text-xs flex justify-between items-center">
-                        <span class="truncate pr-2"><b>${shortName}</b> <span class="text-slate-400 text-[11px]">(${place.display_name})</span></span>
-                        <span class="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold shrink-0">선택</span>
-                    </div>`;
-                });
-                resultDiv.innerHTML = html;
-            } catch (e) {
-                resultDiv.innerHTML = `<p class="text-xs text-red-500">검색 실패: 지도를 직접 터치해 주세요.</p>`;
-            }
-        };
-
-        window.applySearchedCoord = function(target, placeName, lat, lng) {
-            const fixedLat = Number(lat).toFixed(6);
-            const fixedLng = Number(lng).toFixed(6);
-            if (target === 'exp') {
-                if (!document.getElementById('exp-place-name').value) document.getElementById('exp-place-name').value = placeName;
-                document.getElementById('exp-lat').value = fixedLat;
-                document.getElementById('exp-lng').value = fixedLng;
-                document.getElementById('exp-search-results').classList.add('hidden');
-                if (mapExp) {
-                    mapExp.setView([fixedLat, fixedLng], 14);
-                    if (expMarker) mapExp.removeLayer(expMarker);
-                    expMarker = L.marker([fixedLat, fixedLng]).addTo(mapExp).bindPopup(placeName).openPopup();
-                }
-            } else {
-                if (!document.getElementById('act-place').value) document.getElementById('act-place').value = placeName;
-                document.getElementById('act-lat').value = fixedLat;
-                document.getElementById('act-lng').value = fixedLng;
-                document.getElementById('act-search-results').classList.add('hidden');
-                if (mapAct) {
-                    mapAct.setView([fixedLat, fixedLng], 14);
-                    if (actMarker) mapAct.removeLayer(actMarker);
-                    actMarker = L.marker([fixedLat, fixedLng]).addTo(mapAct).bindPopup(placeName).openPopup();
-                }
-            }
-        };
-
-        function renderAllViews() {
-            const sortedExp = sortByDayAndTime(expectedData);
-            const sortedAct = sortByDayAndTime(actualData);
-
-            const totalExp = sortedExp.reduce((s, x) => s + Number(x.budget || 0), 0);
-            const totalAct = sortedAct.reduce((s, x) => s + Number(x.expense || 0), 0);
-            const diff = totalExp - totalAct;
-            document.getElementById('summary-exp-total').innerText = totalExp.toLocaleString() + '원';
-            document.getElementById('summary-act-total').innerText = totalAct.toLocaleString() + '원';
-            document.getElementById('summary-diff-total').innerText = (diff >= 0 ? '+' : '') + diff.toLocaleString() + '원';
-
-            const filteredExp = sortedExp.filter(item => {
-                if (selectedDayFilter === 'all') return true;
-                if (selectedDayFilter === '3') return Number(item.day || 1) >= 3;
-                return String(item.day || 1) === selectedDayFilter;
-            });
-
-            const filteredAct = sortedAct.filter(item => {
-                if (selectedDayFilter === 'all') return true;
-                if (selectedDayFilter === '3') return Number(item.day || 1) >= 3;
-                return String(item.day || 1) === selectedDayFilter;
-            });
-
-            document.getElementById('exp-count-badge').innerText = `${filteredExp.length}건`;
-            document.getElementById('act-count-badge').innerText = `${filteredAct.length}건`;
-
-            const expGroups = {};
-            filteredExp.forEach(item => {
-                const d = item.day || 1;
-                if (!expGroups[d]) expGroups[d] = [];
-                expGroups[d].push(item);
-            });
-
-            let expTimelineHtml = '';
-            Object.keys(expGroups).sort((a,b) => Number(a)-Number(b)).forEach(day => {
-                expTimelineHtml += `
-                <div class="space-y-2">
-                    <div class="bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex justify-between items-center">
-                        <span>📅 ${day}일차 예상 일정</span>
-                        <span>${expGroups[day].length}곳</span>
-                    </div>
-                    <div class="relative border-l-2 border-blue-200 ml-3 space-y-3 py-1">`;
-                
-                expGroups[day].forEach(item => {
-                    const t = normalizeTime(item.time);
-                    const isPM = parseInt(t.split(':')[0], 10) >= 12;
-                    const dotColor = day == 1 ? (isPM ? 'bg-purple-600' : 'bg-blue-600') : (isPM ? 'bg-amber-500' : 'bg-emerald-600');
-                    expTimelineHtml += `
-                    <div class="relative pl-5">
-                        <span class="absolute -left-[7px] top-2 w-3 h-3 rounded-full ${dotColor} ring-2 ring-white"></span>
-                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200/80 space-y-1">
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs font-extrabold text-blue-700 bg-blue-100 px-2 py-0.5 rounded"><i class="fa-regular fa-clock mr-1"></i>${item.time || '시간미정'}</span>
-                                <span class="text-xs font-bold text-slate-700">${Number(item.budget || 0).toLocaleString()}원</span>
-                            </div>
-                            <div class="flex justify-between items-start gap-2 pt-0.5">
-                                <div>
-                                    <h4 class="font-bold text-slate-800 text-sm">${item.category ? `[${item.category}] ` : ''}${item.place_name}</h4>
-                                    ${item.memo ? `<p class="text-xs text-slate-500 mt-0.5">${item.memo}</p>` : ''}
-                                </div>
-                                <div class="flex gap-1 shrink-0">
-                                    <button type="button" onclick="quickCheckIn('${item.id}')" class="bg-emerald-600 text-white px-2 py-1 rounded text-[11px] font-bold cursor-pointer">방문완료</button>
-                                    <button type="button" onclick="editExp('${item.id}')" class="bg-white border border-slate-300 text-blue-600 px-2 py-1 rounded text-[11px] font-bold cursor-pointer">수정</button>
-                                    <button type="button" onclick="deleteSubItem('expected_places', '${item.id}')" class="bg-white border border-slate-300 text-red-500 px-2 py-1 rounded text-[11px] font-bold cursor-pointer">삭제</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
-                });
-                expTimelineHtml += `</div></div>`;
-            });
-            document.getElementById('expected-timeline-list').innerHTML = expTimelineHtml || '<p class="text-xs text-slate-400 py-4 text-center">등록된 예상 일정이 없습니다.</p>';
-            document.getElementById('expected-manage-list').innerHTML = expTimelineHtml || '<p class="text-xs text-slate-400 py-4 text-center">등록된 일정이 없습니다.</p>';
-
-            const actGroups = {};
-            filteredAct.forEach(item => {
-                const d = item.day || 1;
-                if (!actGroups[d]) actGroups[d] = [];
-                actGroups[d].push(item);
-            });
-
-            let actTimelineHtml = '';
-            Object.keys(actGroups).sort((a,b) => Number(a)-Number(b)).forEach(day => {
-                actTimelineHtml += `
-                <div class="space-y-2">
-                    <div class="bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex justify-between items-center">
-                        <span>🧾 ${day}일차 실제 기록</span>
-                        <span>${actGroups[day].length}건</span>
-                    </div>
-                    <div class="relative border-l-2 border-emerald-200 ml-3 space-y-3 py-1">`;
-                
-                actGroups[day].forEach(item => {
-                    actTimelineHtml += `
-                    <div class="relative pl-5">
-                        <span class="absolute -left-[7px] top-2 w-3 h-3 rounded-full bg-emerald-600 ring-2 ring-white"></span>
-                        <div class="bg-emerald-50/40 p-3 rounded-xl border border-emerald-200/80 space-y-1">
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded"><i class="fa-regular fa-clock mr-1"></i>${item.time || ''} · ${item.traveler || '공통'}</span>
-                                <span class="text-xs font-extrabold text-emerald-700">${Number(item.expense || 0).toLocaleString()}원</span>
-                            </div>
-                            <div class="flex justify-between items-start gap-2 pt-0.5">
-                                <div>
-                                    <h4 class="font-bold text-slate-800 text-sm">${item.place}</h4>
-                                    <p class="text-xs text-slate-600 mt-0.5">${item.action || ''}</p>
-                                </div>
-                                <div class="flex gap-1 shrink-0">
-                                    <button type="button" onclick="editAct('${item.id}')" class="bg-white border border-slate-300 text-blue-600 px-2 py-1 rounded text-[11px] font-bold cursor-pointer">수정</button>
-                                    <button type="button" onclick="deleteSubItem('actual_visits', '${item.id}')" class="bg-white border border-slate-300 text-red-500 px-2 py-1 rounded text-[11px] font-bold cursor-pointer">삭제</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
-                });
-                actTimelineHtml += `</div></div>`;
-            });
-            document.getElementById('actual-timeline-list').innerHTML = actTimelineHtml || '<p class="text-xs text-slate-400 py-4 text-center">예상 일정의 [방문완료] 버튼을 누르면 쉽게 입력됩니다!</p>';
-            document.getElementById('actual-manage-list').innerHTML = actTimelineHtml || '<p class="text-xs text-slate-400 py-4 text-center">기록된 내역이 없습니다.</p>';
-
-            let presetHtml = '<option value="">-- 예상 방문지 목록에서 선택하세요 --</option>';
-            sortedExp.forEach(item => {
-                presetHtml += `<option value="${item.id}">[${item.day || 1}일차 ${item.time || ''}] ${item.place_name} (예산: ${Number(item.budget || 0).toLocaleString()}원)</option>`;
-            });
-            document.getElementById('act-preset-select').innerHTML = presetHtml;
-        }
-
-        window.quickCheckIn = function(expId) {
-            const item = expectedData.find(x => x.id === expId);
-            if (!item) return;
-            resetActForm();
-            switchTab('actual');
-            document.getElementById('act-day').value = item.day || 1;
-            const normT = normalizeTime(item.time);
-            document.getElementById('act-time').value = normT !== '99:99' ? normT : '12:00';
-            document.getElementById('act-place').value = item.place_name || '';
-            document.getElementById('act-expense').value = item.budget || 0;
-            document.getElementById('act-action').value = item.memo || `${item.place_name} 방문 완료`;
-            document.getElementById('act-lat').value = item.lat || '';
-            document.getElementById('act-lng').value = item.lng || '';
-            if (item.lat && item.lng && mapAct) {
-                mapAct.setView([item.lat, item.lng], 13);
-                if (actMarker) mapAct.removeLayer(actMarker);
-                actMarker = L.marker([item.lat, item.lng]).addTo(mapAct).bindPopup(item.place_name).openPopup();
-            }
-        };
-
-        window.fillFromExpected = function() {
-            const expId = document.getElementById('act-preset-select').value;
-            if (expId) quickCheckIn(expId);
-        };
-
-        window.editExp = function(id) {
-            const item = expectedData.find(x => x.id === id);
-            if (!item) return;
-            switchTab('expected');
-            document.getElementById('exp-edit-id').value = item.id;
-            document.getElementById('exp-day').value = item.day || 1;
-            const normT = normalizeTime(item.time);
-            document.getElementById('exp-time').value = normT !== '99:99' ? normT : '10:00';
-            document.getElementById('exp-category').value = item.category || '관광';
-            document.getElementById('exp-place-name').value = item.place_name || '';
-            document.getElementById('exp-budget').value = item.budget || 0;
-            document.getElementById('exp-memo').value = item.memo || '';
-            document.getElementById('exp-lat').value = item.lat || '';
-            document.getElementById('exp-lng').value = item.lng || '';
-            document.getElementById('exp-form-title').innerText = `✏️ [${item.place_name}] 일정 수정하기`;
-            document.getElementById('exp-submit-btn').innerText = "일정 수정 완료";
-            document.getElementById('exp-cancel-btn').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
-
-        window.resetExpForm = function() {
-            document.getElementById('expected-form').reset();
-            document.getElementById('exp-edit-id').value = '';
-            document.getElementById('exp-form-title').innerText = "➕ 새로운 일정 추가하기";
-            document.getElementById('exp-submit-btn').innerText = "일정 저장하기";
-            document.getElementById('exp-cancel-btn').classList.add('hidden');
-        };
-
-        window.editAct = function(id) {
-            const item = actualData.find(x => x.id === id);
-            if (!item) return;
-            switchTab('actual');
-            document.getElementById('act-edit-id').value = item.id;
-            document.getElementById('act-day').value = item.day || 1;
-            const normT = normalizeTime(item.time);
-            document.getElementById('act-time').value = normT !== '99:99' ? normT : '12:00';
-            document.getElementById('act-traveler').value = item.traveler || '총무(공통)';
-            document.getElementById('act-place').value = item.place || '';
-            document.getElementById('act-expense').value = item.expense || 0;
-            document.getElementById('act-action').value = item.action || '';
-            document.getElementById('act-lat').value = item.lat || '';
-            document.getElementById('act-lng').value = item.lng || '';
-            document.getElementById('act-form-title').innerText = `✏️ [${item.place}] 방문·지출 수정하기`;
-            document.getElementById('act-submit-btn').innerText = "수정 완료";
-            document.getElementById('act-cancel-btn').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
-
-        window.resetActForm = function() {
-            document.getElementById('actual-form').reset();
-            document.getElementById('act-edit-id').value = '';
-            document.getElementById('act-form-title').innerText = "🧾 실제 방문 및 가계부 지출 기록";
-            document.getElementById('act-submit-btn').innerText = "실제 방문·가계부 저장하기";
-            document.getElementById('act-cancel-btn').classList.add('hidden');
-        };
-
-        window.editCar = function(id) {
-            const item = carsData.find(x => x.id === id);
-            if (!item) return;
-            document.getElementById('car-edit-id').value = item.id;
-            document.getElementById('car-name').value = item.carName || '';
-            document.getElementById('car-driver').value = item.driver || '';
-            document.getElementById('car-members').value = item.members || '';
-            document.getElementById('car-form-title').innerText = "✏️ 차량 배정 수정";
-            document.getElementById('car-submit-btn').innerText = "차량 수정 완료";
-            document.getElementById('car-cancel-btn').classList.remove('hidden');
-        };
-
-        window.resetCarForm = function() {
-            document.getElementById('car-form').reset();
-            document.getElementById('car-edit-id').value = '';
-            document.getElementById('car-form-title').innerText = "🚗 탑승 차량 및 운전자·동승자 관리";
-            document.getElementById('car-submit-btn').innerText = "차량 배정 저장";
-            document.getElementById('car-cancel-btn').classList.add('hidden');
-        };
-
-        function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * (Math.PI/180);
-            const dLon = (lon2 - lon1) * (Math.PI/180);
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * (Math.PI/180)) * Math.cos(lat2 * (Math.PI/180)) * Math.sin(dLon/2) * Math.sin(dLon/2);
-            return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-        }
-
-        function getSegmentStyle(day, timeStr) {
-            const norm = normalizeTime(timeStr);
-            const hour = norm !== '99:99' ? parseInt(norm.split(':')[0], 10) : 12;
-            const isPM = hour >= 12;
-            if (Number(day || 1) === 1) {
-                return isPM ? { color: '#9333ea', weight: 5, opacity: 0.85 } : { color: '#2563eb', weight: 5, opacity: 0.85 };
-            } else {
-                return isPM ? { color: '#d97706', weight: 5, opacity: 0.85 } : { color: '#059669', weight: 5, opacity: 0.85 };
-            }
-        }
-
-        function renderTimelineMap() {
-            if (!mapTl) return;
-            tlLayers.forEach(l => mapTl.removeLayer(l));
-            tlLayers = [];
-            const bounds = [];
-
-            const sortedExp = sortByDayAndTime(expectedData).filter(item => {
-                if (selectedDayFilter === 'all') return true;
-                if (selectedDayFilter === '3') return Number(item.day || 1) >= 3;
-                return String(item.day || 1) === selectedDayFilter;
-            });
-
-            sortedExp.forEach((item) => {
-                if (item.lat && item.lng) {
-                    const style = getSegmentStyle(item.day, item.time);
-                    const m = L.circleMarker([item.lat, item.lng], {
-                        radius: 8, fillColor: style.color, color: "#fff", weight: 2, fillOpacity: 0.95
-                    }).addTo(mapTl).bindPopup(`<b>[${item.day || 1}일차 · ${item.time || ''}] ${item.place_name}</b><br>예산: ${Number(item.budget || 0).toLocaleString()}원`);
-                    tlLayers.push(m);
-                    bounds.push([item.lat, item.lng]);
-                }
-            });
-
-            for (let i = 0; i < sortedExp.length - 1; i++) {
-                const p1 = sortedExp[i];
-                const p2 = sortedExp[i + 1];
-                if (p1.lat && p1.lng && p2.lat && p2.lng) {
-                    const distKm = getDistanceFromLatLonInKm(p1.lat, p1.lng, p2.lat, p2.lng);
-                    const roadDistKm = distKm * 1.3;
-                    const estMinutes = Math.max(5, Math.round((roadDistKm / 55) * 60));
-                    const style = getSegmentStyle(p1.day, p1.time);
-
-                    const polyline = L.polyline([[p1.lat, p1.lng], [p2.lat, p2.lng]], style).addTo(mapTl);
-                    polyline.bindPopup(`🚗 <b>구간 이동 정보 (${p1.day || 1}일차)</b><br><b>${p1.place_name}</b> ➔ <b>${p2.place_name}</b><br>📏 예상 이동거리: 약 ${roadDistKm.toFixed(1)} km (직선 ${distKm.toFixed(1)}km)<br>⏱️ 예상 소요시간: 약 ${estMinutes}분`);
-                    tlLayers.push(polyline);
-                }
-            }
-
-            if (bounds.length > 0) mapTl.fitBounds(bounds, { padding: [30, 30] });
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            const center = [36.9997, 128.3435];
-            mapTl = L.map('map-timeline').setView(center, 10);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapTl);
-
-            mapExp = L.map('map-expected').setView(center, 10);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapExp);
-            mapExp.on('click', (e) => {
-                document.getElementById('exp-lat').value = e.latlng.lat.toFixed(6);
-                document.getElementById('exp-lng').value = e.latlng.lng.toFixed(6);
-                if (expMarker) mapExp.removeLayer(expMarker);
-                expMarker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(mapExp).bindPopup('선택한 일정 위치').openPopup();
-            });
-
-            mapAct = L.map('map-actual').setView(center, 10);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapAct);
-            mapAct.on('click', (e) => {
-                document.getElementById('act-lat').value = e.latlng.lat.toFixed(6);
-                document.getElementById('act-lng').value = e.latlng.lng.toFixed(6);
-                if (actMarker) mapAct.removeLayer(actMarker);
-                actMarker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(mapAct).bindPopup('실제 방문 위치').openPopup();
-            });
-        });
-    </script>
-
-    <!-- ========================================== -->
-    <!-- Firebase 연결 (모바일 멈춤 방지 & 진단 탑재) -->
-    <!-- ========================================== -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { initializeFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBVXAi7WTQJ0sm7FXOjWwAMzmnvw1wSt0M",
-            authDomain: "group-trip-app-754ca.firebaseapp.com",
-            projectId: "group-trip-app-754ca",
-            storageBucket: "group-trip-app-754ca.firebasestorage.app",
-            messagingSenderId: "686842634804",
-            appId: "1:686842634804:web:52b428c33b50167c312061",
-            measurementId: "G-QP2ZYPK8MG"
-        };
-
-        let unsubscribeExp = null, unsubscribeAct = null, unsubscribeCars = null;
-        const statusBadge = document.getElementById('sync-status');
-        let isConnected = false;
-
-        // 7초 타임아웃 감지기: 7초 동안 연결이 안 되면 정확한 이유를 화면에 출력
-        const connectionWatchdog = setTimeout(() => {
-            if (!isConnected) {
-                statusBadge.innerText = "연결 지연/실패";
-                statusBadge.className = "text-xs bg-red-600 px-2.5 py-1 rounded-full text-white font-bold shrink-0";
-                addDiagLog("⚠️ [시간 초과 (7초 경과)] Firebase 서버로부터 응답이 없습니다!", true);
-                addDiagLog("👉 원인 1: Firebase 콘솔 > Firestore Database > [규칙(Rules)] 탭에서 allow read, write: if true; 수정 후 [게시(Publish)] 버튼을 누르지 않았거나 만료되었을 수 있습니다.", true);
-                addDiagLog("👉 원인 2: 모바일 인앱 브라우저(카카오톡/네이버 앱 등)의 광고·추적 차단 기능 때문일 수 있습니다. 우측 상단 [🔄 연결 강제 재시도] 버튼을 눌러보세요.", true);
-            }
-        }, 7000);
-
-        try {
-            addDiagLog("⏳ [2단계] Firebase 프로젝트(group-trip-app-754ca) 초기화 중...");
-            const app = initializeApp(firebaseConfig);
-
-            // 핵심 해결책: 모바일 브라우저에서 WebChannel이 멈추는 현상을 막기 위해 experimentalForceLongPolling 활성화!
-            const db = initializeFirestore(app, {
-                experimentalForceLongPolling: true
-            });
-            window.db = db;
-            addDiagLog("✅ [3단계] 모바일 호환 통신 모드(Long-Polling) 설정 완료. 데이터 요청 중...");
-
-            // 수동 연결 테스트 함수
-            window.runManualDBTest = async function() {
-                addDiagLog("🔄 수동 DB 읽기/쓰기 권한 테스트를 시작합니다...");
-                try {
-                    const snap = await getDocs(collection(db, "trips"));
-                    addDiagLog(`✅ [읽기 성공!] 현재 저장된 여행 수: ${snap.size}개`);
-                    statusBadge.innerText = "연결됨";
-                    statusBadge.className = "text-xs bg-emerald-500 px-2.5 py-1 rounded-full text-white font-semibold shrink-0";
-                } catch (err) {
-                    addDiagLog(`❌ [DB 연결 실패 원인 발견!] 코드: ${err.code} / 메시지: ${err.message}`, true);
-                    if (err.code === 'permission-denied') {
-                        addDiagLog("💡 해결책: Firebase 콘솔 > Firestore Database > [규칙] 탭에서 allow read, write: if true; 로 변경 후 반드시 [게시]를 눌러주세요!", true);
-                    }
-                }
-            };
-
-            // 꼬인 DB 초기화 및 단양 일정 새로 세팅 함수
-            window.resetAndMigrateDB = async function() {
-                if (!confirm('기존에 꼬이거나 중복된 여행 목록을 모두 깨끗이 지우고, [단양·영월·청풍호 1박 2일] 표준 데이터로 DB를 새로 세팅하시겠습니까?')) return;
-                addDiagLog("🧹 기존 DB 정리 및 재구성을 시작합니다...");
-                try {
-                    const snap = await getDocs(collection(db, "trips"));
-                    for (const d of snap.docs) {
-                        await deleteDoc(doc(db, "trips", d.id));
-                    }
-                    addDiagLog("✅ 기존 중복 여행 목록 삭제 완료. 단양 표준 일정을 생성합니다...");
-                    await createDanyangStandardTrip();
-                    addDiagLog("🎉 DB 재설정 완료!");
-                } catch (err) {
-                    addDiagLog(`❌ [DB 초기화 실패] 코드: ${err.code} / 이유: ${err.message}`, true);
-                    alert('DB 작업 실패: ' + err.message);
-                }
-            };
-
-            // 단양 표준 일정 생성 함수
-            async function createDanyangStandardTrip() {
-                const tripRef = await addDoc(collection(db, "trips"), {
-                    name: "단양·영월·청풍호 1박 2일",
-                    startDate: "2026-10-23",
-                    endDate: "2026-10-24"
-                });
-                const tripId = tripRef.id;
-
-                const initialCars = [
-                    { carName: "테슬라 차량", driver: "박성희", members: "오찬욱, 박경민, 이현진" },
-                    { carName: "펠리세이드", driver: "이승호", members: "김봉준, 윤병규, 신의수" }
-                ];
-
-                const initialPlaces = [
-                    { day: 1, time: "08:30", category: "출발/귀가", place_name: "용인 죽전 출발", budget: 150000, lat: 37.3248, lng: 127.1077, memo: "차량 2대 교통비 정액 (팰리세이드 10만 + 전기차 5만)" },
-                    { day: 1, time: "09:55", category: "휴게소", place_name: "천등산휴게소 (제천방향)", budget: 0, lat: 37.0785, lng: 127.9123, memo: "간식 및 전기차 충전 가능" },
-                    { day: 1, time: "10:55", category: "관광", place_name: "도담삼봉", budget: 4500, lat: 36.9997, lng: 128.3435, memo: "단양 대표 인증샷 / 주차비(소형 3,000 + 전기차 1,500)" },
-                    { day: 1, time: "11:45", category: "식당", place_name: "단양구경시장·돌집식당", budget: 201000, lat: 36.9822, lng: 128.3688, memo: "곤드레마늘정식 8인(16만) + 시장 마늘만두·닭강정 포장(4.1만)" },
-                    { day: 1, time: "13:05", category: "관광", place_name: "만천하스카이워크", budget: 24000, lat: 36.9708, lng: 128.3389, memo: "전망대 입장료 3,000원×8명 (무료 셔틀 이동)" },
-                    { day: 1, time: "15:25", category: "카페", place_name: "카페 산", budget: 56000, lat: 37.0094, lng: 128.3995, memo: "해발 600m 패러글라이딩 전망 카페 (음료 8잔)" },
-                    { day: 1, time: "16:40", category: "장보기", place_name: "하나로마트 가곡점", budget: 185800, lat: 37.0315, lng: 128.3965, memo: "바비큐용 삼겹살 3.2kg, 채소, 음료 장보기" },
-                    { day: 1, time: "17:55", category: "숙소", place_name: "더릴지즈 in 캠블리", budget: 256468, lat: 37.1835, lng: 128.4618, memo: "201호 결제완료 / 18:30~ 바비큐 및 자쿠지" },
-                    { day: 2, time: "11:10", category: "관광", place_name: "옥순봉 출렁다리", budget: 24000, lat: 36.9427, lng: 128.2036, memo: "10:00 숙소 출발 / 입장료 3,000원×8명 (지역화폐 환급)" },
-                    { day: 2, time: "12:40", category: "식당", place_name: "느티나무횟집", budget: 200000, lat: 37.0016, lng: 128.1742, memo: "청풍호 송어비빔회 8인 예약 필수 (043-647-0089)" },
-                    { day: 2, time: "13:50", category: "관광", place_name: "청풍호반케이블카", budget: 144000, lat: 37.0039, lng: 128.1755, memo: "물태리역~비봉산 왕복 대인 18,000원×8명" },
-                    { day: 2, time: "15:50", category: "카페", place_name: "콘크리트월", budget: 56000, lat: 37.0583, lng: 128.1585, memo: "서리태크림라떼 등 음료 8잔 / 이후 19:00경 죽전 귀가" }
-                ];
-
-                for (const c of initialCars) await addDoc(collection(db, "trips", tripId, "cars"), c);
-                for (const p of initialPlaces) await addDoc(collection(db, "trips", tripId, "expected_places"), p);
-                return tripId;
-            }
-
-            // 여행 목록 실시간 구독
-            onSnapshot(query(collection(db, "trips")), (snapshot) => {
-                isConnected = true;
-                clearTimeout(connectionWatchdog);
-                statusBadge.innerText = "연결됨";
-                statusBadge.className = "text-xs bg-emerald-500 px-2.5 py-1 rounded-full text-white font-semibold shrink-0";
-                addDiagLog(`🎉 [DB 연결 성공!] 여행 목록 ${snapshot.size}개를 불러왔습니다.`);
-                // 정상 연결 시 1.5초 후 진단창 자동 숨김 (원할 때 상단 'DB진단' 버튼으로 다시 열기 가능)
-                setTimeout(() => {
-                    document.getElementById('diagnostic-panel').classList.add('hidden');
-                }, 1500);
-
-                tripsData = [];
-                let cardsHtml = '';
-                snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    tripsData.push({ id: docSnap.id, ...data });
-                });
-
-                tripsData.sort((a, b) => (a.startDate || '').localeCompare(b.startDate || ''));
-
-                tripsData.forEach((trip) => {
-                    cardsHtml += `
-                    <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-3 shadow-sm">
-                        <div onclick="selectTrip('${trip.id}')" class="cursor-pointer flex-1">
-                            <h3 class="font-bold text-slate-800 text-base hover:text-blue-600 transition">${trip.name || '제목 없음'}</h3>
-                            <p class="text-xs text-slate-500 mt-0.5"><i class="fa-regular fa-calendar mr-1"></i>${trip.startDate || '날짜미정'} ~ ${trip.endDate || '날짜미정'}</p>
-                        </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <button type="button" onclick="selectTrip('${trip.id}')" class="flex-1 sm:flex-none bg-blue-600 active:bg-blue-800 text-white px-4 py-2 rounded-lg text-xs font-bold cursor-pointer">입장하기</button>
-                            <button type="button" onclick="editTripInfo('${trip.id}')" class="bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold cursor-pointer">수정</button>
-                            <button type="button" onclick="deleteTrip('${trip.id}')" class="bg-white border border-red-200 text-red-600 px-3 py-2 rounded-lg text-xs font-bold cursor-pointer">삭제</button>
-                        </div>
-                    </div>`;
-                });
-                document.getElementById('trip-cards-container').innerHTML = cardsHtml || '<p class="text-xs text-slate-400 py-4 text-center">등록된 여행이 없습니다. 상단 [단양·청풍호 기본일정 자동생성] 버튼을 눌러보세요!</p>';
-            }, (err) => {
-                clearTimeout(connectionWatchdog);
-                statusBadge.innerText = "DB 오류";
-                statusBadge.className = "text-xs bg-red-600 px-2.5 py-1 rounded-full text-white font-bold shrink-0";
-                addDiagLog(`❌ [Firestore 실시간 수신 에러] 코드: ${err.code} / 내용: ${err.message}`, true);
-            });
-
-            document.getElementById('trip-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                try {
-                    const editId = document.getElementById('trip-edit-id').value;
-                    const payload = {
-                        name: document.getElementById('trip-name').value.trim(),
-                        startDate: document.getElementById('trip-start').value,
-                        endDate: document.getElementById('trip-end').value
-                    };
-                    if (editId) await updateDoc(doc(db, "trips", editId), payload);
-                    else await addDoc(collection(db, "trips"), payload);
-                    resetTripForm();
-                } catch (err) {
-                    addDiagLog(`❌ [여행 저장 실패] ${err.code}: ${err.message}`, true);
-                    alert('저장 실패: ' + err.message);
-                }
-            });
-
-            window.deleteTrip = async function(tripId) {
-                const trip = tripsData.find(t => t.id === tripId);
-                if (confirm(`[${trip ? trip.name : '이 여행'}] 일정을 삭제하시겠습니까?`)) {
-                    try {
-                        await deleteDoc(doc(db, "trips", tripId));
-                    } catch (err) {
-                        addDiagLog(`❌ [여행 삭제 실패] ${err.message}`, true);
-                    }
-                }
-            };
-
-            document.getElementById('btn-create-danyang').onclick = async function() {
-                if (!confirm('단양·영월·청풍호 1박 2일(12개 시간순 일정 및 차량 배정)을 생성하시겠습니까?')) return;
-                try {
-                    const tripId = await createDanyangStandardTrip();
-                    selectTrip(tripId);
-                } catch (e) {
-                    addDiagLog(`❌ [단양 일정 생성 실패] ${e.message}`, true);
-                    alert('자동 생성 오류: ' + e.message);
-                }
-            };
-
-            window.subscribeTripData = function(tripId) {
-                if (unsubscribeExp) unsubscribeExp();
-                if (unsubscribeAct) unsubscribeAct();
-                if (unsubscribeCars) unsubscribeCars();
-
-                unsubscribeExp = onSnapshot(query(collection(db, "trips", tripId, "expected_places")), (snapshot) => {
-                    expectedData = [];
-                    snapshot.forEach((docSnap) => expectedData.push({ id: docSnap.id, ...docSnap.data() }));
-                    renderAllViews();
-                    renderTimelineMap();
-                }, (err) => addDiagLog(`❌ [예상일정 로드 실패] ${err.message}`, true));
-
-                unsubscribeAct = onSnapshot(query(collection(db, "trips", tripId, "actual_visits")), (snapshot) => {
-                    actualData = [];
-                    snapshot.forEach((docSnap) => actualData.push({ id: docSnap.id, ...docSnap.data() }));
-                    renderAllViews();
-                }, (err) => addDiagLog(`❌ [가계부 로드 실패] ${err.message}`, true));
-
-                unsubscribeCars = onSnapshot(query(collection(db, "trips", tripId, "cars")), (snapshot) => {
-                    carsData = [];
-                    let html = '';
-                    snapshot.forEach((docSnap) => {
-                        const data = docSnap.data();
-                        carsData.push({ id: docSnap.id, ...data });
-                        html += `
-                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-start gap-2">
-                            <div class="space-y-1 text-xs">
-                                <h4 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-car-side text-blue-600 mr-1"></i>${data.carName}</h4>
-                                <p class="text-slate-600"><b class="text-blue-700">운전자:</b> ${data.driver}</p>
-                                <p class="text-slate-600"><b>동승자:</b> ${data.members}</p>
-                            </div>
-                            <div class="flex gap-1 shrink-0">
-                                <button type="button" onclick="editCar('${docSnap.id}')" class="bg-white border border-slate-300 text-blue-600 px-2.5 py-1 rounded text-xs font-bold cursor-pointer">수정</button>
-                                <button type="button" onclick="deleteSubItem('cars', '${docSnap.id}')" class="bg-white border border-slate-300 text-red-500 px-2.5 py-1 rounded text-xs font-bold cursor-pointer">삭제</button>
-                            </div>
-                        </div>`;
-                    });
-                    document.getElementById('car-list').innerHTML = html || '<p class="text-xs text-slate-400 col-span-2 py-3 text-center">등록된 차량 배정 정보가 없습니다.</p>';
-                }, (err) => addDiagLog(`❌ [차량정보 로드 실패] ${err.message}`, true));
-            };
-
-            document.getElementById('expected-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                if (!currentTripId) return;
-                try {
-                    const editId = document.getElementById('exp-edit-id').value;
-                    const payload = {
-                        day: Number(document.getElementById('exp-day').value),
-                        time: document.getElementById('exp-time').value,
-                        category: document.getElementById('exp-category').value,
-                        place_name: document.getElementById('exp-place-name').value.trim(),
-                        budget: Number(document.getElementById('exp-budget').value || 0),
-                        memo: document.getElementById('exp-memo').value.trim(),
-                        lat: Number(document.getElementById('exp-lat').value),
-                        lng: Number(document.getElementById('exp-lng').value)
-                    };
-                    if (editId) await updateDoc(doc(db, "trips", currentTripId, "expected_places", editId), payload);
-                    else await addDoc(collection(db, "trips", currentTripId, "expected_places"), payload);
-                    resetExpForm();
-                    switchTab('timeline');
-                } catch (err) {
-                    addDiagLog(`❌ [일정 저장 실패] ${err.message}`, true);
-                }
-            });
-
-            document.getElementById('actual-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                if (!currentTripId) return;
-                try {
-                    const editId = document.getElementById('act-edit-id').value;
-                    const payload = {
-                        day: Number(document.getElementById('act-day').value),
-                        time: document.getElementById('act-time').value,
-                        traveler: document.getElementById('act-traveler').value.trim(),
-                        place: document.getElementById('act-place').value.trim(),
-                        expense: Number(document.getElementById('act-expense').value || 0),
-                        action: document.getElementById('act-action').value.trim(),
-                        lat: document.getElementById('act-lat').value ? Number(document.getElementById('act-lat').value) : null,
-                        lng: document.getElementById('act-lng').value ? Number(document.getElementById('act-lng').value) : null
-                    };
-                    if (editId) await updateDoc(doc(db, "trips", currentTripId, "actual_visits", editId), payload);
-                    else await addDoc(collection(db, "trips", currentTripId, "actual_visits"), payload);
-                    resetActForm();
-                    switchTab('timeline');
-                } catch (err) {
-                    addDiagLog(`❌ [가계부 저장 실패] ${err.message}`, true);
-                }
-            });
-
-            document.getElementById('car-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                if (!currentTripId) return;
-                try {
-                    const editId = document.getElementById('car-edit-id').value;
-                    const payload = {
-                        carName: document.getElementById('car-name').value.trim(),
-                        driver: document.getElementById('car-driver').value.trim(),
-                        members: document.getElementById('car-members').value.trim()
-                    };
-                    if (editId) await updateDoc(doc(db, "trips", currentTripId, "cars", editId), payload);
-                    else await addDoc(collection(db, "trips", currentTripId, "cars"), payload);
-                    resetCarForm();
-                } catch (err) {
-                    addDiagLog(`❌ [차량 저장 실패] ${err.message}`, true);
-                }
-            });
-
-            window.deleteSubItem = async function(subCol, id) {
-                if (confirm('이 항목을 정말 삭제하시겠습니까?') && currentTripId) {
-                    await deleteDoc(doc(db, "trips", currentTripId, subCol, id));
-                }
-            };
-
-        } catch (e) {
-            addDiagLog(`❌ [치명적 초기화 오류] ${e.message}`, true);
-        }
-    </script>
-</body>
-</html>
+                        <input type="text" id="exp-lat" placeholder
