@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>단체 여행 관리 프로그램</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet CSS & JS (지도용) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK & 본인 설정 적용 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // 🔥 입력해주신 Firebase 설정 정보 적용 완료
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVXAi7WTQJ0sm7FXOjWwAMzmnvw1wSt0M",
+            authDomain: "group-trip-app-754ca.firebaseapp.com",
+            projectId: "group-trip-app-754ca",
+            storageBucket: "group-trip-app-754ca.firebasestorage.app",
+            messagingSenderId: "686842634804",
+            appId: "1:686842634804:web:52b428c33b50167c312061",
+            measurementId: "G-QP2ZYPK8MG"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.FB = { collection, addDoc, getDocs, deleteDoc, updateDoc, doc, onSnapshot, query };
+        window.dispatchEvent(new Event('firebase-ready'));
+    </script>
+    
+    <style>
+        #map { height: 350px; border-radius: 0.5rem; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- 헤더 -->
+    <header class="bg-blue-600 text-white shadow-md">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-plane-departure"></i> 단체 여행 관리 프로그램</h1>
+            <span id="sync-status" class="text-xs bg-blue-500 px-2.5 py-1 rounded-full text-blue-100">동기화 대기중...</span>
+        </div>
+    </header>
+
+    <!-- 메인 컨테이너 -->
+    <main class="max-w-4xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
+
+        <!-- 탭 메뉴 -->
+        <div class="flex border-b border-slate-200 bg-white rounded-t-lg shadow-sm overflow-hidden text-xs md:text-sm">
+            <button onclick="switchTab('travelers')" id="btn-tab-travelers" class="flex-1 py-3 text-center font-semibold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 transition"><i class="fa-solid fa-users mr-1"></i> 참가자·차량</button>
+            <button onclick="switchTab('expected')" id="btn-tab-expected" class="flex-1 py-3 text-center font-semibold text-slate-500 hover:text-blue-600 transition"><i class="fa-solid fa-map-location-dot mr-1"></i> 예상 일정</button>
+            <button onclick="switchTab('actual')" id="btn-tab-actual" class="flex-1 py-3 text-center font-semibold text-slate-500 hover:text-blue-600 transition"><i class="fa-solid fa-receipt mr-1"></i> 가계부</button>
+            <button onclick="switchTab('dashboard')" id="btn-tab-dashboard" class="flex-1 py-3 text-center font-semibold text-slate-500 hover:text-blue-600 transition"><i class="fa-solid fa-chart-pie mr-1"></i> 대시보드</button>
+        </div>
+
+        <!-- 1. 여행자 및 차량 배정 섹션 -->
+        <section id="tab-travelers" class="space-y-4">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <h2 class="text-lg font-bold mb-4 text-slate-700">차량별 탑승 인원 관리</h2>
+                <form id="car-form" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                    <input type="text" id="car-name" placeholder="차량명 (예: 테슬라 차량)" required class="border border-slate-300 rounded-lg px-4 py-2 text-sm">
+                    <input type="text" id="car-driver" placeholder="운전자 이름 (예: 박성희)" required class="border border-slate-300 rounded-lg px-4 py-2 text-sm">
+                    <input type="text" id="car-members" placeholder="탑승자 쉼표로 구분" required class="border border-slate-300 rounded-lg px-4 py-2 text-sm">
+                    <button type="submit" class="md:col-span-3 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition text-sm">차량 및 탑승조 추가/등록</button>
+                </form>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <h3 class="font-semibold text-slate-700 mb-3">현재 차량 배정 현황</h3>
+                <div id="car-list" class="space-y-3"></div>
+            </div>
+        </section>
+
+        <!-- 2. 예상 일정 및 장소 섹션 -->
+        <section id="tab-expected" class="space-y-4 hidden">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 space-y-4">
+                <h2 class="text-lg font-bold text-slate-700">예상 방문지 및 좌표 등록</h2>
+                <p class="text-xs text-slate-500">지도를 클릭하면 위도/경도가 자동 입력됩니다.</p>
+                <div id="map"></div>
+                <form id="expected-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <input type="text" id="exp-place-name" placeholder="장소명" required class="border border-slate-300 rounded-lg px-4 py-2 text-sm">
+                    <input type="number" id="exp-budget" placeholder="예상 지출 금액 (원)" required class="border border-slate-300 rounded-lg px-4 py-2 text-sm">
+                    <input type="text" id="exp-lat" placeholder="위도" readonly class="bg-slate-100 border border-slate-300 rounded-lg px-4 py-2 text-sm">
+                    <input type="text" id="exp-lng" placeholder="경도" readonly class="bg-slate-100 border border-slate-300 rounded-lg px-4 py-2 text-sm">
+                    <button type="submit" class="md:col-span-2 bg-blue-600 text-white py-2.5 rounded-lg font-medium hover:bg-blue-700 transition text-sm">예상 방문지 저장</button>
+                </form>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <h3 class="font-semibold text-slate-700 mb-3">등록된 예상 방문지 목록</h3>
+                <div id="expected-list" class="space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- 3. 가계부 및 실제 방문 기록 섹션 -->
+        <section id="tab-actual" class="space-y-4 hidden">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <h2 class="text-lg font-bold mb-4 text-slate-700">실제 방문 및 지출 가계부 입력</h2>
+                <form id="actual-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" id="act-traveler" placeholder="지출/방문자 이름" required class="border border-slate-300 rounded-lg px-4 py-2 text-sm">
+                    <input type="text" id="act-place" placeholder="실제 방문 장소" required class="border border-slate-300 rounded-lg px-4 py-2 text-sm">
+                    <input type="datetime-local" id="act-time" required class="border border-slate-300 rounded-lg px-4 py-2 text-sm">
+                    <input type="number" id="act-expense" placeholder="실제 지출 금액 (원)" required class="border border-slate-300 rounded-lg px-4 py-2 text-sm">
+                    <textarea id="act-action" placeholder="행동 내용 (예: 점심 식사 및 카페 휴식)" rows="2" class="md:col-span-2 border border-slate-300 rounded-lg px-4 py-2 text-sm"></textarea>
+                    <button type="submit" class="md:col-span-2 bg-emerald-600 text-white py-2.5 rounded-lg font-medium hover:bg-emerald-700 transition text-sm">실제 기록 저장</button>
+                </form>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <h3 class="font-semibold text-slate-700 mb-3">가계부 및 방문 타임라인</h3>
+                <div id="actual-list" class="space-y-3"></div>
+            </div>
+        </section>
+
+        <!-- 4. 종합 대시보드 섹션 -->
+        <section id="tab-dashboard" class="space-y-4 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <h3 class="text-sm font-medium text-slate-500">총 예상 예산</h3>
+                    <p id="total-expected-budget" class="text-2xl font-bold text-blue-600 mt-2">0 원</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <h3 class="text-sm font-medium text-slate-500">총 실제 지출</h3>
+                    <p id="total-actual-expense" class="text-2xl font-bold text-emerald-600 mt-2">0 원</p>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                <h3 class="font-semibold text-slate-700 mb-3">예산 대비 지출 요약</h3>
+                <div id="budget-summary-text" class="text-slate-600 text-sm">데이터를 불러오는 중입니다...</div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 자바스크립트 로직 -->
+    <script>
+        let map, clickedMarker;
+        let expectedData = [], actualData = [];
+
+        function switchTab(tabId) {
+            ['travelers', 'expected', 'actual', 'dashboard'].forEach(id => {
+                document.getElementById(`tab-${id}`).classList.add('hidden');
+                document.getElementById(`btn-tab-${id}`).className = "flex-1 py-3 text-center font-semibold text-slate-500 hover:text-blue-600 transition";
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.getElementById(`btn-tab-${tabId}`).className = "flex-1 py-3 text-center font-semibold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 transition";
+            
+            if (tabId === 'expected' && map) {
+                setTimeout(() => { map.invalidateSize(); }, 200);
+            }
+        }
+
+        window.addEventListener('firebase-ready', () => {
+            const { db, FB } = window;
+            document.getElementById('sync-status').innerText = "실시간 동기화 연결됨";
+            document.getElementById('sync-status').className = "text-xs bg-emerald-500 px-2.5 py-1 rounded-full text-white";
+
+            // 1. 차량 및 탑승자 실시간 동기화
+            FB.onSnapshot(FB.query(FB.collection(db, "cars")), (snapshot) => {
+                let html = '';
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    html += `<div class="p-4 bg-slate-50 rounded-lg border border-slate-100 flex justify-between items-center"><div><h4 class="font-bold text-slate-800"><i class="fa-solid fa-car text-blue-500 mr-1"></i> ${data.carName}</h4><p class="text-xs text-slate-600 mt-1"><b>운전자:</b> ${data.driver}</p><p class="text-xs text-slate-600"><b>탑승자:</b> ${data.members}</p></div><button onclick="deleteDocItem('cars', '${docSnap.id}')" class="text-red-500 hover:text-red-700 text-sm"><i class="fa-solid fa-trash"></i></button></div>`;
+                });
+                document.getElementById('car-list').innerHTML = html || '<p class="text-slate-400 text-sm">등록된 차량 정보가 없습니다.</p>';
+            });
+
+            // 2. 예상 방문지 실시간 동기화
+            FB.onSnapshot(FB.query(FB.collection(db, "expected_places")), (snapshot) => {
+                expectedData = [];
+                let html = '';
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    expectedData.push({ id: docSnap.id, ...data });
+                    html += `<div class="p-3 bg-slate-50 rounded-lg flex justify-between items-center text-sm"><div><h4 class="font-bold text-slate-800">${data.place_name}</h4><p class="text-xs text-slate-500">예산: ${Number(data.budget).toLocaleString()}원</p></div><button onclick="deleteDocItem('expected_places', '${docSnap.id}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button></div>`;
+                });
+                document.getElementById('expected-list').innerHTML = html || '<p class="text-slate-400 text-sm">예상 방문지가 없습니다.</p>';
+                updateDashboard();
+            });
+
+            // 3. 실제 방문/지출 실시간 동기화
+            FB.onSnapshot(FB.query(FB.collection(db, "actual_visits")), (snapshot) => {
+                actualData = [];
+                let html = '';
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    actualData.push({ id: docSnap.id, ...data });
+                    html += `<div class="p-4 bg-slate-50 rounded-lg border border-slate-100 space-y-1 text-sm"><div class="flex justify-between font-bold text-slate-800"><span>${data.place} (${data.traveler})</span><span class="text-emerald-600">${Number(data.expense).toLocaleString()}원</span></div><p class="text-xs text-slate-500"><i class="fa-regular fa-clock"></i> ${data.time.replace('T', ' ')}</p><p class="text-slate-600">${data.action}</p><div class="text-right"><button onclick="deleteDocItem('actual_visits', '${docSnap.id}')" class="text-red-500 hover:text-red-700 text-xs"><i class="fa-solid fa-trash mr-1"></i>삭제</button></div></div>`;
+                });
+                document.getElementById('actual-list').innerHTML = html || '<p class="text-slate-400 text-sm">실제 기록이 없습니다.</p>';
+                updateDashboard();
+            });
+        });
+
+        // 폼 이벤트
+        document.getElementById('car-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const carName = document.getElementById('car-name').value;
+            const driver = document.getElementById('car-driver').value;
+            const members = document.getElementById('car-members').value;
+            await window.FB.addDoc(window.FB.collection(window.db, "cars"), { carName, driver, members });
+            document.getElementById('car-form').reset();
+        });
+
+        document.getElementById('expected-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const place_name = document.getElementById('exp-place-name').value;
+            const budget = document.getElementById('exp-budget').value;
+            const lat = document.getElementById('exp-lat').value;
+            const lng = document.getElementById('exp-lng').value;
+            if(!lat || !lng) { alert('지도에서 위치를 클릭해 주세요!'); return; }
+            await window.FB.addDoc(window.FB.collection(window.db, "expected_places"), { place_name, budget, lat, lng });
+            document.getElementById('expected-form').reset();
+            if (clickedMarker) map.removeLayer(clickedMarker);
+        });
+
+        document.getElementById('actual-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const traveler = document.getElementById('act-traveler').value;
+            const place = document.getElementById('act-place').value;
+            const time = document.getElementById('act-time').value;
+            const expense = document.getElementById('act-expense').value;
+            const action = document.getElementById('act-action').value;
+            await window.FB.addDoc(window.FB.collection(window.db, "actual_visits"), { traveler, place, time, expense, action });
+            document.getElementById('actual-form').reset();
+        });
+
+        window.deleteDocItem = async function(collectionName, id) {
+            if(confirm('정말 삭제하시겠습니까?')) {
+                await window.FB.deleteDoc(window.FB.doc(window.db, collectionName, id));
+            }
+        }
+
+        function updateDashboard() {
+            let totalExp = expectedData.reduce((sum, item) => sum + Number(item.budget), 0);
+            let totalAct = actualData.reduce((sum, item) => sum + Number(item.expense), 0);
+            document.getElementById('total-expected-budget').innerText = totalExp.toLocaleString() + ' 원';
+            document.getElementById('total-actual-expense').innerText = totalAct.toLocaleString() + ' 원';
+            
+            let diff = totalExp - totalAct;
+            let summaryText = `총 예상 예산은 <b>${totalExp.toLocaleString()}원</b>이며, 현재까지 실제 지출은 <b>${totalAct.toLocaleString()}원</b>입니다. `;
+            summaryText += diff >= 0 ? `예산 내에서 <b>${diff.toLocaleString()}원</b> 절약 중입니다.` : `예산보다 <b>${Math.abs(diff).toLocaleString()}원</b> 초과 지출되었습니다!`;
+            document.getElementById('budget-summary-text').innerHTML = summaryText;
+        }
+
+        window.onload = function() {
+            map = L.map('map').setView([36.9856, 128.2045], 10); // 단양 중심
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            map.on('click', function(e) {
+                const lat = e.latlng.lat.toFixed(6);
+                const lng = e.latlng.lng.toFixed(6);
+                document.getElementById('exp-lat').value = lat;
+                document.getElementById('exp-lng').value = lng;
+                if (clickedMarker) map.removeLayer(clickedMarker);
+                clickedMarker = L.marker([lat, lng]).addTo(map).bindPopup('선택한 위치').openPopup();
+            });
+        }
+    </script>
+</body>
+</html>
