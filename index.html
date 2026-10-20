@@ -3,74 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>다목적 단체 여행 관리 매니저</title>
+    <title>단체 여행 매니저</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
-        #map-timeline, #map-expected, #map-actual, #map-dashboard { height: 320px; border-radius: 0.5rem; z-index: 10; }
+        #map-timeline, #map-expected, #map-actual, #map-dashboard { height: 300px; border-radius: 0.5rem; z-index: 10; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-    <!-- 헤더 -->
     <header class="bg-blue-600 text-white shadow-md sticky top-0 z-50">
         <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <button onclick="goTripSelector()" class="bg-blue-700 hover:bg-blue-800 px-2.5 py-1 rounded-lg text-xs font-bold transition">
-                    <i class="fa-solid fa-list mr-1"></i> 여행 목록
-                </button>
-                <div>
-                    <h1 id="header-trip-title" class="text-base font-bold flex items-center gap-1.5">여행 선택 필요</h1>
-                    <p id="header-trip-subtitle" class="text-[11px] text-blue-100">원하는 여행을 선택하거나 새로 만드세요</p>
-                </div>
-            </div>
-            <span id="sync-status" class="text-xs bg-amber-500 px-2.5 py-1 rounded-full text-white font-semibold">DB 연결중...</span>
+            <h1 id="header-trip-title" class="text-base font-bold">여행 매니저 (연결 확인중)</h1>
+            <span id="sync-status" class="text-xs bg-amber-500 px-2.5 py-1 rounded-full text-white font-semibold">연결 대기</span>
         </div>
     </header>
 
-    <!-- 에러 안내 배너 -->
-    <div id="error-banner" class="hidden bg-red-600 text-white px-4 py-3 text-xs leading-relaxed shadow-inner">
-        <div class="max-w-4xl mx-auto flex items-start gap-2">
-            <i class="fa-solid fa-triangle-exclamation text-base mt-0.5"></i>
-            <div id="error-message" class="flex-1"></div>
-        </div>
+    <div id="debug-banner" class="bg-amber-600 text-white px-4 py-3 text-xs">
+        <div id="debug-message">Firebase 연결을 시도하고 있습니다...</div>
     </div>
 
-    <!-- 0. 여행 선택 및 생성 화면 -->
-    <div id="trip-selector-screen" class="max-w-4xl mx-auto px-4 py-6 w-full space-y-6">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
-            <div class="flex justify-between items-center">
-                <h2 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-plane-departure text-blue-600 mr-2"></i>내 여행 일정 목록</h2>
-                <button onclick="fillDanyangPDFData()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm">
-                    <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> 단양·청풍호 계획서 자동생성
-                </button>
-            </div>
-            <p class="text-xs text-slate-500">관리할 여행을 선택하거나, 아래에서 새로운 여행을 만들어 보세요.</p>
-            <div id="trip-cards-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2"></div>
+    <main class="max-w-4xl mx-auto px-3 py-4 flex-grow w-full space-y-4">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
+            <h2 class="text-lg font-bold text-slate-800">여행 일정 목록</h2>
+            <button onclick="createTestTrip()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold">단양 여행 일정 생성하기</button>
+            <div id="trip-cards-container" class="space-y-2"></div>
         </div>
+    </main>
 
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-4">
-            <h2 class="text-base font-bold text-slate-800"><i class="fa-solid fa-circle-plus text-emerald-600 mr-2"></i>새로운 여행 만들기</h2>
-            <form id="new-trip-form" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <input type="text" id="new-trip-name" placeholder="여행 이름 (예: 강릉 바다 여행)" required class="border border-slate-300 rounded-xl px-3 py-2 text-sm">
-                <input type="date" id="new-trip-start" required class="border border-slate-300 rounded-xl px-3 py-2 text-sm">
-                <input type="date" id="new-trip-end" required class="border border-slate-300 rounded-xl px-3 py-2 text-sm">
-                <button type="submit" class="sm:col-span-3 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-bold text-sm transition">새 여행 생성하기</button>
-            </form>
-        </div>
-    </div>
+    <script>
+        let currentTripId = null;
+        let tripsData = [], carsData = [], expectedData = [], actualData = [];
+    </script>
 
-    <!-- 메인 컨테이너 -->
-    <main id="main-app-screen" class="max-w-4xl mx-auto px-3 py-4 flex-grow w-full space-y-4 hidden">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, onSnapshot, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        <!-- 탭 메뉴 -->
-        <div class="flex border-b border-slate-200 bg-white rounded-t-xl shadow-sm overflow-x-auto no-scrollbar text-xs md:text-sm sticky top-[60px] z-40">
-            <button onclick="switchTab('timeline')" id="btn-tab-timeline" class="flex-1 min-w-[75px] py-3 text-center font-bold text-blue-600 border-b-2 border-blue-60
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVXAi7WTQJ0sm7FXOjWwAMzmnvw1wSt0M",
+            authDomain: "group-trip-app-754ca.firebaseapp.com",
+            projectId: "group-trip-app-754ca",
+            storageBucket: "group-trip-app-754ca.firebasestorage.app",
+            messagingSenderId: "686842634804",
+            appId: "1:686842634804:web:52b428c33b50167c312061",
+            measurementId: "G-QP2ZYPK8MG"
+        };
+
+        const statusBadge = document.getElementById('sync-status');
+        const debugBanner = document.getElementById('debug-banner');
+        const debugMessage = document.getElementById('debug-message');
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+            window.db = db;
+
+            debugMessage.innerText = "Firebase 초기화 완료. 데이터 로딩 중...";
+
+            onSnapshot(query(collection(db, "trips")), (snapshot) => {
+                statusBadge.innerText = "연결됨";
+                statusBadge.className = "text-xs bg-emerald-500 px-2.5 py-1 rounded-full text-white font-semibold";
+                debugBanner.classList.add('hidden');
+
+                let html = '';
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    html += `<div class="p-3 bg-slate-100 rounded-lg flex justify-between items-center text-sm"><span><b>${data.name}</b> (${data.startDate}~${data.endDate})</span></div>`;
+                });
+                document.getElementById('trip-cards-container').innerHTML = html || '<p class="text-xs text-slate-400">저장된 여행이 없습니다. 위 버튼을 눌러보세요.</p>';
+            }, (err) => {
+                debugBanner.className = "bg-red-600 text-white px-4 py-3 text-xs";
+                debugMessage.innerHTML = `<b>DB 연결 에러 발생:</b> ${err.code} - ${err.message}<br>👉 Firestore Database가 생성되었는지, 규칙(Rules)이 게시되었는지 확인해주세요.`;
+            });
+
+            window.createTestTrip = async function() {
+                try {
+                    await addDoc(collection(db, "trips"), { name: "단양·영월·청풍호 1박 2일", startDate: "2026-10-23", endDate: "2026-10-24" });
+                    alert('여행 일정이 생성되었습니다!');
+                } catch (e) {
+                    alert('생성 실패: ' + e.message);
+                }
+            };
+
+        } catch (e) {
+            debugBanner.className = "bg-red-600 text-white px-4 py-3 text-xs";
+            debugMessage.innerHTML = `<b>코드 실행 에러:</b> ${e.message}`;
+        }
+    </script>
+</body>
+</html>
