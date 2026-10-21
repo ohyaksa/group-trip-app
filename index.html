@@ -2,344 +2,294 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>스마트 단체 여행 매니저</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- SheetJS (엑셀 백업 및 복원) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- 엑셀 백업/복원용 SheetJS -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <!-- 카카오 도로명 우편번호 API -->
+    <!-- 카카오 우편번호 서비스 -->
     <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
-    <!-- 국내용: 카카오맵 JavaScript SDK (services 라이브러리 포함) -->
+    <!-- 국내용: 카카오맵 SDK (autoload=false 적용) -->
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=421e90b13a87b1868e381924faab6e44&libraries=services&autoload=false"></script>
-    <!-- 해외용: 구글맵 JavaScript API (places 라이브러리 포함) -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDQZ863jMNo9cvu0UDXy3iNxuiVyxTITWE&libraries=places" async defer></script>
-    <!-- Firebase 표준 호환 SDK -->
+    <!-- 해외용: 구글맵 SDK -->
+    <script src="https://maps.googleapis.com/maps/api/js?libraries=places" async defer></script>
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
     <style>
-        .map-box { height: 320px; border-radius: 0.75rem; position: relative; overflow: hidden; background: #f1f5f9; }
+        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; background-color: #f8fafc; }
+        /* 카카오맵 및 구글맵 깨짐 방지용 가로폭 100% 고정 */
+        .map-box { width: 100%; height: 320px; border-radius: 0.75rem; position: relative; overflow: hidden; background: #f1f5f9; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col pb-16">
+<body class="text-slate-800 pb-20">
 
     <!-- 상단 고정 헤더 -->
-    <header class="bg-blue-600 text-white shadow-md sticky top-0 z-50">
-        <div class="max-w-4xl mx-auto px-3 py-3 flex justify-between items-center gap-2">
+    <header class="bg-blue-600 text-white sticky top-0 z-40 shadow-md">
+        <div class="max-w-3xl mx-auto px-3 py-3 flex justify-between items-center gap-2">
             <div class="flex items-center gap-2 min-w-0">
-                <button type="button" onclick="goTripSelector()" id="btn-back" class="hidden bg-blue-700 active:bg-blue-900 px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition flex items-center gap-1 shadow-sm shrink-0">
+                <button id="btn-back" onclick="goTripSelector()" class="hidden bg-blue-700 hover:bg-blue-800 px-2.5 py-1.5 rounded-full text-xs font-bold shrink-0 cursor-pointer flex items-center gap-1">
                     <i class="fa-solid fa-arrow-left"></i> 목록
                 </button>
                 <div class="truncate">
-                    <h1 id="header-trip-title" class="text-sm sm:text-base font-bold leading-tight truncate">여행 일정 목록</h1>
-                    <p id="header-trip-dates" class="text-[11px] text-blue-100 hidden truncate"></p>
+                    <h1 id="header-trip-title" class="font-extrabold text-sm sm:text-base truncate">여행 일정 목록</h1>
+                    <p id="header-trip-dates" class="hidden text-[11px] text-blue-100 truncate"></p>
                 </div>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
-                <!-- 국내(카카오) / 해외(구글) 지도 전환 스위치 -->
-                <button type="button" onclick="toggleMapProvider()" id="btn-map-provider" class="hidden bg-amber-400 text-slate-900 px-2.5 py-1 rounded-full text-[11px] font-extrabold cursor-pointer shadow-sm">
+                <button id="btn-map-provider" onclick="toggleMapProvider()" class="hidden bg-amber-400 text-slate-900 px-2.5 py-1 rounded-full text-[11px] font-extrabold cursor-pointer shadow-sm">
                     🇰🇷 국내(카카오)
                 </button>
-                <!-- 실수 삭제 방지용 편집 잠금 토글 -->
-                <button type="button" onclick="toggleEditLock()" id="btn-edit-lock" class="bg-blue-700 hover:bg-blue-800 px-2.5 py-1 rounded-full text-[11px] font-semibold cursor-pointer" title="편집 잠금/해제">
+                <button id="btn-edit-lock" onclick="toggleEditLock()" class="bg-blue-700 hover:bg-blue-800 px-2.5 py-1 rounded-full text-[11px] font-semibold cursor-pointer text-white">
                     <i class="fa-solid fa-lock-open mr-0.5"></i>편집중
                 </button>
-                <!-- 보안 규칙 도움말 모달 열기 -->
-                <button type="button" onclick="toggleRulesModal()" class="bg-blue-700 hover:bg-blue-800 px-2 py-1 rounded-full text-[11px] font-semibold cursor-pointer" title="DB 보안규칙 안내">
+                <button onclick="toggleRulesModal()" title="보안 및 이용 안내" class="bg-blue-700 hover:bg-blue-800 w-7 h-7 rounded-full text-xs flex items-center justify-center cursor-pointer">
                     <i class="fa-solid fa-shield-halved"></i>
                 </button>
-                <button type="button" onclick="forceReloadDB()" class="bg-blue-700 hover:bg-blue-800 px-2 py-1 rounded-full text-[11px] font-semibold cursor-pointer" title="새로고침">
+                <button onclick="forceReloadDB()" title="데이터 새로고침" class="bg-blue-700 hover:bg-blue-800 w-7 h-7 rounded-full text-xs flex items-center justify-center cursor-pointer">
                     <i class="fa-solid fa-rotate"></i>
                 </button>
-                <span id="sync-status" class="text-xs bg-amber-500 px-2 py-1 rounded-full text-white font-semibold">연결중</span>
+                <span id="sync-status" class="text-xs bg-amber-500 px-2 py-1 rounded-full text-white font-semibold shrink-0">연결중</span>
             </div>
         </div>
     </header>
 
-    <!-- 에러 발생 시 안내 배너 -->
-    <div id="error-banner" class="hidden bg-red-600 text-white px-4 py-2.5 text-xs">
-        <div class="max-w-4xl mx-auto flex justify-between items-center gap-2">
-            <span id="error-text"></span>
-            <button type="button" onclick="this.closest('#error-banner').classList.add('hidden')" class="underline shrink-0">닫기</button>
+    <!-- 오류 알림 배너 -->
+    <div id="error-banner" class="hidden max-w-3xl mx-auto mt-2 px-3">
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-2.5 rounded-xl text-xs flex justify-between items-center">
+            <span id="error-text">오류가 발생했습니다.</span>
+            <button onclick="document.getElementById('error-banner').classList.add('hidden')" class="font-bold ml-2">✕</button>
         </div>
     </div>
 
-    <!-- Firestore 보안 규칙(30일 만료 방지 및 데이터 검증) 안내 모달 -->
-    <div id="rules-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-5 space-y-3 shadow-xl text-xs">
+    <!-- 보안 규칙 및 기능 안내 모달 -->
+    <div id="rules-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-5 space-y-3 shadow-xl">
             <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-shield-halved text-blue-600 mr-1"></i>Firestore 보안 규칙 권장 설정</h3>
-                <button type="button" onclick="toggleRulesModal()" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
+                <h3 class="font-extrabold text-sm text-slate-800"><i class="fa-solid fa-shield-halved text-blue-600 mr-1"></i>데이터 보호 및 이용 안내</h3>
+                <button onclick="toggleRulesModal()" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
             </div>
-            <p class="text-slate-600 leading-relaxed">
-                30일 테스트 모드 만료를 막고 잘못된 데이터 덮어쓰기를 방지하려면 Firebase 콘솔 ➔ <b>Firestore Database ➔ 규칙(Rules)</b> 탭에 아래 규칙을 붙여넣고 <b>[게시]</b>하세요.
-            </p>
-            <pre class="bg-slate-900 text-emerald-300 p-3 rounded-xl overflow-x-auto font-mono text-[11px] leading-snug">rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /trips/{tripId} {
-      allow read, delete: if true;
-      allow create, update: if request.resource.data.name is string
-                            && request.resource.data.name.size() > 0;
-      match /{subCol}/{docId} {
-        allow read, write: if true;
-      }
-    }
-  }
-}</pre>
-            <div class="flex justify-end pt-1">
-                <button type="button" onclick="toggleRulesModal()" class="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold">확인</button>
+            <div class="text-xs text-slate-600 space-y-2 leading-relaxed">
+                <p>• <b>[🔓 편집중 / 🔒 잠금됨] 버튼:</b> 일행들이 일정을 볼 때 실수로 삭제하거나 수정하지 않도록 상단 버튼을 눌러 <b>[🔒 잠금됨]</b>으로 설정할 수 있습니다.</p>
+                <p>• <b>구간 거리·소요시간 및 네이버 길찾기:</b> 타임라인 장소와 장소 사이의 파란색 이동 박스를 누르면 출발지와 목적지가 자동 입력된 네이버 지도 길찾기가 바로 열립니다.</p>
+                <p>• <b>엑셀 백업 생활화:</b> 중요한 일정 입력 후에는 첫 화면의 <b>[엑셀 백업]</b> 버튼을 눌러 스마트폰이나 PC에 안전하게 보관해 주세요.</p>
             </div>
+            <button onclick="toggleRulesModal()" class="w-full bg-blue-600 text-white py-2 rounded-xl text-xs font-bold cursor-pointer">확인</button>
         </div>
     </div>
 
     <!-- ========================================== -->
-    <!-- 0. 첫 화면: 여행 목록 및 접이식 생성/백업    -->
+    <!-- 화면 1: 여행 일정 목록 (대분류 1·2 폴더 및 백업) -->
     <!-- ========================================== -->
-    <div id="trip-selector-screen" class="max-w-4xl mx-auto px-4 py-5 w-full space-y-4">
-        
-        <!-- 내 여행 일정 목록 -->
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-            <div class="pb-2 border-b border-slate-100 flex justify-between items-center">
+    <main id="trip-selector-screen" class="max-w-3xl mx-auto p-3 space-y-4">
+
+        <!-- 엑셀 통합 백업 & 복원 카드 -->
+        <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+            <div class="flex justify-between items-center">
+                <h2 class="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-excel text-emerald-600"></i> 전체 여행 데이터 엑셀 백업 · 복원
+                </h2>
+                <span id="backup-cache-status" class="text-[11px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold">백업 준비중</span>
+            </div>
+            <p class="text-xs text-slate-500">모든 여행의 예상 일정, 가계부, 차량 배치, 5대분류 체크리스트를 엑셀 파일 하나로 백업하거나 복원합니다.</p>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                <button type="button" onclick="exportExcelBackup('mobile')" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
+                    <i class="fa-solid fa-mobile-screen-button"></i> 폰 저장/공유
+                </button>
+                <button type="button" onclick="exportExcelBackup('pc')" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
+                    <i class="fa-solid fa-download"></i> PC 다운로드
+                </button>
+                <button type="button" onclick="exportExcelBackup('gdrive')" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
+                    <i class="fa-brands fa-google-drive"></i> 구글드라이브
+                </button>
+                <label class="bg-amber-500 hover:bg-amber-600 text-white py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm text-center">
+                    <i class="fa-solid fa-upload"></i> 엑셀 복원
+                    <input type="file" accept=".xlsx,.xls" onchange="restoreFromExcelFile(event)" class="hidden">
+                </label>
+            </div>
+        </section>
+
+        <!-- 내 여행 일정 목록 (대분류 1: 연도별 / 대분류 2: 국내·해외 지역별) -->
+        <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+            <div class="flex justify-between items-center">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-suitcase-rolling text-blue-600 mr-1.5"></i>내 여행 일정 목록</h2>
-                    <p class="text-xs text-slate-500 mt-0.5">입장할 여행을 터치하세요. 각 여행별로 일정·가계부·체크리스트가 독립 관리됩니다.</p>
+                    <h2 class="text-base font-extrabold text-slate-800"><i class="fa-solid fa-suitcase-rolling text-blue-600 mr-1.5"></i>내 여행 일정 목록</h2>
+                    <p class="text-[11px] text-slate-500 mt-0.5">연도별(대분류 1) 또는 국내·해외 지역별(대분류 2) 폴더를 눌러 일정을 확인하세요.</p>
                 </div>
+                <button id="btn-create-danyang" type="button" class="bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 px-3 py-1.5 rounded-xl text-xs font-extrabold cursor-pointer shrink-0">
+                    + 단양 샘플 생성
+                </button>
             </div>
             <div id="trip-cards-container" class="space-y-3">
-                <p class="text-xs text-slate-400 py-4 text-center">데이터베이스에서 여행 목록을 불러오는 중입니다...</p>
+                <p class="text-xs text-slate-400 py-4 text-center">여행 목록을 불러오는 중입니다...</p>
             </div>
-        </div>
+        </section>
 
-        <!-- [접이식 1] 새로운 여행 직접 만들기 / 수정 -->
-        <div id="trip-accordion-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <button type="button" onclick="toggleAccordion('trip-form-body', 'trip-form-chevron')" class="w-full p-4 flex justify-between items-center bg-white hover:bg-slate-50 cursor-pointer text-left transition">
-                <span id="trip-form-title" class="text-sm font-bold text-slate-800 flex items-center gap-2">
+        <!-- 새로운 여행 직접 만들기 / 수정 (아코디언) -->
+        <section id="trip-accordion-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <button type="button" onclick="toggleAccordion('trip-form-body', 'trip-form-chevron')" class="w-full p-4 flex justify-between items-center bg-slate-50 hover:bg-slate-100 cursor-pointer text-left">
+                <span id="trip-form-title" class="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">
                     <i class="fa-solid fa-circle-plus text-emerald-600"></i> 새로운 여행 직접 만들기 (터치하여 열기)
                 </span>
-                <i id="trip-form-chevron" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform"></i>
+                <i id="trip-form-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
             </button>
-            <div id="trip-form-body" class="hidden p-5 pt-3 border-t border-slate-100 bg-slate-50/40">
-                <form id="trip-form" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div id="trip-form-body" class="hidden p-4 border-t border-slate-200">
+                <form id="trip-form" class="space-y-3">
                     <input type="hidden" id="trip-edit-id">
-                    <div class="sm:col-span-2">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">여행 제목</label>
-                        <input type="text" id="trip-name" placeholder="예: 속초 가족 여행, 일본 오사카 3박 4일" required class="w-full border border-slate-300 rounded-xl px-3.5 py-2 text-sm bg-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">국내 / 해외 지도선택</label>
-                        <select id="trip-region" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white font-bold text-blue-700">
-                            <option value="kr">🇰🇷 국내 여행 (카카오맵)</option>
-                            <option value="global">🌍 해외 여행 (구글맵)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">참여 인원수 (명)</label>
-                        <input type="number" id="trip-count" value="8" min="1" required class="w-full border border-slate-300 rounded-xl px-3.5 py-2 text-sm font-bold text-blue-600 bg-white">
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">시작일 ~ 종료일</label>
-                        <div class="flex gap-2">
-                            <input type="date" id="trip-start" required class="w-1/2 border border-slate-300 rounded-lg px-2.5 py-2 text-xs bg-white">
-                            <input type="date" id="trip-end" required class="w-1/2 border border-slate-300 rounded-lg px-2.5 py-2 text-xs bg-white">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">여행 제목</label>
+                            <input type="text" id="trip-name" required placeholder="예: 속초·양양 가족여행 1박 2일" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">참여 인원 (명)</label>
+                            <input type="number" id="trip-count" value="8" min="1" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm">
                         </div>
                     </div>
-                    <div class="sm:col-span-2 flex items-end gap-2">
-                        <button type="submit" id="trip-submit-btn" class="flex-1 bg-blue-600 active:bg-blue-800 text-white py-2.5 rounded-xl font-bold text-sm cursor-pointer transition">
-                            새 여행 저장
-                        </button>
-                        <button type="button" onclick="resetTripForm()" id="trip-cancel-btn" class="bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-bold text-sm cursor-pointer">
-                            닫기
-                        </button>
+                    <!-- 수정 1 반영: 국내/해외 구분 및 지역 소분류 선택 드롭다운 -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">국내 / 해외 구분</label>
+                            <select id="trip-region" onchange="onChangeTripRegion()" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white font-bold text-blue-700">
+                                <option value="kr">🇰🇷 국내 여행 (카카오맵)</option>
+                                <option value="global">🌍 해외 여행 (구글맵)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">지역 소분류 선택</label>
+                            <select id="trip-subregion" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm bg-white font-bold text-indigo-700">
+                                <option value="강원도">강원도</option>
+                                <option value="수도권">수도권</option>
+                                <option value="충청권">충청권</option>
+                                <option value="전라도">전라도</option>
+                                <option value="경상도">경상도</option>
+                                <option value="제주도">제주도</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">출발일 (연도별 자동 분류 기준)</label>
+                            <input type="date" id="trip-start" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">종료일</label>
+                            <input type="date" id="trip-end" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm">
+                        </div>
+                    </div>
+                    <div class="flex gap-2 pt-1">
+                        <button type="submit" id="trip-submit-btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs font-extrabold cursor-pointer">새 여행 저장</button>
+                        <button type="button" onclick="resetTripForm()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer">취소</button>
                     </div>
                 </form>
             </div>
-        </div>
-
-        <!-- [접이식 2] 엑셀(.xlsx) 백업 및 복원 센터 -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <button type="button" onclick="toggleAccordion('backup-body', 'backup-chevron')" class="w-full p-4 flex justify-between items-center bg-white hover:bg-slate-50 cursor-pointer text-left transition">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-file-excel text-emerald-600"></i>
-                    <span class="text-sm font-bold text-slate-800">전체 데이터 엑셀(.xlsx) 백업 및 복원 (터치하여 열기)</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span id="backup-cache-status" class="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold">자동갱신중</span>
-                    <i id="backup-chevron" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform"></i>
-                </div>
-            </button>
-            <div id="backup-body" class="hidden p-5 pt-3 border-t border-slate-100 space-y-4 bg-slate-50/40">
-                <p class="text-xs text-slate-500">모든 여행 일정, 대안장소, 가계부, 5대 분류 체크리스트가 실시간 반영되어 엑셀로 백업·복원됩니다.</p>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    <button type="button" onclick="exportExcelBackup('mobile')" class="bg-emerald-600 active:bg-emerald-800 text-white p-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm cursor-pointer">
-                        <i class="fa-solid fa-mobile-screen-button text-sm"></i> 스마트폰 엑셀 백업
-                    </button>
-                    <button type="button" onclick="exportExcelBackup('pc')" class="bg-slate-800 active:bg-slate-950 text-white p-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm cursor-pointer">
-                        <i class="fa-solid fa-desktop text-sm"></i> PC / 내 기기에 저장
-                    </button>
-                    <button type="button" onclick="exportExcelBackup('gdrive')" class="bg-blue-600 active:bg-blue-800 text-white p-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm cursor-pointer">
-                        <i class="fa-brands fa-google-drive text-sm"></i> 구글 드라이브 백업
-                    </button>
-                </div>
-                <div class="bg-white p-3.5 rounded-xl border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div class="text-xs">
-                        <p class="font-bold text-slate-700"><i class="fa-solid fa-rotate-left text-blue-600 mr-1"></i>백업된 엑셀 파일(.xlsx)로 데이터 복원하기</p>
-                        <p class="text-[11px] text-slate-500 mt-0.5">동일한 여행이 있으면 덮어쓰거나 새로 추가할 수 있으며, 빈 좌표는 왜곡 없이 유지됩니다.</p>
-                    </div>
-                    <label class="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer text-center shrink-0">
-                        <i class="fa-solid fa-folder-open text-amber-500 mr-1"></i> 엑셀 파일 선택
-                        <input type="file" id="excel-restore-input" accept=".xlsx,.xls" onchange="restoreFromExcelFile(event)" class="hidden">
-                    </label>
-                </div>
-            </div>
-        </div>
-
-        <!-- 최하단 눈에 띄지 않는 단양 샘플 자동생성 링크 -->
-        <div class="pt-4 pb-2 text-center">
-            <button type="button" id="btn-create-danyang" class="text-[11px] text-slate-400 hover:text-slate-600 underline decoration-slate-300 cursor-pointer transition">
-                + 단양·청풍호 기본일정 샘플 자동생성 (초기 세팅용)
-            </button>
-        </div>
-    </div>
+        </section>
+    </main>
 
     <!-- ========================================== -->
-    <!-- 메인 앱 화면 (여행 입장 후 화면)             -->
+    <!-- 화면 2: 개별 여행 메인 화면 (5개 탭 구성) -->
     <!-- ========================================== -->
-    <main id="main-app-screen" class="max-w-4xl mx-auto px-3 py-3 flex-grow w-full space-y-4 hidden">
-        
-        <!-- 5개 탭 네비게이션 (한 줄 고정 레이아웃) -->
-        <div class="flex border-b border-slate-200 bg-white rounded-xl shadow-sm overflow-x-auto no-scrollbar text-xs sticky top-[52px] z-40">
-            <button type="button" onclick="switchTab('plan')" id="btn-tab-plan" class="flex-1 py-3 px-1 text-center font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 whitespace-nowrap cursor-pointer">
-                타임라인(계획)
-            </button>
-            <button type="button" onclick="switchTab('visit')" id="btn-tab-visit" class="flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer">
-                타임라인(방문)
-            </button>
-            <button type="button" onclick="switchTab('expected')" id="btn-tab-expected" class="flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer">
-                일정관리
-            </button>
-            <button type="button" onclick="switchTab('actual')" id="btn-tab-actual" class="flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer">
-                가계부·회비
-            </button>
-            <button type="button" onclick="switchTab('checklist')" id="btn-tab-checklist" class="flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer">
-                체크·차량
-            </button>
-        </div>
+    <main id="main-app-screen" class="hidden max-w-3xl mx-auto p-3 space-y-4">
 
-        <!-- 공통 일자 필터 바 (타임라인 계획/방문 전용) -->
-        <div id="common-day-filter-bar" class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-2">
-            <div class="flex gap-1 bg-slate-100 p-1 rounded-lg text-xs font-bold">
-                <button type="button" onclick="setDayFilter('all')" id="filter-day-all" class="px-2.5 py-1.5 rounded-md bg-white text-blue-600 shadow-sm cursor-pointer">전체</button>
-                <button type="button" onclick="setDayFilter('1')" id="filter-day-1" class="px-2.5 py-1.5 rounded-md text-slate-600 cursor-pointer">1일차</button>
-                <button type="button" onclick="setDayFilter('2')" id="filter-day-2" class="px-2.5 py-1.5 rounded-md text-slate-600 cursor-pointer">2일차</button>
-                <button type="button" onclick="setDayFilter('3')" id="filter-day-3" class="px-2.5 py-1.5 rounded-md text-slate-600 cursor-pointer">3일차+</button>
+        <!-- 5개 탭 네비게이션 -->
+        <nav class="bg-white rounded-2xl shadow-sm border border-slate-200 flex overflow-x-auto no-scrollbar text-xs sm:text-sm">
+            <button id="btn-tab-plan" onclick="switchTab('plan')" class="flex-1 py-3 px-1 text-center font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 whitespace-nowrap cursor-pointer">타임라인(계획)</button>
+            <button id="btn-tab-visit" onclick="switchTab('visit')" class="flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer">타임라인(방문)</button>
+            <button id="btn-tab-expected" onclick="switchTab('expected')" class="flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer">일정관리</button>
+            <button id="btn-tab-actual" onclick="switchTab('actual')" class="flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer">가계부·회비</button>
+            <button id="btn-tab-checklist" onclick="switchTab('checklist')" class="flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer">체크·차량</button>
+        </nav>
+
+        <!-- 타임라인 공통 일차 필터 바 -->
+        <div id="common-day-filter-bar" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-2">
+            <div class="inline-flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                <button id="filter-day-all" onclick="setDayFilter('all')" class="px-2.5 py-1.5 rounded-md bg-white text-blue-600 shadow-sm cursor-pointer">전체</button>
+                <button id="filter-day-1" onclick="setDayFilter('1')" class="px-2.5 py-1.5 rounded-md text-slate-600 cursor-pointer">1일차</button>
+                <button id="filter-day-2" onclick="setDayFilter('2')" class="px-2.5 py-1.5 rounded-md text-slate-600 cursor-pointer">2일차</button>
+                <button id="filter-day-3" onclick="setDayFilter('3')" class="px-2.5 py-1.5 rounded-md text-slate-600 cursor-pointer">3일차+</button>
             </div>
-            <div class="flex gap-1.5">
-                <button type="button" onclick="locateMyGPS()" class="bg-slate-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer">
-                    <i class="fa-solid fa-location-crosshairs mr-0.5"></i>내위치
+            <div class="flex items-center gap-1.5">
+                <button type="button" onclick="locateMyGPS()" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer flex items-center gap-1">
+                    <i class="fa-solid fa-location-crosshairs"></i> 내위치
                 </button>
-                <button type="button" onclick="openExpectedEditorNew()" class="bg-blue-600 active:bg-blue-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer">
+                <button type="button" onclick="openExpectedEditorNew()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">
                     + 일정추가
                 </button>
             </div>
         </div>
 
-        <!-- 탭 1: 타임라인(계획) -->
+        <!-- [탭 1] 타임라인(계획) -->
         <section id="tab-plan" class="space-y-4">
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-2.5">
-                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1.5 text-xs">
-                    <div>
-                        <h3 class="font-bold text-blue-700"><i class="fa-solid fa-map-location-dot mr-1"></i>계획 타임라인 지도 (방문전=실선 / 방문완료=점선)</h3>
-                        <p class="text-[11px] text-slate-500 mt-0.5">* 마커나 선을 클릭하면 장소 정보와 구간 이동거리·소요시간이 표시됩니다.</p>
-                    </div>
-                    <div class="flex gap-2 text-[10px] font-semibold flex-wrap shrink-0">
-                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span>1일차 오전</span>
-                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-purple-600 inline-block"></span>1일차 오후</span>
-                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block"></span>2일차 오전</span>
-                        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-600 inline-block"></span>2일차 오후</span>
-                    </div>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2">
+                <h3 class="text-xs sm:text-sm font-extrabold text-blue-800"><i class="fa-solid fa-map-location-dot mr-1"></i>계획 타임라인 지도 (방문전=실선 / 방문완료=점선)</h3>
+                <p class="text-[11px] text-slate-500">* 마커나 선을 클릭하면 장소 정보와 구간 이동거리·소요시간이 표시됩니다.</p>
+                <div class="flex flex-wrap gap-3 text-[11px] font-bold pt-0.5 pb-1">
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span>1일차 오전</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-purple-600 inline-block"></span>1일차 오후</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block"></span>2일차 오전</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>2일차 오후</span>
                 </div>
                 <div id="map-plan" class="map-box"></div>
             </div>
 
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
-                <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                <div class="flex justify-between items-center">
                     <div>
-                        <h3 class="font-bold text-blue-600 text-sm flex items-center gap-1.5">
-                            <i class="fa-regular fa-calendar-check"></i> 예상 일정 타임라인 (계획)
-                        </h3>
-                        <p class="text-[11px] text-slate-400">[방문전]↔[방문완료] 양방향 전환 시 가계부가 자동 동기화되며, 대안 장소와 1초 만에 교체할 수 있습니다.</p>
+                        <h3 class="text-sm font-extrabold text-slate-800"><i class="fa-regular fa-calendar-check text-blue-600 mr-1"></i>예상 일정 타임라인 (계획)</h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">[방문전]↔[방문완료] 양방향 전환 및 구간별 [네이버 길찾기]를 바로 실행할 수 있습니다.</p>
                     </div>
-                    <span id="exp-count-badge" class="text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full font-bold shrink-0">0건</span>
+                    <span id="exp-count-badge" class="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-bold shrink-0">총 0곳</span>
                 </div>
                 <div id="expected-timeline-list" class="space-y-4"></div>
             </div>
         </section>
 
-        <!-- 탭 2: 타임라인(방문) -->
-        <section id="tab-visit" class="space-y-4 hidden">
-            <div id="visit-map-card" class="bg-white p-4 rounded-xl shadow-sm border border-emerald-200 space-y-2.5 scroll-mt-28">
-                <div class="text-xs">
-                    <h3 class="font-bold text-emerald-700"><i class="fa-solid fa-route mr-1"></i>실제 방문 타임라인 지도 (방문완료=굵은 실선 / 방문예정=점선)</h3>
-                    <p class="text-[11px] text-slate-500 mt-0.5">* 방문 완료한 구간은 <b>굵은 실선</b>으로 강조되고, 방문 예정인 곳은 <b>점선</b>으로 표시됩니다.</p>
-                </div>
+        <!-- [탭 2] 타임라인(방문) -->
+        <section id="tab-visit" class="hidden space-y-4">
+            <div id="visit-map-card" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2">
+                <h3 class="text-xs sm:text-sm font-extrabold text-emerald-800"><i class="fa-solid fa-route mr-1"></i>실제 방문 완료 강조 지도 (완료구간=굵은실선 / 미방문=점선)</h3>
+                <p class="text-[11px] text-slate-500">* 아래 목록에서 장소를 터치하면 해당 위치로 지도가 즉시 확대 이동합니다.</p>
                 <div id="map-visit" class="map-box"></div>
             </div>
 
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
-                <div class="flex justify-between items-center pb-2 border-b border-slate-100">
-                    <div>
-                        <h3 class="font-bold text-emerald-600 text-sm flex items-center gap-1.5">
-                            <i class="fa-solid fa-shoe-prints"></i> 방문완료 및 실제 지출 타임라인
-                        </h3>
-                        <p class="text-[11px] text-slate-400">항목을 터치하면 위 지도에서 해당 방문 위치와 굵은 동선을 즉시 비춰줍니다.</p>
-                    </div>
-                    <span id="act-count-badge" class="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full font-bold shrink-0">0건</span>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-extrabold text-slate-800"><i class="fa-solid fa-receipt text-emerald-600 mr-1"></i>실제 방문 및 지출 타임라인</h3>
+                    <span id="act-count-badge" class="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-bold">방문·지출 0건</span>
                 </div>
                 <div id="actual-timeline-list" class="space-y-4"></div>
             </div>
         </section>
 
-        <!-- 탭 3: 일정관리 (접이식 입력창 + 필터 영향 없는 전체 목록) -->
-        <section id="tab-expected" class="space-y-4 hidden">
-            <!-- [접이식] 예상 일정 추가 / 수정하기 -->
-            <div id="exp-accordion-card" class="bg-white rounded-2xl shadow-sm border border-blue-200 overflow-hidden">
-                <button type="button" onclick="toggleExpFormAccordion()" class="w-full p-4 flex justify-between items-center bg-blue-50/60 hover:bg-blue-50 cursor-pointer text-left transition">
-                    <span id="exp-form-title" class="font-bold text-blue-900 text-sm flex items-center gap-2">
+        <!-- [탭 3] 일정관리 (예상 일정 입력/수정 + 전체 목록) -->
+        <section id="tab-expected" class="hidden space-y-4">
+            <div id="exp-accordion-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <button type="button" onclick="toggleExpFormAccordion()" class="w-full p-4 flex justify-between items-center bg-blue-50/60 hover:bg-blue-50 cursor-pointer text-left">
+                    <span id="exp-form-title" class="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">
                         <i class="fa-solid fa-circle-plus text-blue-600"></i> 예상 일정 추가 / 수정하기 (터치하여 열기)
                     </span>
-                    <i id="exp-form-chevron" class="fa-solid fa-chevron-down text-blue-600 text-xs transition-transform"></i>
+                    <i id="exp-form-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
                 </button>
-
-                <div id="exp-form-body" class="hidden p-5 space-y-4 border-t border-blue-100">
-                    <div class="bg-blue-50/70 p-3.5 rounded-xl border border-blue-100 space-y-2.5">
-                        <div class="flex flex-wrap justify-between items-center gap-2">
-                            <label class="text-xs font-bold text-blue-900"><i class="fa-solid fa-map-pin mr-1"></i>1단계: 장소명 검색(카카오/구글) 또는 도로명 주소로 위치 자동 입력</label>
-                            <button type="button" onclick="openKakaoAddressPopup('exp')" class="bg-amber-400 hover:bg-amber-500 text-slate-900 px-3 py-1.5 rounded-lg text-xs font-extrabold shadow-sm cursor-pointer flex items-center gap-1">
-                                <i class="fa-solid fa-magnifying-glass-location"></i> 카카오 도로명 주소검색
-                            </button>
-                        </div>
+                <div id="exp-form-body" class="hidden p-4 border-t border-slate-200 space-y-3">
+                    <!-- 키워드 장소 검색창 -->
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+                        <label class="block text-xs font-extrabold text-blue-700"><i class="fa-solid fa-magnifying-glass mr-1"></i>장소명 검색 (상호명·주소·전화·좌표 자동 입력)</label>
                         <div class="flex gap-2">
-                            <input type="text" id="exp-search-keyword" placeholder="장소명 입력 (예: 돌집식당, 속초중앙시장, 오사카성)" class="flex-1 border border-blue-200 rounded-lg px-3 py-2 text-sm bg-white">
-                            <button type="button" onclick="searchPlaceCoord('exp')" class="bg-blue-600 active:bg-blue-800 text-white px-4 py-2 rounded-lg text-xs font-bold shrink-0 cursor-pointer">장소 검색</button>
+                            <input type="text" id="exp-search-keyword" onkeydown="if(event.key==='Enter'){event.preventDefault();searchPlaceCoord('exp');}" placeholder="예: 도담삼봉, 단양 돌집식당, 카페 산" class="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-xs bg-white">
+                            <button type="button" onclick="searchPlaceCoord('exp')" class="bg-blue-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 cursor-pointer">검색</button>
                         </div>
-                        <div id="exp-search-results" class="hidden space-y-1 pt-1 max-h-40 overflow-y-auto"></div>
-                        <p class="text-[11px] text-slate-500">* 아래 지도를 직접 터치해도 해당 위치의 주소와 좌표가 자동으로 입력됩니다.</p>
+                        <div id="exp-search-results" class="hidden space-y-1 max-h-44 overflow-y-auto pt-1"></div>
                     </div>
 
-                    <div id="map-expected" class="map-box"></div>
-
-                    <form id="expected-form" class="space-y-3 pt-1">
+                    <form id="expected-form" class="space-y-3">
                         <input type="hidden" id="exp-edit-id">
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                        <div class="grid grid-cols-3 gap-2">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">여행 일차</label>
-                                <select id="exp-day" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white font-semibold">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">일차</label>
+                                <select id="exp-day" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs bg-white font-bold">
                                     <option value="1">1일차</option>
                                     <option value="2">2일차</option>
                                     <option value="3">3일차</option>
@@ -348,166 +298,154 @@ service cloud.firestore {
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">방문 시간</label>
-                                <input type="time" id="exp-time" value="10:00" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-semibold">
+                                <input type="time" id="exp-time" value="10:00" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs">
                             </div>
-                            <div class="col-span-2 sm:col-span-1">
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">구분</label>
-                                <select id="exp-category" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white">
-                                    <option value="관광">📸 관광지</option>
-                                    <option value="식당">🍚 식당</option>
-                                    <option value="카페">☕ 카페</option>
-                                    <option value="숙소">🏠 숙소</option>
-                                    <option value="장보기">🛒 장보기</option>
-                                    <option value="휴게소">⛽ 휴게소</option>
-                                    <option value="출발/귀가">🚗 출발/귀가</option>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">카테고리</label>
+                                <select id="exp-category" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs bg-white">
+                                    <option value="관광">관광</option>
+                                    <option value="식당">식당</option>
+                                    <option value="카페">카페</option>
+                                    <option value="숙소">숙소</option>
+                                    <option value="장보기">장보기</option>
+                                    <option value="휴게소">휴게소</option>
+                                    <option value="출발/귀가">출발/귀가</option>
+                                    <option value="기타">기타</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">장소 이름</label>
-                                <input type="text" id="exp-place-name" placeholder="예: 돌집식당" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div class="sm:col-span-1">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">장소명</label>
+                                <input type="text" id="exp-place-name" required placeholder="장소 이름" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">전화번호 (선택)</label>
-                                <input type="tel" id="exp-phone" placeholder="예: 043-422-2842" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">전화번호</label>
+                                <input type="tel" id="exp-phone" placeholder="예: 043-422-2842" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">예상 지출 총액 (원)</label>
-                                <input type="number" id="exp-budget" value="0" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">예상 예산 (원)</label>
+                                <input type="number" id="exp-budget" value="0" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">정확한 주소 (도로명/지번/해외주소)</label>
-                            <div class="flex gap-2">
-                                <input type="text" id="exp-address" placeholder="예: 충북 단양군 단양읍 중앙2로 11" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm">
-                                <button type="button" onclick="geocodeFromAddressInput('exp')" class="bg-slate-700 text-white px-3 py-2 rounded-lg text-xs font-bold shrink-0 cursor-pointer">주소로 좌표찾기</button>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">메모 및 예정 행동</label>
-                            <input type="text" id="exp-memo" placeholder="예: 곤드레마늘정식 8인 예약 필수" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="text" id="exp-lat" placeholder="위도 (자동/지도터치)" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-slate-50">
-                            <input type="text" id="exp-lng" placeholder="경도 (자동/지도터치)" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-slate-50">
-                        </div>
-
-                        <!-- 대안 식당·카페 후보 등록 -->
-                        <div class="bg-indigo-50/60 p-3.5 rounded-xl border border-indigo-200 space-y-2.5">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <h4 class="text-xs font-bold text-indigo-900"><i class="fa-solid fa-repeat mr-1"></i>대안 식당·카페·장소 후보 등록 (선택)</h4>
-                                    <p class="text-[11px] text-indigo-700">후보 장소를 등록해 두면 타임라인에서 터치 한 번으로 본 일정과 교체됩니다.</p>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-xs font-semibold text-slate-600">도로명 / 지번 주소</label>
+                                <div class="flex gap-1">
+                                    <button type="button" onclick="openKakaoAddressPopup('exp')" class="text-[11px] bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-bold cursor-pointer">우편번호 검색</button>
+                                    <button type="button" onclick="geocodeFromAddressInput('exp')" class="text-[11px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold cursor-pointer">주소로 좌표찾기</button>
                                 </div>
-                                <button type="button" onclick="addAlternativeRow()" class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer shrink-0">
-                                    + 대안 장소 추가
-                                </button>
+                            </div>
+                            <input type="text" id="exp-address" placeholder="주소 입력 또는 상단 검색창 이용" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">메모 및 안내사항</label>
+                            <input type="text" id="exp-memo" placeholder="예: 곤드레마늘정식 8인 예약 필수" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                        </div>
+
+                        <!-- 대안 장소 섹션 -->
+                        <div class="bg-indigo-50/60 p-3 rounded-xl border border-indigo-200 space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-extrabold text-indigo-800"><i class="fa-solid fa-repeat mr-1"></i>대안 후보 장소 (선택사항)</span>
+                                <button type="button" onclick="addAlternativeRow()" class="bg-indigo-600 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">+ 대안 장소 추가</button>
                             </div>
                             <div id="exp-alternatives-container" class="space-y-2"></div>
                         </div>
 
-                        <div class="flex gap-2">
-                            <button type="submit" id="exp-submit-btn" class="flex-1 bg-blue-600 active:bg-blue-800 text-white py-3 rounded-xl text-sm font-bold cursor-pointer shadow-sm">
-                                예상 일정 저장하기
-                            </button>
-                            <button type="button" onclick="resetExpForm()" id="exp-cancel-btn" class="bg-slate-200 text-slate-700 px-5 py-3 rounded-xl text-sm font-bold cursor-pointer">
-                                닫기
-                            </button>
+                        <!-- 지도 클릭 위치 지정 -->
+                        <div class="space-y-1.5">
+                            <p class="text-[11px] text-slate-500 font-semibold">* 지도를 클릭하면 해당 위치의 위도·경도와 도로명 주소가 자동 입력됩니다.</p>
+                            <div id="map-expected" class="map-box"></div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" id="exp-lat" placeholder="위도 (자동입력)" class="border border-slate-200 bg-slate-50 rounded-lg px-2.5 py-1.5 text-[11px]">
+                                <input type="text" id="exp-lng" placeholder="경도 (자동입력)" class="border border-slate-200 bg-slate-50 rounded-lg px-2.5 py-1.5 text-[11px]">
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 pt-2">
+                            <button type="submit" id="exp-submit-btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs font-extrabold cursor-pointer">예상 일정 저장하기</button>
+                            <button type="button" onclick="resetExpForm(false)" class="bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer">닫기</button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                <h3 class="font-bold text-slate-800 mb-3 text-sm">등록된 예상 일정 전체 목록 (일차 필터 무관 전체 표시)</h3>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                <h3 class="text-sm font-extrabold text-slate-800"><i class="fa-solid fa-list-check text-blue-600 mr-1"></i>전체 예상 일정 관리 목록</h3>
                 <div id="expected-manage-list" class="space-y-4"></div>
             </div>
         </section>
 
-        <!-- 탭 4: 가계부 및 1/N 개인별 납부 회비 정산기 (접이식 입력창) -->
-        <section id="tab-actual" class="space-y-4 hidden">
-            <div class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-5 rounded-2xl shadow-md space-y-4">
-                <div class="flex flex-wrap justify-between items-center gap-2 border-b border-emerald-500/50 pb-3">
-                    <div>
-                        <span class="text-xs bg-emerald-800/80 px-2.5 py-1 rounded-full font-bold">💰 가계부 1/N 회비 정산기</span>
-                        <h3 class="text-lg font-extrabold mt-1.5">개인별 납부할 회비 내역</h3>
-                    </div>
-                    <div class="flex gap-1.5">
-                        <button type="button" onclick="exportExcelBackup('pc')" class="bg-emerald-800 hover:bg-emerald-900 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-sm cursor-pointer flex items-center gap-1">
-                            <i class="fa-solid fa-file-excel"></i> 엑셀백업
-                        </button>
-                        <button type="button" onclick="copySettlementReport()" class="bg-white text-emerald-800 hover:bg-emerald-50 px-3.5 py-2 rounded-xl text-xs font-extrabold shadow-sm cursor-pointer flex items-center gap-1.5">
-                            <i class="fa-regular fa-copy"></i> 카톡 정산복사
-                        </button>
+        <!-- [탭 4] 가계부·회비 -->
+        <section id="tab-actual" class="hidden space-y-4">
+            <!-- 정산 요약 및 1/N 계산기 -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-extrabold text-slate-800"><i class="fa-solid fa-calculator text-emerald-600 mr-1.5"></i>실시간 예산 비교 및 1/N 회비 정산</h3>
+                    <div class="flex items-center gap-1.5 text-xs">
+                        <span class="text-slate-500 font-semibold">정산 인원:</span>
+                        <input type="number" id="calc-member-count" value="8" min="1" onchange="updateMemberCount(this.value)" class="w-14 border border-slate-300 rounded-lg px-2 py-1 text-center font-extrabold text-blue-700">
+                        <span class="font-bold">명</span>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                    <div class="bg-white/10 p-3 rounded-xl">
-                        <p class="text-[11px] text-emerald-100">총 예상 예산</p>
-                        <p id="calc-exp-total" class="text-base font-bold mt-1">0원</p>
-                        <p id="calc-exp-per" class="text-[11px] text-emerald-200 mt-0.5">1인당 0원</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div class="bg-blue-50/70 border border-blue-200 p-3 rounded-xl">
+                        <p class="text-[11px] font-bold text-blue-700">총 예상 예산</p>
+                        <p id="calc-exp-total" class="text-base font-extrabold text-slate-800 mt-0.5">0원</p>
+                        <p id="calc-exp-per" class="text-[11px] text-slate-500 mt-0.5">1인 예상 약 0원</p>
                     </div>
-                    <div class="bg-white/15 p-3 rounded-xl border border-white/20">
-                        <p class="text-[11px] text-emerald-100">총 실제 사용금액</p>
-                        <p id="calc-act-total" class="text-base font-extrabold text-amber-300 mt-1">0원</p>
-                        <p id="calc-diff-text" class="text-[11px] text-emerald-100 mt-0.5">예산 대비 0원</p>
+                    <div class="bg-emerald-50/70 border border-emerald-200 p-3 rounded-xl">
+                        <p class="text-[11px] font-bold text-emerald-700">총 실제 지출액</p>
+                        <p id="calc-act-total" class="text-base font-extrabold text-emerald-800 mt-0.5">0원</p>
+                        <p id="calc-diff-text" class="text-[11px] text-slate-600 mt-0.5">예산 여유 +0원</p>
                     </div>
-                    <div class="bg-white/10 p-3 rounded-xl flex flex-col justify-center items-center">
-                        <label class="text-[11px] text-emerald-100 mb-1">참여 인원수 조정</label>
-                        <div class="flex items-center gap-1.5">
-                            <input type="number" id="calc-member-count" value="8" min="1" onchange="updateMemberCount(this.value)" class="w-16 text-center text-slate-900 font-extrabold text-sm rounded-lg py-1 px-2">
-                            <span class="text-xs font-bold">명</span>
-                        </div>
-                    </div>
-                    <div class="bg-white text-slate-900 p-3 rounded-xl shadow-inner flex flex-col justify-center">
-                        <p class="text-[11px] font-bold text-emerald-700">1인당 납부할 회비 (실제)</p>
-                        <p id="calc-per-person-exact" class="text-lg font-black text-emerald-600 mt-0.5">0원</p>
-                        <p id="calc-per-person-round" class="text-[11px] text-slate-500 font-semibold">100원 올림: 0원</p>
+                    <div class="bg-amber-50/80 border border-amber-200 p-3 rounded-xl">
+                        <p class="text-[11px] font-bold text-amber-800">실제 지출 기준 1인당 회비</p>
+                        <p id="calc-per-person-exact" class="text-base font-extrabold text-amber-900 mt-0.5">0원</p>
+                        <p id="calc-per-person-round" class="text-[11px] text-amber-700 font-semibold mt-0.5">100원 올림: 0원</p>
                     </div>
                 </div>
+
+                <button type="button" onclick="copySettlementReport()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-extrabold cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-share-nodes"></i> 카카오톡 공유용 가계부 정산 내역 복사하기
+                </button>
             </div>
 
-            <!-- [접이식] 실제 방문 및 가계부 입력 폼 -->
-            <div id="act-accordion-card" class="bg-white rounded-2xl shadow-sm border border-emerald-200 overflow-hidden">
-                <button type="button" onclick="toggleActFormAccordion()" class="w-full p-4 flex justify-between items-center bg-emerald-50/60 hover:bg-emerald-50 cursor-pointer text-left transition">
-                    <span id="act-form-title" class="font-bold text-emerald-900 text-sm flex items-center gap-2">
+            <!-- 가계부 직접 입력 / 수정 아코디언 -->
+            <div id="act-accordion-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <button type="button" onclick="toggleActFormAccordion()" class="w-full p-4 flex justify-between items-center bg-emerald-50/60 hover:bg-emerald-50 cursor-pointer text-left">
+                    <span id="act-form-title" class="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">
                         <i class="fa-solid fa-circle-plus text-emerald-600"></i> 실제 방문 및 지출 내역 입력하기 (터치하여 열기)
                     </span>
-                    <i id="act-form-chevron" class="fa-solid fa-chevron-down text-emerald-600 text-xs transition-transform"></i>
+                    <i id="act-form-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
                 </button>
-
-                <div id="act-form-body" class="hidden p-5 space-y-4 border-t border-emerald-100">
-                    <div class="bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-200 space-y-2">
-                        <div class="flex flex-wrap justify-between items-center gap-2">
-                            <label class="text-xs font-bold text-emerald-800">💡 계획된 예상 일정에서 불러오거나 장소/주소 검색하기</label>
-                            <button type="button" onclick="openKakaoAddressPopup('act')" class="bg-amber-400 text-slate-900 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer">
-                                카카오 주소검색
-                            </button>
-                        </div>
-                        <select id="act-preset-select" onchange="fillFromExpected()" class="w-full border border-emerald-300 rounded-lg px-3 py-2 text-sm bg-white">
+                <div id="act-form-body" class="hidden p-4 border-t border-slate-200 space-y-3">
+                    <div class="bg-blue-50/60 p-3 rounded-xl border border-blue-200 space-y-1.5">
+                        <label class="block text-xs font-bold text-blue-800">💡 예상 일정에서 불러오기 (선택 시 자동 채움)</label>
+                        <select id="act-preset-select" onchange="fillFromExpected()" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs bg-white">
                             <option value="">-- 예상 방문지 목록에서 선택하세요 --</option>
                         </select>
-                        <div class="flex gap-2 pt-1">
-                            <input type="text" id="act-search-keyword" placeholder="또는 새로운 방문 장소명 검색" class="flex-1 border border-emerald-200 rounded-lg px-3 py-1.5 text-xs bg-white">
-                            <button type="button" onclick="searchPlaceCoord('act')" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 cursor-pointer">장소 검색</button>
-                        </div>
-                        <div id="act-search-results" class="hidden space-y-1 pt-1 max-h-32 overflow-y-auto"></div>
                     </div>
 
-                    <div id="map-actual" class="map-box"></div>
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+                        <label class="block text-xs font-extrabold text-emerald-700"><i class="fa-solid fa-magnifying-glass mr-1"></i>새로운 방문 장소 검색</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="act-search-keyword" onkeydown="if(event.key==='Enter'){event.preventDefault();searchPlaceCoord('act');}" placeholder="장소명 입력 후 검색" class="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-xs bg-white">
+                            <button type="button" onclick="searchPlaceCoord('act')" class="bg-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 cursor-pointer">검색</button>
+                        </div>
+                        <div id="act-search-results" class="hidden space-y-1 max-h-44 overflow-y-auto pt-1"></div>
+                    </div>
 
                     <form id="actual-form" class="space-y-3">
                         <input type="hidden" id="act-edit-id">
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                        <div class="grid grid-cols-3 gap-2">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">방문 일차</label>
-                                <select id="act-day" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white font-semibold">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">일차</label>
+                                <select id="act-day" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs bg-white font-bold">
                                     <option value="1">1일차</option>
                                     <option value="2">2일차</option>
                                     <option value="3">3일차</option>
@@ -515,260 +453,223 @@ service cloud.firestore {
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">실제 방문 시간</label>
-                                <input type="time" id="act-time" value="12:00" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-semibold">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">시간</label>
+                                <input type="time" id="act-time" value="12:00" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs">
                             </div>
-                            <div class="col-span-2 sm:col-span-1">
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">결제자 / 행동 주체</label>
-                                <select id="act-traveler" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white font-semibold">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">결제자</label>
+                                <select id="act-traveler" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs bg-white">
                                     <option value="총무(공통)">총무(공통)</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">실제 방문 장소명</label>
-                                <input type="text" id="act-place" placeholder="예: 돌집식당" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">방문 장소명</label>
+                                <input type="text" id="act-place" required placeholder="방문 장소" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">전화번호 (선택)</label>
-                                <input type="tel" id="act-phone" placeholder="예: 043-422-2842" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">전화번호</label>
+                                <input type="tel" id="act-phone" placeholder="전화번호" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">실제 사용 금액 (원)</label>
-                                <input type="number" id="act-expense" value="0" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold text-emerald-700">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">실제 지출액 (원)</label>
+                                <input type="number" id="act-expense" value="0" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-emerald-700">
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">방문지 주소 (선택)</label>
-                            <div class="flex gap-2">
-                                <input type="text" id="act-address" placeholder="도로명 또는 지번 주소" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm">
-                                <button type="button" onclick="geocodeFromAddressInput('act')" class="bg-slate-700 text-white px-3 py-2 rounded-lg text-xs font-bold shrink-0 cursor-pointer">주소로 좌표찾기</button>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-xs font-semibold text-slate-600">주소</label>
+                                <div class="flex gap-1">
+                                    <button type="button" onclick="openKakaoAddressPopup('act')" class="text-[11px] bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-bold cursor-pointer">우편번호 검색</button>
+                                    <button type="button" onclick="geocodeFromAddressInput('act')" class="text-[11px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold cursor-pointer">주소로 좌표찾기</button>
+                                </div>
                             </div>
+                            <input type="text" id="act-address" placeholder="도로명 또는 지번 주소" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">방문한 곳의 행동 및 지출 상세 내역</label>
-                            <textarea id="act-action" rows="2" placeholder="예: 곤드레마늘정식 8인분 식사 및 음료 결제" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></textarea>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">지출 상세 내역</label>
+                            <input type="text" id="act-action" placeholder="예: 점심 곤드레정식 8인 결제" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="text" id="act-lat" placeholder="위도 (선택)" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-slate-50">
-                            <input type="text" id="act-lng" placeholder="경도 (선택)" class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs bg-slate-50">
+                        <div class="space-y-1.5">
+                            <div id="map-actual" class="map-box"></div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" id="act-lat" placeholder="위도" class="border border-slate-200 bg-slate-50 rounded-lg px-2.5 py-1.5 text-[11px]">
+                                <input type="text" id="act-lng" placeholder="경도" class="border border-slate-200 bg-slate-50 rounded-lg px-2.5 py-1.5 text-[11px]">
+                            </div>
                         </div>
 
-                        <div class="flex gap-2">
-                            <button type="submit" id="act-submit-btn" class="flex-1 bg-emerald-600 active:bg-emerald-800 text-white py-3 rounded-xl text-sm font-bold cursor-pointer shadow-sm">
-                                가계부 지출 내역 저장하기
-                            </button>
-                            <button type="button" onclick="resetActForm()" id="act-cancel-btn" class="bg-slate-200 text-slate-700 px-5 py-3 rounded-xl text-sm font-bold cursor-pointer">
-                                닫기
-                            </button>
+                        <div class="flex gap-2 pt-2">
+                            <button type="submit" id="act-submit-btn" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-extrabold cursor-pointer">가계부 지출 내역 저장하기</button>
+                            <button type="button" onclick="resetActForm(false)" class="bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer">닫기</button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                <h3 class="font-bold text-slate-800 mb-3 text-sm">가계부 지출 전체 내역 (일차 필터 무관 전체 표시)</h3>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                <h3 class="text-sm font-extrabold text-slate-800"><i class="fa-solid fa-coins text-emerald-600 mr-1"></i>전체 가계부 지출 내역 관리</h3>
                 <div id="actual-manage-list" class="space-y-4"></div>
             </div>
         </section>
 
-        <!-- ============================================================== -->
-        <!-- 탭 5: 여행별 독립 체크리스트 (접이식 차량/체크 입력창 적용)      -->
-        <!-- ============================================================== -->
-        <section id="tab-checklist" class="space-y-4 hidden">
+        <!-- [탭 5] 체크리스트 & 차량 배치 -->
+        <section id="tab-checklist" class="hidden space-y-4">
 
-            <!-- 상단 진행률 게이지 & 담당자별 모아보기 필터 -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-                <div class="flex flex-wrap justify-between items-center gap-2">
-                    <div>
-                        <h2 class="text-base font-extrabold text-slate-800"><i class="fa-solid fa-clipboard-check text-blue-600 mr-1.5"></i>여행 맞춤형 통합 체크리스트</h2>
-                        <p class="text-xs text-slate-500">이 체크리스트는 현재 선택된 여행에만 독립적으로 저장됩니다.</p>
-                    </div>
-                    <button type="button" onclick="loadDefaultChecklistTemplate()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">
-                        ✨ 기본 템플릿 불러오기
-                    </button>
-                </div>
-
-                <div class="space-y-1 pt-1">
-                    <div class="flex justify-between text-xs font-bold">
-                        <span class="text-slate-600">전체 준비 진행률</span>
-                        <span id="chk-progress-text" class="text-blue-600">0% (0/0)</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                        <div id="chk-progress-bar" class="bg-blue-600 h-full transition-all duration-300" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold text-slate-700"><i class="fa-solid fa-user-check text-blue-600 mr-1"></i>담당자·구입자별 보기:</span>
-                        <select id="chk-person-filter" onchange="renderChecklistAll()" class="border border-slate-300 rounded-lg px-2.5 py-1 bg-white font-bold text-blue-700">
-                            <option value="all">전체 인원 보기</option>
-                        </select>
-                    </div>
-                    <button type="button" onclick="copyUncheckedItems()" class="text-slate-600 hover:text-slate-900 underline font-semibold cursor-pointer">
-                        📋 미완료 항목 카톡 복사
-                    </button>
-                </div>
-            </div>
-
-            <!-- [대분류 1] 차량 배치 (접이식 입력창 + 차량 카드 목록) -->
-            <div id="car-section-card" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-                <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <div>
-                        <span class="text-[11px] font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">대분류 1</span>
-                        <h3 id="car-form-title" class="font-bold text-slate-800 text-base mt-1">🚗 차량 배치 (운전자·탑승자 명단)</h3>
-                    </div>
-                    <button type="button" onclick="toggleAccordion('car-form-wrap', 'car-form-chevron')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1">
+            <!-- 1. 차량 배치 및 참가자 명단 -->
+            <div id="car-section-card" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 id="car-form-title" class="text-sm font-extrabold text-slate-800">🚗 차량 배치 (운전자·탑승자 명단)</h3>
+                    <button type="button" onclick="toggleAccordion('car-form-wrap', 'car-form-chevron')" class="bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1">
                         <span>+ 차량 추가/수정</span>
                         <i id="car-form-chevron" class="fa-solid fa-chevron-down text-[10px] transition-transform"></i>
                     </button>
                 </div>
+                <p class="text-[11px] text-slate-500">* 여기에 등록된 운전자·동승자 이름이 체크리스트 담당자 및 가계부 결제자 목록에 자동 연동됩니다.</p>
 
-                <!-- 평상시에는 접혀 있는 차량 입력 폼 -->
-                <div id="car-form-wrap" class="hidden pt-1">
-                    <form id="car-form" class="grid grid-cols-1 sm:grid-cols-4 gap-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <div id="car-form-wrap" class="hidden pt-2 border-t border-slate-200">
+                    <form id="car-form" class="space-y-2.5">
                         <input type="hidden" id="car-edit-id">
-                        <input type="text" id="car-code" placeholder="소분류 (예: A차량 / 1호차)" required class="border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white font-bold">
-                        <input type="text" id="car-name" placeholder="차종 (예: 테슬라, 팰리세이드)" required class="border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white">
-                        <input type="text" id="car-driver" placeholder="운전자 (예: 박성희)" required class="border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white">
-                        <input type="text" id="car-members" placeholder="탑승자 쉼표구분 (예: 오찬욱, 박경민)" required class="border border-slate-300 rounded-lg px-3 py-2 text-xs bg-white">
-                        <div class="sm:col-span-4 flex gap-2">
-                            <button type="submit" id="car-submit-btn" class="flex-1 bg-blue-600 active:bg-blue-800 text-white py-2 rounded-lg text-xs font-bold cursor-pointer">
-                                차량 배치 저장
-                            </button>
-                            <button type="button" onclick="resetCarForm()" id="car-cancel-btn" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer">
-                                닫기
-                            </button>
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                            <input type="text" id="car-code" required placeholder="구분 (예: A차량)" class="border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                            <input type="text" id="car-name" required placeholder="차종 (예: 테슬라, 팰리세이드)" class="border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                            <input type="text" id="car-driver" required placeholder="운전자 이름" class="border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                            <input type="text" id="car-members" placeholder="동승자 (쉼표로 구분)" class="border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="submit" id="car-submit-btn" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold cursor-pointer">차량 배치 저장</button>
+                            <button type="button" onclick="resetCarForm(false)" class="bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-bold cursor-pointer">취소</button>
                         </div>
                     </form>
                 </div>
 
-                <div id="car-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                <div id="car-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1"></div>
             </div>
 
-            <!-- [접이식] 대분류 2 ~ 5 통합 추가/수정 입력 폼 (평상시 접힘) -->
-            <div id="chk-editor-card" class="bg-indigo-50/70 rounded-2xl shadow-sm border border-indigo-200 overflow-hidden">
-                <button type="button" onclick="toggleAccordion('chk-form-body', 'chk-form-chevron')" class="w-full p-4 flex justify-between items-center bg-indigo-50 hover:bg-indigo-100/70 cursor-pointer text-left transition">
-                    <span id="chk-form-title" class="font-bold text-indigo-950 text-sm flex items-center gap-2">
+            <!-- 체크리스트 진행률 및 인원별 필터 -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                <div class="flex flex-wrap justify-between items-center gap-2">
+                    <div>
+                        <h3 class="text-sm font-extrabold text-slate-800"><i class="fa-solid fa-clipboard-check text-indigo-600 mr-1"></i>준비물 · 먹거리 · 현장구입 체크리스트</h3>
+                        <p id="chk-progress-text" class="text-xs font-bold text-indigo-600 mt-0.5">0% (0/0 완료)</p>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <select id="chk-person-filter" onchange="renderChecklistAll()" class="border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs bg-white font-semibold">
+                            <option value="all">전체 인원 보기</option>
+                        </select>
+                        <button type="button" onclick="loadDefaultChecklistTemplate()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer">기본템플릿</button>
+                        <button type="button" onclick="copyUncheckedItems()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer">미완료복사</button>
+                    </div>
+                </div>
+                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                    <div id="chk-progress-bar" class="bg-indigo-600 h-full transition-all duration-300" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- 체크리스트 항목 추가/수정 아코디언 -->
+            <div id="chk-editor-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <button type="button" onclick="toggleAccordion('chk-form-body', 'chk-form-chevron')" class="w-full p-4 flex justify-between items-center bg-indigo-50/60 hover:bg-indigo-50 cursor-pointer text-left">
+                    <span id="chk-form-title" class="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">
                         <i class="fa-solid fa-plus-circle text-indigo-600"></i> 체크리스트 항목 추가 / 수정 (터치하여 열기)
                     </span>
-                    <i id="chk-form-chevron" class="fa-solid fa-chevron-down text-indigo-600 text-xs transition-transform"></i>
+                    <i id="chk-form-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
                 </button>
-
-                <div id="chk-form-body" class="hidden p-5 pt-3 border-t border-indigo-100">
-                    <form id="chk-form" class="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+                <div id="chk-form-body" class="hidden p-4 border-t border-slate-200">
+                    <form id="chk-form" class="space-y-3">
                         <input type="hidden" id="chk-edit-id">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">대분류</label>
+                                <select id="chk-major" onchange="onChangeChkMajor()" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs bg-white font-bold">
+                                    <option value="prep">🎒 2. 여행 준비물</option>
+                                    <option value="food">🍱 3. 먹거리 (사전준비)</option>
+                                    <option value="buy">🛒 4. 여행중 구입품목 (장소별)</option>
+                                    <option value="etc">📌 5. 기타 예약·확인사항</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label id="chk-minor-label" class="block text-xs font-semibold text-slate-600 mb-1">준비물 소분류</label>
+                                <input type="text" id="chk-minor" list="chk-minor-presets" required placeholder="소분류 또는 구입장소" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                                <datalist id="chk-minor-presets"></datalist>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">담당자 / 구입자</label>
+                                <select id="chk-person" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs bg-white">
+                                    <option value="공통(총무)">공통(총무)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <div class="sm:col-span-2">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">품목명 / 할 일 내용</label>
+                                <input type="text" id="chk-title" required placeholder="예: 국산 냉장 삼겹살 3.2kg, 아이스박스" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                            </div>
+                            <div id="chk-price-wrap" class="hidden">
+                                <label class="block text-xs font-semibold text-emerald-700 mb-1">예상/결제 금액 (원)</label>
+                                <input type="number" id="chk-price" value="0" class="w-full border border-emerald-300 rounded-xl px-3 py-2 text-xs font-bold">
+                            </div>
+                        </div>
+
                         <div>
-                            <label class="block text-[11px] font-bold text-indigo-900 mb-1">대분류 선택</label>
-                            <select id="chk-major" onchange="onChangeChkMajor()" required class="w-full border border-indigo-300 rounded-lg px-2.5 py-2 text-xs bg-white font-bold">
-                                <option value="prep">2) 여행 준비물</option>
-                                <option value="food">3) 먹을 것 준비물 (사전)</option>
-                                <option value="buy">4) 여행중 구입품목 (장소별)</option>
-                                <option value="etc">5) 기타 (예약·확인사항)</option>
-                            </select>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">세부 메모</label>
+                            <input type="text" id="chk-memo" placeholder="예: 전날 미리 전화 주문하기" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
                         </div>
-                        <div>
-                            <label id="chk-minor-label" class="block text-[11px] font-bold text-indigo-900 mb-1">소분류 (구분/장소)</label>
-                            <input type="text" id="chk-minor" list="chk-minor-presets" placeholder="예: 공통필수품, 하나로마트" required class="w-full border border-indigo-300 rounded-lg px-2.5 py-2 text-xs bg-white">
-                            <datalist id="chk-minor-presets">
-                                <option value="공통 필수품"></option>
-                                <option value="전자·촬영장비"></option>
-                                <option value="상비약·구급함"></option>
-                                <option value="세면·개인물품"></option>
-                            </datalist>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-indigo-900 mb-1">품목명 / 체크할 내용</label>
-                            <input type="text" id="chk-title" placeholder="예: 아이스박스, 삼겹살 3.2kg" required class="w-full border border-indigo-300 rounded-lg px-2.5 py-2 text-xs bg-white">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-indigo-900 mb-1">준비할 사람 / 구입자 (탑승자 연동)</label>
-                            <select id="chk-person" class="w-full border border-indigo-300 rounded-lg px-2.5 py-2 text-xs bg-white font-semibold">
-                                <option value="공통(총무)">공통(총무)</option>
-                            </select>
-                        </div>
-                        <div id="chk-price-wrap" class="hidden sm:col-span-2">
-                            <label class="block text-[11px] font-bold text-indigo-900 mb-1">구입 가격 / 예상 비용 (원)</label>
-                            <input type="number" id="chk-price" value="0" placeholder="0" class="w-full border border-indigo-300 rounded-lg px-2.5 py-2 text-xs bg-white font-bold text-emerald-700">
-                        </div>
-                        <div id="chk-memo-wrap" class="sm:col-span-4">
-                            <label class="block text-[11px] font-bold text-indigo-900 mb-1">수량 / 상세 메모 (선택)</label>
-                            <input type="text" id="chk-memo" placeholder="예: 1인 400g 기준 전날 미리 전화주문" class="w-full border border-indigo-300 rounded-lg px-2.5 py-2 text-xs bg-white">
-                        </div>
-                        <div class="sm:col-span-4 flex gap-2 pt-1">
-                            <button type="submit" id="chk-submit-btn" class="flex-1 bg-indigo-600 active:bg-indigo-800 text-white py-2.5 rounded-xl text-xs font-bold cursor-pointer shadow-sm">
-                                체크리스트에 저장하기
-                            </button>
-                            <button type="button" onclick="resetChkForm()" id="chk-cancel-btn" class="bg-white border border-slate-300 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer">
-                                닫기
-                            </button>
+
+                        <div class="flex gap-2">
+                            <button type="submit" id="chk-submit-btn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl text-xs font-extrabold cursor-pointer">체크리스트에 저장하기</button>
+                            <button type="button" onclick="resetChkForm(false)" class="bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer">닫기</button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <!-- [대분류 2] 여행 준비물 표시 영역 -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-                <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <div>
-                        <span class="text-[11px] font-extrabold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">대분류 2</span>
-                        <h3 class="font-bold text-slate-800 text-base mt-1">🎒 여행 준비물 (담당자 배정)</h3>
-                    </div>
-                    <button type="button" onclick="quickOpenChkForm('prep', '공통 필수품')" class="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg font-bold cursor-pointer">+ 준비물 추가</button>
+            <!-- 분류별 체크리스트 출력 영역 -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2.5">
+                <div class="flex justify-between items-center">
+                    <h4 class="text-xs sm:text-sm font-extrabold text-slate-800">🎒 2. 여행 준비물 (소분류별)</h4>
+                    <button type="button" onclick="quickOpenChkForm('prep', '공통 필수품')" class="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg font-bold cursor-pointer">+ 준비물 추가</button>
                 </div>
-                <div id="chk-list-prep" class="space-y-3"></div>
+                <div id="chk-list-prep" class="space-y-2"></div>
             </div>
 
-            <!-- [대분류 3] 먹을 것 준비물 (사전준비물) 표시 영역 -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-                <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <div>
-                        <span class="text-[11px] font-extrabold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">대분류 3</span>
-                        <h3 class="font-bold text-slate-800 text-base mt-1">🍱 먹을 것 준비물 (출발 전 사전준비물)</h3>
-                    </div>
-                    <button type="button" onclick="quickOpenChkForm('food', '사전 먹거리')" class="text-xs bg-amber-50 text-amber-800 px-2.5 py-1 rounded-lg font-bold cursor-pointer">+ 먹거리 추가</button>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2.5">
+                <div class="flex justify-between items-center">
+                    <h4 class="text-xs sm:text-sm font-extrabold text-slate-800">🍱 3. 먹거리 사전 준비 (집에서 챙길 것)</h4>
+                    <button type="button" onclick="quickOpenChkForm('food', '주식·김치·반찬')" class="text-xs bg-amber-50 text-amber-800 px-2.5 py-1 rounded-lg font-bold cursor-pointer">+ 먹거리 추가</button>
                 </div>
-                <div id="chk-list-food" class="space-y-3"></div>
+                <div id="chk-list-food" class="space-y-2"></div>
             </div>
 
-            <!-- [대분류 4] 여행중 구입품목 (장소별 물품·가격·구입자) 표시 영역 -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-                <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2.5">
+                <div class="flex justify-between items-center">
                     <div>
-                        <span class="text-[11px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">대분류 4</span>
-                        <h3 class="font-bold text-slate-800 text-base mt-1">🛒 여행중 구입품목 (장소별 구입물품 · 가격 · 구입자)</h3>
-                        <p class="text-[11px] text-slate-500">장소별로 구입할 물품을 관리하며, [가계부 반영]을 누르면 중복 없이 1회 실제 지출로 등록됩니다.</p>
+                        <h4 class="text-xs sm:text-sm font-extrabold text-emerald-800">🛒 4. 여행중 현장 구입품목 (구입장소별 & 가계부 연동)</h4>
+                        <p class="text-[11px] text-slate-500">[가계부반영] 버튼을 누르면 해당 구입장소의 일차·시간에 맞춰 가계부 지출로 자동 등록됩니다.</p>
                     </div>
-                    <button type="button" onclick="quickOpenChkForm('buy', '하나로마트 가곡점')" class="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg font-bold cursor-pointer shrink-0">+ 구입품목 추가</button>
+                    <button type="button" onclick="quickOpenChkForm('buy', '하나로마트 가곡점')" class="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg font-bold shrink-0 cursor-pointer">+ 구입품목 추가</button>
                 </div>
-                <div id="chk-list-buy" class="space-y-4"></div>
+                <div id="chk-list-buy" class="space-y-2"></div>
             </div>
 
-            <!-- [대분류 5] 기타 (예약·확인사항) 표시 영역 -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-                <div class="flex justify-between items-center border-b border-slate-100 pb-2">
-                    <div>
-                        <span class="text-[11px] font-extrabold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">대분류 5</span>
-                        <h3 class="font-bold text-slate-800 text-base mt-1">📌 기타 (사전 예약 · 숙소 체크 · 주의사항)</h3>
-                    </div>
-                    <button type="button" onclick="quickOpenChkForm('etc', '식당·매표 사전예약')" class="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-bold cursor-pointer">+ 기타항목 추가</button>
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2.5">
+                <div class="flex justify-between items-center">
+                    <h4 class="text-xs sm:text-sm font-extrabold text-slate-800">📌 5. 기타 예약 · 확인사항</h4>
+                    <button type="button" onclick="quickOpenChkForm('etc', '식당·매표 사전예약')" class="text-xs bg-purple-50 text-purple-700 px-2.5 py-1 rounded-lg font-bold cursor-pointer">+ 기타항목 추가</button>
                 </div>
-                <div id="chk-list-etc" class="space-y-3"></div>
+                <div id="chk-list-etc" class="space-y-2"></div>
             </div>
-
         </section>
 
     </main>
 
     <!-- 2부 코드를 여기에 이어서 붙여넣으세요 -->
     <!-- ========================================== -->
-    <!-- 2부: 카카오/구글 듀얼 지도 및 무결성 스크립트 -->
+    <!-- 2부: 카카오/구글 듀얼 지도, 네비 길찾기, 대분류 폴더 스크립트 -->
     <!-- ========================================== -->
     <script>
         let currentTripId = null;
@@ -789,6 +690,9 @@ service cloud.firestore {
         window.cachedBackupFileName = "단체여행_백업.xlsx";
         let backupDebounceTimer = null;
 
+        const KR_SUBREGIONS = ['강원도', '수도권', '충청권', '전라도', '경상도', '제주도'];
+        const GLOBAL_SUBREGIONS = ['일본', '중국', '아시아', '유럽', '북아메리카', '남아메리카', '오세아니아', '아프리카'];
+
         const firebaseConfig = {
             apiKey: "AIzaSyBVXAi7WTQJ0sm7FXOjWwAMzmnvw1wSt0M",
             authDomain: "group-trip-app-754ca.firebaseapp.com",
@@ -802,12 +706,12 @@ service cloud.firestore {
         let db = null;
         let unsubExp = null, unsubAct = null, unsubCars = null, unsubChk = null;
 
-        // 1. HTML 이스케이프 헬퍼 (XSS 및 따옴표 화면 깨짐 완벽 방지)
+        // HTML 이스케이프 헬퍼 (XSS 및 따옴표 화면 깨짐 완벽 방지)
         const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
         }[c]));
 
-        // 2. 한국 시간(KST / 로컬 타임존) 기준 YYYY-MM-DD 문자열 반환
+        // 한국 시간(KST / 로컬 타임존) 기준 YYYY-MM-DD 문자열 반환
         function getLocalDateStr() {
             const now = new Date();
             const offsetMs = now.getTimezoneOffset() * 60000;
@@ -928,6 +832,42 @@ service cloud.firestore {
             });
         }
 
+        // 국내/해외 선택 시 지역 소분류 목록 자동 변경
+        window.onChangeTripRegion = function(selectedSub) {
+            const reg = document.getElementById('trip-region').value;
+            const subEl = document.getElementById('trip-subregion');
+            if (!subEl) return;
+            const list = (reg === 'global') ? GLOBAL_SUBREGIONS : KR_SUBREGIONS;
+            subEl.innerHTML = list.map(r => `<option value="${r}">${r}</option>`).join('');
+            if (selectedSub && list.includes(selectedSub)) {
+                subEl.value = selectedSub;
+            }
+        };
+
+        // 기존 여행의 제목을 분석해 세부 지역을 자동으로 분류하는 스마트 매칭 함수
+        function inferTripSubRegion(trip) {
+            if (trip.subRegion) return trip.subRegion;
+            const name = String(trip.name || '');
+            if (trip.region === 'global') {
+                if (/일본|오사카|도쿄|후쿠오카|교토|삿포로|오키나와|나고야|북해도|대마도/.test(name)) return '일본';
+                if (/중국|상하이|베이징|칭다오|장가계|백두산|홍콩|마카오|하이난/.test(name)) return '중국';
+                if (/유럽|프랑스|파리|스위스|이탈리아|로마|스페인|런던|영국|독일|프라하|오스트리아|동유럽|서유럽/.test(name)) return '유럽';
+                if (/미국|캐나다|하와이|뉴욕|LA|라스베가스|밴쿠버|북미|북아메리카/.test(name)) return '북아메리카';
+                if (/남미|남아메리카|브라질|페루|아르헨티나|칠레|볼리비아/.test(name)) return '남아메리카';
+                if (/호주|시드니|멜버른|뉴질랜드|괌|사이판|오세아니아|오세니아/.test(name)) return '오세아니아';
+                if (/아프리카|이집트|모로코|케냐|남아공|탄자니아/.test(name)) return '아프리카';
+                return '아시아';
+            } else {
+                if (/단양|제천|충풍|청풍|충주|충청|충북|충남|대전|세종|공주|부여|태안|보령|서산|천안|아산|예산|괴산/.test(name)) return '충청권';
+                if (/강원|속초|강릉|양양|고성|동해|삼척|평창|정선|영월|춘천|홍천|인제|원주|철원|태백/.test(name)) return '강원도';
+                if (/서울|경기|인천|용인|수원|가평|양평|포천|파주|강화|화성|안산|수도권/.test(name)) return '수도권';
+                if (/전라|전북|전남|전주|여수|순천|군산|목포|담양|보성|해남|남원|광주|구례|고창|부안|완도/.test(name)) return '전라도';
+                if (/경상|경북|경남|부산|경주|포항|통영|거제|남해|안동|대구|울산|울릉|진주|밀양|문경|영덕/.test(name)) return '경상도';
+                if (/제주|서귀포|우도|한라산|애월|성산/.test(name)) return '제주도';
+                return '강원도';
+            }
+        }
+
         // 목록 화면으로 돌아가기
         window.goTripSelector = function() {
             currentTripId = null;
@@ -954,7 +894,6 @@ service cloud.firestore {
             currentRegion = trip.region || 'kr';
             document.getElementById('calc-member-count').value = currentMemberCount;
 
-            // 이전 여행 데이터 잔상 즉시 제거
             expectedData = [];
             actualData = [];
             carsData = [];
@@ -967,8 +906,9 @@ service cloud.firestore {
             document.getElementById('btn-back').classList.remove('hidden');
             document.getElementById('btn-map-provider').classList.remove('hidden');
             document.getElementById('header-trip-title').innerText = trip.name || '여행 일정';
+            const subReg = inferTripSubRegion(trip);
             const dateEl = document.getElementById('header-trip-dates');
-            dateEl.innerText = `${trip.startDate || ''} ~ ${trip.endDate || ''} · ${currentMemberCount}인`;
+            dateEl.innerText = `[${subReg}] ${trip.startDate || ''} ~ ${trip.endDate || ''} · ${currentMemberCount}인`;
             dateEl.classList.remove('hidden');
 
             updateMapProviderUI();
@@ -1008,6 +948,7 @@ service cloud.firestore {
             document.getElementById('trip-edit-id').value = trip.id;
             document.getElementById('trip-name').value = trip.name || '';
             document.getElementById('trip-region').value = trip.region || 'kr';
+            onChangeTripRegion(inferTripSubRegion(trip));
             document.getElementById('trip-count').value = trip.memberCount || 8;
             document.getElementById('trip-start').value = trip.startDate || '';
             document.getElementById('trip-end').value = trip.endDate || '';
@@ -1021,12 +962,13 @@ service cloud.firestore {
             document.getElementById('trip-edit-id').value = '';
             document.getElementById('trip-count').value = 8;
             document.getElementById('trip-region').value = 'kr';
+            onChangeTripRegion('강원도');
             document.getElementById('trip-form-title').innerHTML = `<i class="fa-solid fa-circle-plus text-emerald-600"></i> 새로운 여행 직접 만들기 (터치하여 열기)`;
             document.getElementById('trip-submit-btn').innerText = "새 여행 저장";
             toggleAccordion('trip-form-body', 'trip-form-chevron', false);
         };
 
-        // 5개 탭 전환 (일관된 너비 및 스타일 유지)
+        // 5개 탭 전환
         window.switchTab = function(tabId) {
             ['plan', 'visit', 'expected', 'actual', 'checklist'].forEach(id => {
                 document.getElementById(`tab-${id}`).classList.add('hidden');
@@ -1066,7 +1008,17 @@ service cloud.firestore {
             const centerLng = (currentRegion === 'kr') ? 128.3435 : 135.5023;
 
             if (currentRegion === 'kr') {
-                if (typeof kakao === 'undefined' || !kakao.maps) return;
+                if (typeof kakao === 'undefined' || !kakao.maps) {
+                    const planEl = document.getElementById('map-plan');
+                    if (planEl) {
+                        planEl.innerHTML = `<div class="p-6 text-center text-xs text-red-600 space-y-1">
+                            <p class="font-bold text-sm">⚠️ 카카오맵을 불러오지 못했습니다.</p>
+                            <p>1) 카카오 개발자 사이트 ➔ <b>[제품 설정] ➔ [카카오맵]</b>에서 <b>사용 설정(ON)</b>을 켜주세요.</p>
+                            <p>2) <b>[앱 설정] ➔ [플랫폼] ➔ [Web]</b>에 도메인을 등록해 주세요.</p>
+                        </div>`;
+                    }
+                    return;
+                }
                 kakao.maps.load(() => {
                     const createKMap = (id) => {
                         const el = document.getElementById(id);
@@ -1105,7 +1057,11 @@ service cloud.firestore {
                             reverseGeocode(lat, lng, 'act');
                         });
                     }
-                    renderTimelineMaps();
+
+                    setTimeout(() => {
+                        if (mapPlan) mapPlan.relayout();
+                        renderTimelineMaps();
+                    }, 250);
                 });
             } else {
                 if (typeof google === 'undefined' || !google.maps) {
@@ -1182,7 +1138,7 @@ service cloud.firestore {
             }
         }
 
-        // 좌표 -> 주소 역지오코딩 (카카오 / 구글)
+        // 좌표 -> 주소 역지오코딩
         function reverseGeocode(lat, lng, target) {
             const addrInput = document.getElementById(target === 'exp' ? 'exp-address' : 'act-address');
             if (!addrInput) return;
@@ -1206,7 +1162,7 @@ service cloud.firestore {
             }
         }
 
-        // 주소 -> 좌표 지오코딩 (카카오 / 구글)
+        // 주소 -> 좌표 지오코딩
         window.geocodeFromAddressInput = function(target) {
             const addrInput = document.getElementById(target === 'exp' ? 'exp-address' : 'act-address');
             const queryStr = addrInput ? addrInput.value.trim() : '';
@@ -1241,7 +1197,7 @@ service cloud.firestore {
             }
         };
 
-        // 키워드 장소 검색 (국내: 카카오 로컬 Places / 해외: 구글 Places & Geocoder)
+        // 키워드 장소 검색
         window.searchPlaceCoord = function(target) {
             const inputEl = document.getElementById(target === 'exp' ? 'exp-search-keyword' : 'act-search-keyword');
             const resultDiv = document.getElementById(target === 'exp' ? 'exp-search-results' : 'act-search-results');
@@ -1304,7 +1260,6 @@ service cloud.firestore {
             resultDiv.innerHTML = html;
         }
 
-        // exp와 act 모두 지원하도록 통합된 검색 결과 적용 함수
         window.applySearchedCoord = function(target, idx) {
             const item = (lastSearchResults[target] || [])[idx];
             if (!item) return;
@@ -1377,7 +1332,7 @@ service cloud.firestore {
             return isPM ? '#d97706' : '#059669';
         }
 
-        // 계획 지도 & 방문 지도 동선 렌더링 (기존 지도 인스턴스 유지 + 마커/선 클릭 팝업 완비)
+        // 계획 지도 & 방문 지도 동선 렌더링
         function renderTimelineMaps() {
             const sortedExp = sortByDayAndTime(expectedData).filter(item => {
                 if (selectedDayFilter === 'all') return true;
@@ -1468,7 +1423,10 @@ service cloud.firestore {
                         });
                     }
 
-                    if (validPts.length > 0) targetMap.setBounds(bounds);
+                    if (validPts.length > 0) {
+                        targetMap.relayout();
+                        targetMap.setBounds(bounds);
+                    }
                 };
 
                 drawKRoute(mapPlan, planOverlays, 'standard');
@@ -1567,7 +1525,6 @@ service cloud.firestore {
             }
         }
 
-        // ID 기반 방문 지도 포커스 (인라인 따옴표 오류 원천 방지)
         window.focusVisitByExpId = function(expId) {
             const item = expectedData.find(x => x.id === expId);
             if (!item) return;
@@ -1605,7 +1562,6 @@ service cloud.firestore {
             }, () => alert('위치 권한을 허용해 주세요.'));
         };
 
-        // 주소 복사 (ID 기반 호출로 안전 처리)
         window.copyExpAddressById = function(expId) {
             const item = expectedData.find(x => x.id === expId);
             if (!item || !item.address) return;
@@ -1693,9 +1649,7 @@ service cloud.firestore {
             });
         };
 
-        // ==========================================
-        // [방문전 <-> 방문완료] 양방향 연동 (취소 시 가계부 자동 삭제!)
-        // ==========================================
+        // [방문전 <-> 방문완료] 양방향 연동 (취소 시 가계부 자동 삭제)
         window.toggleVisitStatus = async function(expId) {
             if (!checkEditable() || !currentTripId || !db) return;
             const item = expectedData.find(x => x.id === expId);
@@ -1707,7 +1661,6 @@ service cloud.firestore {
             });
 
             if (nextVisitedState) {
-                // 방문완료 시 가계부에 자동 등록 (중복 방지)
                 const alreadyInAct = actualData.some(a => a.linkedExpId === expId);
                 if (!alreadyInAct) {
                     await db.collection("trips").doc(currentTripId).collection("actual_visits").add({
@@ -1725,7 +1678,6 @@ service cloud.firestore {
                     });
                 }
             } else {
-                // 다시 [방문전]으로 되돌릴 때 연결된 자동 생성 가계부 내역 삭제 (총액 왜곡 해결!)
                 const linkedActs = actualData.filter(a => a.linkedExpId === expId);
                 for (const a of linkedActs) {
                     await db.collection("trips").doc(currentTripId).collection("actual_visits").doc(a.id).delete();
@@ -1734,8 +1686,33 @@ service cloud.firestore {
         };
 
         // ==========================================
-        // 타임라인 뷰 및 전체 관리 목록 분리 렌더링
+        // 장소 간 거리·소요시간 박스 및 네이버 지도 길찾기 연동
         // ==========================================
+        window.openRouteByExpId = function(startId, endId) {
+            const startItem = expectedData.find(x => x.id === startId);
+            const endItem = expectedData.find(x => x.id === endId);
+            if (!startItem || !endItem) return;
+
+            const sName = startItem.place_name || startItem.address || '출발지';
+            const eName = endItem.place_name || endItem.address || '도착지';
+
+            if (currentRegion === 'kr') {
+                if (startItem.lat && startItem.lng && endItem.lat && endItem.lng) {
+                    // 네이버 지도 길찾기 (출발지명·좌표 -> 도착지명·좌표 자동 입력, 자동차 경로)
+                    const naverRouteUrl = `https://m.map.naver.com/route.nhn?menu=route&sname=${encodeURIComponent(sName)}&sx=${startItem.lng}&sy=${startItem.lat}&ename=${encodeURIComponent(eName)}&ex=${endItem.lng}&ey=${endItem.lat}&pathType=0&showMap=true`;
+                    window.open(naverRouteUrl, '_blank');
+                } else {
+                    const fallbackUrl = `https://map.naver.com/p/search/${encodeURIComponent(sName + '에서 ' + eName + ' 길찾기')}`;
+                    window.open(fallbackUrl, '_blank');
+                }
+            } else {
+                const origin = (startItem.lat && startItem.lng) ? `${startItem.lat},${startItem.lng}` : (startItem.address || sName);
+                const dest = (endItem.lat && endItem.lng) ? `${endItem.lat},${endItem.lng}` : (endItem.address || eName);
+                const googleRouteUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}&travelmode=driving`;
+                window.open(googleRouteUrl, '_blank');
+            }
+        };
+
         function buildExpListHtml(list) {
             const expGroups = {};
             list.forEach(item => {
@@ -1746,15 +1723,16 @@ service cloud.firestore {
 
             let html = '';
             Object.keys(expGroups).sort((a, b) => Number(a) - Number(b)).forEach(day => {
+                const dayItems = expGroups[day];
                 html += `
                 <div class="space-y-2">
                     <div class="bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex justify-between items-center">
                         <span>📅 ${esc(day)}일차 예상 일정</span>
-                        <span>${expGroups[day].length}곳</span>
+                        <span>${dayItems.length}곳</span>
                     </div>
                     <div class="relative border-l-2 border-blue-200 ml-3 space-y-3 py-1">`;
 
-                expGroups[day].forEach(item => {
+                dayItems.forEach((item, idx) => {
                     const isVisited = Boolean(item.visited);
                     const t = normalizeTime(item.time);
                     const isPM = parseInt(t.split(':')[0], 10) >= 12;
@@ -1780,13 +1758,45 @@ service cloud.firestore {
                     if (Array.isArray(item.alternatives) && item.alternatives.length > 0) {
                         altButtonsHtml = `<div class="flex flex-wrap items-center gap-1.5 pt-1">
                             <span class="text-[11px] font-bold text-indigo-700"><i class="fa-solid fa-repeat mr-0.5"></i>대안 교체:</span>`;
-                        item.alternatives.forEach((alt, idx) => {
+                        item.alternatives.forEach((alt, altIdx) => {
                             altButtonsHtml += `
-                            <button type="button" onclick="swapWithAlternative('${item.id}', ${idx})" class="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer">
+                            <button type="button" onclick="swapWithAlternative('${item.id}', ${altIdx})" class="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer">
                                 🔄 ${esc(alt.name)} (${Number(alt.budget || 0).toLocaleString()}원)
                             </button>`;
                         });
                         altButtonsHtml += `</div>`;
+                    }
+
+                    // 다음 장소가 있을 경우: 장소와 장소 사이 라인 아래에 [이동거리 및 소요시간 + 네이버 길찾기] 박스 생성
+                    let routeBoxHtml = '';
+                    if (idx < dayItems.length - 1) {
+                        const nextItem = dayItems[idx + 1];
+                        let distTimeText = '길찾기 경로 확인하기';
+                        if (item.lat && item.lng && nextItem.lat && nextItem.lng) {
+                            const straightKm = getDistanceFromLatLonInKm(Number(item.lat), Number(item.lng), Number(nextItem.lat), Number(nextItem.lng));
+                            const roadKm = straightKm * 1.3; // 네비게이션 도로 굴곡 보정거리
+                            const estMin = Math.max(5, Math.round((roadKm / 55) * 60));
+                            const timeFormatted = estMin >= 60
+                                ? `약 ${Math.floor(estMin / 60)}시간 ${estMin % 60}분`
+                                : `약 ${estMin}분`;
+                            distTimeText = `이동거리 <b>약 ${roadKm.toFixed(1)}km</b> · 소요시간 <b>${timeFormatted}</b>`;
+                        }
+                        const routeBtnLabel = (currentRegion === 'kr') ? '네이버 길찾기 ▶' : '구글맵 길찾기 ▶';
+                        routeBoxHtml = `
+                        <div class="pt-2.5 pb-0.5 relative">
+                            <span class="absolute -left-[25px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-blue-100 border border-blue-400 text-blue-700 flex items-center justify-center text-[9px] shadow-sm">
+                                <i class="fa-solid fa-arrow-down"></i>
+                            </span>
+                            <button type="button" onclick="openRouteByExpId('${item.id}', '${nextItem.id}')" class="w-full bg-blue-50/90 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 rounded-xl px-3 py-2 text-left flex flex-wrap justify-between items-center gap-2 cursor-pointer transition shadow-sm">
+                                <div class="text-xs text-blue-900 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-car-side text-blue-600"></i>
+                                    <span>${distTimeText}</span>
+                                </div>
+                                <span class="text-[11px] font-extrabold text-emerald-700 bg-white border border-emerald-200 px-2 py-0.5 rounded-lg shrink-0 flex items-center gap-1">
+                                    <i class="fa-solid fa-diamond-turn-right"></i> ${routeBtnLabel}
+                                </span>
+                            </button>
+                        </div>`;
                     }
 
                     html += `
@@ -1827,6 +1837,7 @@ service cloud.firestore {
                                 <button type="button" onclick="deleteSubItem('expected_places', '${item.id}')" class="bg-white hover:bg-slate-100 border border-slate-300 text-red-500 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">삭제</button>
                             </div>
                         </div>
+                        ${routeBoxHtml}
                     </div>`;
                 });
                 html += `</div></div>`;
@@ -1903,7 +1914,6 @@ service cloud.firestore {
             const sortedExpAll = sortByDayAndTime(expectedData);
             const sortedActAll = sortByDayAndTime(actualData);
 
-            // 가계부 요약 및 1/N 회비 계산
             const totalExp = sortedExpAll.reduce((s, x) => s + Number(x.budget || 0), 0);
             const totalAct = sortedActAll.reduce((s, x) => s + Number(x.expense || 0), 0);
             const diff = totalExp - totalAct;
@@ -1916,7 +1926,6 @@ service cloud.firestore {
             document.getElementById('calc-per-person-exact').innerText = Math.round(totalAct / members).toLocaleString() + '원';
             document.getElementById('calc-per-person-round').innerText = `100원 올림: ${(Math.ceil(totalAct / members / 100) * 100).toLocaleString()}원`;
 
-            // 타임라인 탭 전용 일차 필터링
             const filteredExp = sortedExpAll.filter(item => {
                 if (selectedDayFilter === 'all') return true;
                 if (selectedDayFilter === '3') return Number(item.day || 1) >= 3;
@@ -1933,7 +1942,6 @@ service cloud.firestore {
             document.getElementById('exp-count-badge').innerText = `총 ${filteredExp.length}곳 (완료 ${completedCount})`;
             document.getElementById('act-count-badge').innerText = `방문·지출 ${filteredAct.length}건`;
 
-            // 타임라인 탭(필터 적용)과 관리 탭(항상 전체 목록 표시) 분리 렌더링!
             document.getElementById('expected-timeline-list').innerHTML = buildExpListHtml(filteredExp) || '<p class="text-xs text-slate-400 py-4 text-center">등록된 예상 일정이 없습니다.</p>';
             document.getElementById('expected-manage-list').innerHTML = buildExpListHtml(sortedExpAll) || '<p class="text-xs text-slate-400 py-4 text-center">등록된 일정이 없습니다.</p>';
 
@@ -2129,7 +2137,6 @@ service cloud.firestore {
             });
         };
 
-        // 체크리스트 구입품목 -> 가계부 반영 (연결된 예상 일정의 일차·시간·좌표 자동 매칭 + 중복 등록 원천 차단)
         window.sendBuyItemToActual = async function(chkId) {
             if (!checkEditable() || !currentTripId || !db) return;
             const item = checklistData.find(x => x.id === chkId);
@@ -2139,7 +2146,6 @@ service cloud.firestore {
                 return;
             }
 
-            // 구입 장소명(minor)과 일치하는 예상 일정이 있으면 해당 일차/시간/좌표 사용
             const matchedExp = expectedData.find(e => e.place_name && item.minor && (e.place_name.includes(item.minor) || item.minor.includes(e.place_name)));
             const targetDay = matchedExp ? Number(matchedExp.day || 1) : (selectedDayFilter !== 'all' ? Number(selectedDayFilter) : 1);
             const targetTime = matchedExp ? (matchedExp.time || getLocalTimeStr()) : getLocalTimeStr();
@@ -2365,32 +2371,171 @@ service cloud.firestore {
             if (!keepOpen) toggleAccordion('car-form-wrap', 'car-form-chevron', false);
         };
 
-        function renderTripCards() {
-            let cardsHtml = '';
-            tripsData.sort((a, b) => (a.startDate || '').localeCompare(b.startDate || ''));
-            tripsData.forEach((trip) => {
-                const regionBadge = trip.region === 'global'
-                    ? `<span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">🌍 해외(구글맵)</span>`
-                    : `<span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">🇰🇷 국내(카카오맵)</span>`;
+        // ==========================================
+        // 여행 일정 목록 2대 대분류(연도별 / 국내·해외 지역별) 렌더링
+        // ==========================================
+        function buildSingleTripCardHtml(trip) {
+            const subReg = inferTripSubRegion(trip);
+            const regionBadge = trip.region === 'global'
+                ? `<span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">🌍 해외 · ${esc(subReg)}</span>`
+                : `<span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">🇰🇷 국내 · ${esc(subReg)}</span>`;
 
-                cardsHtml += `
-                <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-3 shadow-sm">
-                    <div onclick="selectTrip('${trip.id}')" class="cursor-pointer flex-1">
-                        <div class="flex flex-wrap items-center gap-1.5">
-                            <h3 class="font-bold text-slate-800 text-base hover:text-blue-600 transition">${esc(trip.name || '제목 없음')}</h3>
-                            <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">${Number(trip.memberCount || 8)}인</span>
-                            ${regionBadge}
-                        </div>
-                        <p class="text-xs text-slate-500 mt-1"><i class="fa-regular fa-calendar mr-1"></i>${esc(trip.startDate || '날짜미정')} ~ ${esc(trip.endDate || '날짜미정')}</p>
+            return `
+            <div class="bg-white border border-slate-200 p-3.5 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-3 shadow-sm">
+                <div onclick="selectTrip('${trip.id}')" class="cursor-pointer flex-1">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <h3 class="font-bold text-slate-800 text-sm sm:text-base hover:text-blue-600 transition">${esc(trip.name || '제목 없음')}</h3>
+                        <span class="text-[11px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">${Number(trip.memberCount || 8)}인</span>
+                        ${regionBadge}
                     </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <button type="button" onclick="selectTrip('${trip.id}')" class="flex-1 sm:flex-none bg-blue-600 active:bg-blue-800 text-white px-4 py-2 rounded-lg text-xs font-bold cursor-pointer">입장하기</button>
-                        <button type="button" onclick="editTripInfo('${trip.id}')" class="bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold cursor-pointer">수정</button>
-                        <button type="button" onclick="deleteTrip('${trip.id}')" class="bg-white border border-red-200 text-red-600 px-3 py-2 rounded-lg text-xs font-bold cursor-pointer">삭제</button>
+                    <p class="text-xs text-slate-500 mt-1"><i class="fa-regular fa-calendar mr-1"></i>${esc(trip.startDate || '날짜미정')} ~ ${esc(trip.endDate || '날짜미정')}</p>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button type="button" onclick="selectTrip('${trip.id}')" class="flex-1 sm:flex-none bg-blue-600 active:bg-blue-800 text-white px-3.5 py-2 rounded-lg text-xs font-bold cursor-pointer">입장하기</button>
+                    <button type="button" onclick="editTripInfo('${trip.id}')" class="bg-slate-50 border border-slate-300 text-slate-700 px-2.5 py-2 rounded-lg text-xs font-bold cursor-pointer">수정</button>
+                    <button type="button" onclick="deleteTrip('${trip.id}')" class="bg-slate-50 border border-red-200 text-red-600 px-2.5 py-2 rounded-lg text-xs font-bold cursor-pointer">삭제</button>
+                </div>
+            </div>`;
+        }
+
+        function renderTripCards() {
+            const container = document.getElementById('trip-cards-container');
+            if (!container) return;
+
+            if (tripsData.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-400 py-4 text-center">등록된 여행이 없습니다. 아래 [새로운 여행 직접 만들기]를 눌러보세요.</p>';
+                return;
+            }
+
+            const sortedTrips = [...tripsData].sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''));
+
+            // 1. 대분류 1: 연도별 그룹핑
+            const yearGroups = {};
+            sortedTrips.forEach(t => {
+                const yr = (t.startDate && t.startDate.length >= 4) ? `${t.startDate.slice(0, 4)}년` : '연도미정';
+                if (!yearGroups[yr]) yearGroups[yr] = [];
+                yearGroups[yr].push(t);
+            });
+
+            let yearSubHtml = '';
+            Object.keys(yearGroups).sort((a, b) => b.localeCompare(a)).forEach((yr, idx) => {
+                const list = yearGroups[yr];
+                const bodyId = `yr-sub-body-${idx}`;
+                const chevId = `yr-sub-chev-${idx}`;
+                yearSubHtml += `
+                <div class="border border-blue-200 rounded-xl bg-white overflow-hidden">
+                    <button type="button" onclick="toggleAccordion('${bodyId}', '${chevId}')" class="w-full px-3.5 py-2.5 bg-blue-50/50 hover:bg-blue-50 flex justify-between items-center text-xs font-bold text-slate-800 cursor-pointer">
+                        <span><i class="fa-regular fa-folder-open text-blue-600 mr-1.5"></i>${esc(yr)} 여행 일정</span>
+                        <div class="flex items-center gap-2">
+                            <span class="bg-blue-600 text-white px-2 py-0.5 rounded-full text-[10px]">${list.length}건</span>
+                            <i id="${chevId}" class="fa-solid fa-chevron-down text-slate-400 text-[10px] transition-transform" style="transform: rotate(180deg);"></i>
+                        </div>
+                    </button>
+                    <div id="${bodyId}" class="p-3 space-y-2 border-t border-blue-100 bg-slate-50/50">
+                        ${list.map(t => buildSingleTripCardHtml(t)).join('')}
                     </div>
                 </div>`;
             });
-            document.getElementById('trip-cards-container').innerHTML = cardsHtml || '<p class="text-xs text-slate-400 py-4 text-center">등록된 여행이 없습니다. 아래 [새로운 여행 직접 만들기]를 눌러보세요.</p>';
+
+            // 2. 대분류 2: 국내 여행(6대 권역) & 해외 여행(8대 권역) 그룹핑
+            const krGroups = {};
+            KR_SUBREGIONS.forEach(r => krGroups[r] = []);
+            const globalGroups = {};
+            GLOBAL_SUBREGIONS.forEach(r => globalGroups[r] = []);
+
+            sortedTrips.forEach(t => {
+                const sub = inferTripSubRegion(t);
+                if (t.region === 'global') {
+                    if (!globalGroups[sub]) globalGroups[sub] = [];
+                    globalGroups[sub].push(t);
+                } else {
+                    if (!krGroups[sub]) krGroups[sub] = [];
+                    krGroups[sub].push(t);
+                }
+            });
+
+            const buildRegionSubFolders = (groupsObj, prefix) => {
+                let subHtml = '';
+                Object.keys(groupsObj).forEach((regName, idx) => {
+                    const list = groupsObj[regName];
+                    const hasItems = list.length > 0;
+                    const bodyId = `reg-${prefix}-body-${idx}`;
+                    const chevId = `reg-${prefix}-chev-${idx}`;
+                    subHtml += `
+                    <div class="border ${hasItems ? 'border-emerald-200 bg-white' : 'border-slate-200 bg-slate-50/60'} rounded-xl overflow-hidden">
+                        <button type="button" onclick="toggleAccordion('${bodyId}', '${chevId}')" class="w-full px-3.5 py-2.5 flex justify-between items-center text-xs font-bold ${hasItems ? 'text-slate-800 bg-emerald-50/40 hover:bg-emerald-50' : 'text-slate-400'} cursor-pointer">
+                            <span><i class="fa-solid fa-location-dot ${hasItems ? 'text-emerald-600' : 'text-slate-300'} mr-1.5"></i>${esc(regName)}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="${hasItems ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-500'} px-2 py-0.5 rounded-full text-[10px]">${list.length}건</span>
+                                <i id="${chevId}" class="fa-solid fa-chevron-down text-[10px] transition-transform" style="${hasItems ? 'transform: rotate(180deg);' : ''}"></i>
+                            </div>
+                        </button>
+                        <div id="${bodyId}" class="${hasItems ? '' : 'hidden'} p-3 space-y-2 border-t border-slate-100 bg-slate-50/40">
+                            ${hasItems ? list.map(t => buildSingleTripCardHtml(t)).join('') : `<p class="text-[11px] text-slate-400 text-center py-2">${esc(regName)}에 등록된 여행 일정이 없습니다.</p>`}
+                        </div>
+                    </div>`;
+                });
+                return subHtml;
+            };
+
+            const totalKrCount = Object.values(krGroups).reduce((acc, arr) => acc + arr.length, 0);
+            const totalGlobalCount = Object.values(globalGroups).reduce((acc, arr) => acc + arr.length, 0);
+
+            container.innerHTML = `
+                <!-- [대분류 1] 연도별 여행 일정 -->
+                <div class="border-2 border-blue-200 rounded-2xl overflow-hidden shadow-sm">
+                    <button type="button" onclick="toggleAccordion('major-year-body', 'major-year-chev')" class="w-full p-4 bg-blue-600 text-white flex justify-between items-center cursor-pointer text-left">
+                        <div>
+                            <span class="text-[10px] bg-blue-800 px-2 py-0.5 rounded-full font-extrabold">대분류 1</span>
+                            <h3 class="text-sm sm:text-base font-extrabold mt-1"><i class="fa-solid fa-calendar-days mr-1.5"></i>연도별 여행 일정 보기</h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs bg-white text-blue-700 px-2.5 py-0.5 rounded-full font-extrabold">총 ${sortedTrips.length}건</span>
+                            <i id="major-year-chev" class="fa-solid fa-chevron-down text-sm transition-transform" style="transform: rotate(180deg);"></i>
+                        </div>
+                    </button>
+                    <div id="major-year-body" class="p-3.5 space-y-2.5 bg-slate-100/70">
+                        ${yearSubHtml}
+                    </div>
+                </div>
+
+                <!-- [대분류 2] 국내 여행 / 해외 여행 지역별 일정 -->
+                <div class="border-2 border-emerald-200 rounded-2xl overflow-hidden shadow-sm">
+                    <button type="button" onclick="toggleAccordion('major-region-body', 'major-region-chev')" class="w-full p-4 bg-emerald-600 text-white flex justify-between items-center cursor-pointer text-left">
+                        <div>
+                            <span class="text-[10px] bg-emerald-800 px-2 py-0.5 rounded-full font-extrabold">대분류 2</span>
+                            <h3 class="text-sm sm:text-base font-extrabold mt-1"><i class="fa-solid fa-earth-asia mr-1.5"></i>국내 여행 · 해외 여행 지역별 보기</h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs bg-white text-emerald-700 px-2.5 py-0.5 rounded-full font-extrabold">국내 ${totalKrCount} · 해외 ${totalGlobalCount}</span>
+                            <i id="major-region-chev" class="fa-solid fa-chevron-down text-sm transition-transform"></i>
+                        </div>
+                    </button>
+                    <div id="major-region-body" class="hidden p-3.5 space-y-4 bg-slate-100/70">
+                        <!-- 국내 여행 소분류 (강원도, 수도권, 충청권, 전라도, 경상도, 제주도) -->
+                        <div class="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2.5">
+                            <div class="flex justify-between items-center border-b pb-2">
+                                <h4 class="text-xs sm:text-sm font-extrabold text-slate-800">🇰🇷 국내 여행 (강원도 · 수도권 · 충청권 · 전라도 · 경상도 · 제주도)</h4>
+                                <span class="text-xs font-bold text-blue-600">${totalKrCount}건</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                ${buildRegionSubFolders(krGroups, 'kr')}
+                            </div>
+                        </div>
+
+                        <!-- 해외 여행 소분류 (일본, 중국, 아시아, 유럽, 북아메리카, 남아메리카, 오세아니아, 아프리카) -->
+                        <div class="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2.5">
+                            <div class="flex justify-between items-center border-b pb-2">
+                                <h4 class="text-xs sm:text-sm font-extrabold text-slate-800">🌍 해외 여행 (일본 · 중국 · 아시아 · 유럽 · 북미 · 남미 · 오세아니아 · 아프리카)</h4>
+                                <span class="text-xs font-bold text-emerald-600">${totalGlobalCount}건</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                ${buildRegionSubFolders(globalGroups, 'global')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         window.forceReloadDB = async function() {
@@ -2409,7 +2554,6 @@ service cloud.firestore {
             }
         };
 
-        // 여행 데이터 실시간 구독 + 변경 시마다 디바운스로 백업 캐시 자동 최신화!
         function subscribeTripData(tripId) {
             if (!db) return;
             if (unsubExp) unsubExp();
@@ -2474,7 +2618,6 @@ service cloud.firestore {
             }
         };
 
-        // 하위 컬렉션까지 남김없이 일괄 삭제하는 완전한 deleteTrip
         async function deleteTripSubcollections(tripId) {
             const subCols = ["expected_places", "actual_visits", "cars", "checklists"];
             for (const sub of subCols) {
@@ -2532,6 +2675,7 @@ service cloud.firestore {
                         여행ID: tId,
                         여행제목: tData.name || '',
                         지역구분: tData.region || 'kr',
+                        지역소분류: inferTripSubRegion(tData),
                         참여인원: tData.memberCount || 8,
                         시작일: tData.startDate || '',
                         종료일: tData.endDate || ''
@@ -2615,7 +2759,6 @@ service cloud.firestore {
                 XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(carRows.length ? carRows : [{안내:'데이터없음'}]), "차량배정");
                 XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(chkRows.length ? chkRows : [{안내:'데이터없음'}]), "체크리스트");
 
-                // 한국 시간(KST) 날짜 적용
                 const todayStr = getLocalDateStr();
                 const fileName = `단체여행_백업_${todayStr}.xlsx`;
                 const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
@@ -2669,7 +2812,6 @@ service cloud.firestore {
             }
         };
 
-        // 빈 좌표 null 유지 + 중복 여행 덮어쓰기 선택 + Batch 고속 복원
         window.restoreFromExcelFile = function(event) {
             if (!checkEditable()) { event.target.value = ''; return; }
             const file = event.target.files[0];
@@ -2698,30 +2840,25 @@ service cloud.firestore {
                     for (const tRow of tripsSheet) {
                         if (!tRow.여행제목) continue;
                         const existingTrip = tripsData.find(t => t.name === String(tRow.여행제목) && t.startDate === String(tRow.시작일 || ''));
+                        const tripPayload = {
+                            name: String(tRow.여행제목),
+                            region: String(tRow.지역구분 || 'kr'),
+                            subRegion: String(tRow.지역소분류 || inferTripSubRegion({ name: tRow.여행제목, region: tRow.지역구분 || 'kr' })),
+                            memberCount: Number(tRow.참여인원 || 8),
+                            startDate: String(tRow.시작일 || ''),
+                            endDate: String(tRow.종료일 || '')
+                        };
 
                         if (overwriteExisting && existingTrip) {
                             await deleteTripSubcollections(existingTrip.id);
-                            await db.collection("trips").doc(existingTrip.id).update({
-                                name: String(tRow.여행제목),
-                                region: String(tRow.지역구분 || 'kr'),
-                                memberCount: Number(tRow.참여인원 || 8),
-                                startDate: String(tRow.시작일 || ''),
-                                endDate: String(tRow.종료일 || '')
-                            });
+                            await db.collection("trips").doc(existingTrip.id).update(tripPayload);
                             idMap[tRow.여행ID] = existingTrip.id;
                         } else {
-                            const newTripRef = await db.collection("trips").add({
-                                name: String(tRow.여행제목),
-                                region: String(tRow.지역구분 || 'kr'),
-                                memberCount: Number(tRow.참여인원 || 8),
-                                startDate: String(tRow.시작일 || ''),
-                                endDate: String(tRow.종료일 || '')
-                            });
+                            const newTripRef = await db.collection("trips").add(tripPayload);
                             idMap[tRow.여행ID] = newTripRef.id;
                         }
                     }
 
-                    // Batch 고속 쓰기 헬퍼
                     let batch = db.batch();
                     let opCount = 0;
                     async function commitBatchIfNeeded(force = false) {
@@ -2822,11 +2959,12 @@ service cloud.firestore {
             reader.readAsArrayBuffer(file);
         };
 
-        // 단양·청풍호 표준 샘플 생성 (돌집식당 점심 16만 / 시장간식 4.1만 분리로 이중계산 완벽 제거!)
+        // 단양·청풍호 표준 샘플 생성
         async function createDanyangStandardTrip() {
             const tripRef = await db.collection("trips").add({
                 name: "단양·영월·청풍호 1박 2일",
                 region: "kr",
+                subRegion: "충청권",
                 memberCount: 8,
                 startDate: "2026-10-23",
                 endDate: "2026-10-24"
@@ -2915,6 +3053,7 @@ service cloud.firestore {
                 const payload = {
                     name: document.getElementById('trip-name').value.trim(),
                     region: document.getElementById('trip-region').value,
+                    subRegion: document.getElementById('trip-subregion').value,
                     memberCount: Number(document.getElementById('trip-count').value || 8),
                     startDate: document.getElementById('trip-start').value,
                     endDate: document.getElementById('trip-end').value
