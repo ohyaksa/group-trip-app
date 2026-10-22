@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>스마트 단체 여행 매니저 - 종합 이용 가이드 & 도움말 (Ver 1.2)</title>
+    <title>스마트 단체 여행 매니저 - 종합 이용 가이드 & 도움말 (Ver 1.22)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script>
@@ -28,7 +28,7 @@
         <!-- 상단 헤더 -->
         <div class="flex justify-between items-center border-b pb-3">
             <div>
-                <span class="bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold">Official Guide (Ver 1.2)</span>
+                <span class="bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold">Official Guide (Ver 1.22)</span>
                 <h1 class="font-extrabold text-base sm:text-lg text-slate-900 mt-1 flex items-center gap-2">
                     <i class="fa-solid fa-book-open text-blue-600"></i> 스마트 단체 여행 매니저 도움말
                 </h1>
@@ -88,16 +88,32 @@
                 <i class="fa-solid fa-code-branch text-blue-600"></i> 버전 업그레이드 소식
             </h2>
 
-            <!-- [최신] Ver 1.2 -->
+            <!-- [최신] Ver 1.22 -->
             <div class="border-2 border-blue-200 rounded-xl bg-white overflow-hidden shadow-sm">
-                <button type="button" onclick="toggleSection('ver-12-content', 'ver-12-chev')" class="w-full p-3.5 bg-blue-50/70 hover:bg-blue-50 flex justify-between items-center text-xs font-extrabold text-blue-900 cursor-pointer text-left">
-                    <span>🚀 Ver 1.2 업데이트 (최신 버전) <span class="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-full ml-1.5 font-normal">New</span></span>
-                    <i id="ver-12-chev" class="fa-solid fa-chevron-down text-blue-600 transition-transform" style="transform: rotate(180deg);"></i>
+                <button type="button" onclick="toggleSection('ver-122-content', 'ver-122-chev')" class="w-full p-3.5 bg-blue-50/70 hover:bg-blue-50 flex justify-between items-center text-xs font-extrabold text-blue-900 cursor-pointer text-left">
+                    <span>🚀 Ver 1.22 업데이트 (최신 버전) <span class="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-full ml-1.5 font-normal">New</span></span>
+                    <i id="ver-122-chev" class="fa-solid fa-chevron-down text-blue-600 transition-transform" style="transform: rotate(180deg);"></i>
                 </button>
-                <div id="ver-12-content" class="p-3.5 border-t border-blue-100 text-xs text-slate-700 space-y-2 leading-relaxed bg-blue-50/20">
-                    <p>• <b>가계부 영수증 첨부 기능:</b> 지출 입력 시 영수증 사진을 바로 촬영·첨부하고, 원본을 크게 확대해서 볼 수 있는 라이트박스 뷰어 도입.</p>
-                    <p>• <b>일정관리 사진 최대 3장 첨부:</b> 예상 일정마다 메뉴판이나 장소 사진을 최대 3장까지 등록하고 미니 갤러리 형태로 타임라인에서 공유.</p>
-                    <p>• <b>스마트 압축 엔진 탑재:</b> 스마트폰 고용량 사진을 화질 저하 없이 자동 최적화하여 파이어베이스 및 엑셀 백업에 완벽 연동.</p>
+                <div id="ver-122-content" class="p-3.5 border-t border-blue-100 text-xs text-slate-700 space-y-2 leading-relaxed bg-blue-50/20">
+                    <p>• <b>구글 지도 전환 회색 빈 화면 오류 완벽 패치:</b> 카카오맵(국내)에서 구글 지도(해외) 모드로 전환할 때 지도 타일이 회색으로 비어 보이던 렌더링 지연 및 리사이즈 문제를 강제 트리거 코드로 완벽히 해결했습니다.</p>
+                    <p>• <b>가계부 지출 수정 제목 버그 패치 (Ver 1.21):</b> 지출 내역 수정 시 아코디언 타이틀에 특정 장소명으로 고정되던 오류를 수정하여 선택한 장소명이 정확히 표시됩니다.</p>
+                    <p>• <b>가계부 영수증 첨부 & 일정 사진 3장 (Ver 1.2):</b> 스마트 압축 엔진을 통한 영수증/사진 업로드 및 라이트박스 뷰어 제공.</p>
+                </div>
+            </div>
+
+            <!-- Ver 1.2 -->
+            <div class="border border-slate-200 rounded-xl bg-white overflow-hidden shadow-sm">
+                <button type="button" onclick="toggleSection('ver-12-content', 'ver-12-chev')" class="w-full p-3.5 hover:bg-slate-50 flex justify-between items-center text-xs font-bold text-slate-800 cursor-pointer text-left">
+                    <span>📦 Ver 1.2 업데이트</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-slate-400">클릭하여 상세보기</span>
+                        <i id="ver-12-chev" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
+                    </div>
+                </button>
+                <div id="ver-12-content" class="hidden p-3.5 border-t border-slate-100 text-xs text-slate-600 space-y-2 leading-relaxed bg-slate-50/50">
+                    <p>• <b>가계부 영수증 첨부 및 라이트박스 뷰어:</b> 지출 입력 시 영수증 사진을 촬영·첨부하고 원본을 크게 확대해서 확인.</p>
+                    <p>• <b>일정관리 사진 최대 3장 첨부:</b> 예상 일정마다 메뉴판이나 풍경 사진을 3장까지 등록하고 미니 갤러리 형태로 공유.</p>
+                    <p>• <b>스마트 압축 엔진 탑재:</b> 고용량 사진을 화질 저하 없이 자동 최적화하여 백업 및 클라우드 동기화 연동.</p>
                 </div>
             </div>
 
@@ -111,10 +127,7 @@
                     </div>
                 </button>
                 <div id="ver-11-content" class="hidden p-3.5 border-t border-slate-100 text-xs text-slate-600 space-y-2 leading-relaxed bg-slate-50/50">
-                    <p>• <b>구글 지도 API 키 복원:</b> 해외 구글 지도 모드가 정상 작동하도록 API 키 시스템 복원.</p>
-                    <p>• <b>긴 일정·주소 전체 노출:</b> 타임라인에서 긴 장소명이나 주소가 잘리지 않고 자동 줄바꿈.</p>
-                    <p>• <b>날짜 및 요일 자동 계산:</b> 각 일차 타이틀 옆에 실제 날짜와 요일 자동 표시.</p>
-                    <p>• <b>가계부 카테고리 확장:</b> 쇼핑, 교통비, 통신,보험 항목 추가.</p>
+                    <p>• <b>구글 지도 API 키 복원 및 날짜·요일 자동 계산:</b> 일차별 실제 날짜/요일 표시 및 긴 일정·주소 자동 줄바꿈.</p>
                 </div>
             </div>
 
@@ -128,10 +141,7 @@
                     </div>
                 </button>
                 <div id="ver-10-content" class="hidden p-3.5 border-t border-slate-100 text-xs text-slate-600 space-y-2 leading-relaxed bg-slate-50/50">
-                    <p>• <b>듀얼 지도 시스템:</b> 국내(카카오맵)와 해외(구글맵) 동선 지도.</p>
-                    <p>• <b>대분류 폴더 구조:</b> 연도별 여행 일정(대분류 1) 및 지역별 소분류 폴더(대분류 2).</p>
-                    <p>• <b>네이버 길찾기 연동:</b> 구간 이동 거리·소요시간 및 길찾기 실행.</p>
-                    <p>• <b>1/N 가계부 정산 및 엑셀 백업:</b> 회비 정산 및 통합 엑셀 백업·복원.</p>
+                    <p>• <b>듀얼 지도 시스템 및 대분류 폴더:</b> 카카오/구글 듀얼 지도, 연도별/지역별 대분류 폴더, 네이버 길찾기 연동.</p>
                 </div>
             </div>
         </div>
@@ -208,9 +218,9 @@
                     <i id="page-4-chev" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
                 </button>
                 <div id="page-4-content" class="hidden p-3.5 border-t border-slate-100 text-xs text-slate-600 space-y-2 leading-relaxed bg-slate-50/50">
-                    <p>• <b>영수증 첨부 기능 (Ver 1.2 신규):</b> 지출 입력 시 영수증 사진을 촬영·첨부하고, 썸네일이나 [영수증 보기]를 눌러 크게 확대해 확인할 수 있습니다.</p>
-                    <p>• <b>카테고리 세분화:</b> 식당, 카페, 관광, 숙박, 장보기뿐만 아니라 쇼핑, 교통비, 통신,보험 항목으로 지출을 관리합니다.</p>
-                    <p>• <b>1/N 정산 및 카카오톡 공유:</b> 1인당 회비(100원 단위 올림 계산 포함)를 산출해 단톡방에 간편하게 공유할 수 있습니다.</p>
+                    <p>• <b>영수증 첨부 기능:</b> 지출 입력 시 영수증 사진을 촬영·첨부하고, 썸네일이나 [영수증 보기]를 눌러 크게 확대해 확인할 수 있습니다.</p>
+                    <p>• <b>지출 수정 타이틀 버그 패치 (Ver 1.21):</b> 지출 내역 수정 시 아코디언 타이틀에 특정 장소명으로 고정되던 오류를 수정하여 선택한 장소명이 정확히 표시됩니다.</p>
+                    <p>• <b>카테고리 세분화 및 1/N 정산:</b> 식당, 카페, 관광, 숙박, 장보기, 쇼핑, 교통비, 통신,보험 항목으로 지출을 관리하고 단톡방에 정산 내역을 공유할 수 있습니다.</p>
                 </div>
             </div>
 
