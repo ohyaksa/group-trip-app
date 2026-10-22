@@ -1181,10 +1181,10 @@
         };
 
        // [Ver 1.2 수정] 국내(카카오맵) <-> 해외(구글맵) 지도 뷰어만 전환 (여행 본래의 국내/해외 속성은 변경 안 함)
+        // 국내 일정에서도 카카오맵과 구글맵을 자유롭게 전환하여 볼 수 있도록 허용
         window.toggleMapProvider = async function() {
             currentRegion = (currentRegion === 'kr') ? 'global' : 'kr';
             updateMapProviderUI();
-            // ✨ [해결] DB 업데이트 코드를 제거하여 지도 보기만 전환되고, 국내 여행(강원도 등)의 지역 속성은 안전하게 유지되도록 수정
             initMaps();
             setTimeout(() => renderTimelineMaps(), 300);
         };
@@ -1264,9 +1264,17 @@
         // ==========================================
         // 국내(카카오맵) & 해외(구글맵) 통합 지도 엔진
         // ==========================================
+       // 국내/해외 듀얼 지도 초기화 엔진 (구글맵 전환 시 국내 좌표 예외 처리 포함)
         function initMaps() {
-            const centerLat = (currentRegion === 'kr') ? 36.9997 : 34.6937;
-            const centerLng = (currentRegion === 'kr') ? 128.3435 : 135.5023;
+            // 현재 등록된 첫 번째 장소의 좌표가 있으면 그 위치를 중심 좌석으로 우선 활용
+            let centerLat = 36.9997, centerLng = 128.3435;
+            if (expectedData.length > 0 && expectedData[0].lat && expectedData[0].lng) {
+                centerLat = Number(expectedData[0].lat);
+                centerLng = Number(expectedData[0].lng);
+            } else if (currentRegion === 'global') {
+                centerLat = 34.6937;
+                centerLng = 135.5023;
+            }
 
             if (currentRegion === 'kr') {
                 if (typeof kakao === 'undefined' || !kakao.maps) {
@@ -1274,8 +1282,7 @@
                     if (planEl) {
                         planEl.innerHTML = `<div class="p-6 text-center text-xs text-red-600 space-y-1">
                             <p class="font-bold text-sm">⚠️ 카카오맵을 불러오지 못했습니다.</p>
-                            <p>1) 카카오 개발자 사이트 ➔ <b>[제품 설정] ➔ [카카오맵]</b>에서 <b>사용 설정(ON)</b>을 켜주세요.</p>
-                            <p>2) <b>[앱 설정] ➔ [플랫폼] ➔ [Web]</b>에 도메인을 등록해 주세요.</p>
+                            <p>카카오 개발자 사이트 설정을 확인해 주세요.</p>
                         </div>`;
                     }
                     return;
@@ -1335,7 +1342,7 @@
                     el.innerHTML = '';
                     return new google.maps.Map(el, {
                         center: { lat: centerLat, lng: centerLng },
-                        zoom: 10,
+                        zoom: 12,
                         mapTypeControl: false,
                         streetViewControl: false
                     });
