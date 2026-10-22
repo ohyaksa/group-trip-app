@@ -3,7 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>스마트 단체 여행 매니저</title>
+    <title>스마트 단체 여행 매니저 Ver 1.2</title>
+
+    <!-- 스마트폰 바탕화면 아이콘 및 웹사이트 링크 공유(오픈그래프) 설정 -->
+    <link rel="icon" type="image/png" href="apple-touch-icon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="여행매니저">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="스마트 단체 여행 매니저 Ver 1.2">
+    <meta property="og:description" content="단체 여행 타임라인 동선 지도, 네비게이션 길찾기, 영수증 가계부 1/N 정산, 준비물 체크리스트 통합 관리">
+    <meta property="og:image" content="og-image.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- 엑셀 백업/복원용 SheetJS -->
@@ -12,8 +24,8 @@
     <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
     <!-- 국내용: 카카오맵 SDK (autoload=false 적용) -->
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=421e90b13a87b1868e381924faab6e44&libraries=services&autoload=false"></script>
-    <!-- 해외용: 구글맵 SDK -->
-    <script src="https://maps.googleapis.com/maps/api/js?libraries=places" async defer></script>
+    <!-- 해외용: 구글맵 SDK (기존 API 키 복원 적용) -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBVXAi7WTQJ0sm7FXOjWwAMzmnvw1wSt0M&libraries=places" async defer></script>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -27,32 +39,38 @@
 </head>
 <body class="text-slate-800 pb-20">
 
-    <!-- 상단 고정 헤더 -->
+    <!-- 상단 고정 헤더 (Ver 1.2: 도움말(help.html) 연결 버튼 및 전체 제목 표시) -->
     <header class="bg-blue-600 text-white sticky top-0 z-40 shadow-md">
-        <div class="max-w-3xl mx-auto px-3 py-3 flex justify-between items-center gap-2">
-            <div class="flex items-center gap-2 min-w-0">
-                <button id="btn-back" onclick="goTripSelector()" class="hidden bg-blue-700 hover:bg-blue-800 px-2.5 py-1.5 rounded-full text-xs font-bold shrink-0 cursor-pointer flex items-center gap-1">
-                    <i class="fa-solid fa-arrow-left"></i> 목록
-                </button>
-                <div class="truncate">
-                    <h1 id="header-trip-title" class="font-extrabold text-sm sm:text-base truncate">여행 일정 목록</h1>
-                    <p id="header-trip-dates" class="hidden text-[11px] text-blue-100 truncate"></p>
+        <div class="max-w-3xl mx-auto px-3 py-2.5 space-y-1.5">
+            <!-- 상단 1열: 목록 버튼 & 기능 제어 버튼 모음 -->
+            <div class="flex justify-between items-center gap-1.5">
+                <div class="flex items-center gap-1.5">
+                    <button id="btn-back" onclick="goTripSelector()" class="hidden bg-blue-700 hover:bg-blue-800 px-2.5 py-1 rounded-full text-xs font-bold shrink-0 cursor-pointer flex items-center gap-1 shadow-sm">
+                        <i class="fa-solid fa-arrow-left"></i> 목록
+                    </button>
+                    <span class="text-[10px] bg-blue-800/90 text-blue-100 px-2 py-0.5 rounded-full font-extrabold">Ver 1.2</span>
+                </div>
+                <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                    <button id="btn-map-provider" onclick="toggleMapProvider()" class="hidden bg-amber-400 text-slate-900 px-2 py-1 rounded-full text-[11px] font-extrabold cursor-pointer shadow-sm">
+                        🇰🇷 국내(카카오)
+                    </button>
+                    <button id="btn-edit-lock" onclick="toggleEditLock()" class="bg-blue-700 hover:bg-blue-800 px-2 py-1 rounded-full text-[11px] font-semibold cursor-pointer text-white">
+                        <i class="fa-solid fa-lock-open mr-0.5"></i>편집중
+                    </button>
+                    <!-- [Ver 1.2] help.html 도움말 새창 열기 버튼 -->
+                    <a href="help.html" target="_blank" title="도움말 보기" class="bg-amber-300 hover:bg-amber-400 text-slate-900 px-2.5 py-1 rounded-full text-[11px] font-extrabold flex items-center gap-1 cursor-pointer shadow-sm">
+                        <i class="fa-solid fa-circle-question text-blue-800"></i> 도움말
+                    </a>
+                    <button onclick="forceReloadDB()" title="데이터 새로고침" class="bg-blue-700 hover:bg-blue-800 w-7 h-7 rounded-full text-xs flex items-center justify-center cursor-pointer">
+                        <i class="fa-solid fa-rotate"></i>
+                    </button>
+                    <span id="sync-status" class="text-[11px] bg-amber-500 px-2 py-1 rounded-full text-white font-semibold shrink-0">연결중</span>
                 </div>
             </div>
-            <div class="flex items-center gap-1.5 shrink-0">
-                <button id="btn-map-provider" onclick="toggleMapProvider()" class="hidden bg-amber-400 text-slate-900 px-2.5 py-1 rounded-full text-[11px] font-extrabold cursor-pointer shadow-sm">
-                    🇰🇷 국내(카카오)
-                </button>
-                <button id="btn-edit-lock" onclick="toggleEditLock()" class="bg-blue-700 hover:bg-blue-800 px-2.5 py-1 rounded-full text-[11px] font-semibold cursor-pointer text-white">
-                    <i class="fa-solid fa-lock-open mr-0.5"></i>편집중
-                </button>
-                <button onclick="toggleRulesModal()" title="보안 및 이용 안내" class="bg-blue-700 hover:bg-blue-800 w-7 h-7 rounded-full text-xs flex items-center justify-center cursor-pointer">
-                    <i class="fa-solid fa-shield-halved"></i>
-                </button>
-                <button onclick="forceReloadDB()" title="데이터 새로고침" class="bg-blue-700 hover:bg-blue-800 w-7 h-7 rounded-full text-xs flex items-center justify-center cursor-pointer">
-                    <i class="fa-solid fa-rotate"></i>
-                </button>
-                <span id="sync-status" class="text-xs bg-amber-500 px-2 py-1 rounded-full text-white font-semibold shrink-0">연결중</span>
+            <!-- 상단 2열: 여행 전체 제목 및 전체 기간 표시 (잘림 없이 전체 노출) -->
+            <div class="pt-0.5">
+                <h1 id="header-trip-title" class="font-extrabold text-sm sm:text-base leading-snug break-words">여행 일정 목록</h1>
+                <p id="header-trip-dates" class="hidden text-xs text-blue-100 font-medium leading-tight break-words mt-0.5"></p>
             </div>
         </div>
     </header>
@@ -65,24 +83,21 @@
         </div>
     </div>
 
-    <!-- 보안 규칙 및 기능 안내 모달 -->
-    <div id="rules-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-5 space-y-3 shadow-xl">
-            <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="font-extrabold text-sm text-slate-800"><i class="fa-solid fa-shield-halved text-blue-600 mr-1"></i>데이터 보호 및 이용 안내</h3>
-                <button onclick="toggleRulesModal()" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+    <!-- [Ver 1.2] 사진 & 영수증 원본 크게 보기 모달 (Lightbox) -->
+    <div id="photo-modal" onclick="closePhotoModal()" class="hidden fixed inset-0 bg-black/85 z-50 flex flex-col items-center justify-center p-4">
+        <div class="max-w-lg w-full space-y-3" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center text-white px-1">
+                <span id="photo-modal-caption" class="text-xs sm:text-sm font-extrabold truncate">사진 크게 보기</span>
+                <button type="button" onclick="closePhotoModal()" class="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded-full text-xs font-bold cursor-pointer">닫기 ✕</button>
             </div>
-            <div class="text-xs text-slate-600 space-y-2 leading-relaxed">
-                <p>• <b>[🔓 편집중 / 🔒 잠금됨] 버튼:</b> 일행들이 일정을 볼 때 실수로 삭제하거나 수정하지 않도록 상단 버튼을 눌러 <b>[🔒 잠금됨]</b>으로 설정할 수 있습니다.</p>
-                <p>• <b>구간 거리·소요시간 및 네이버 길찾기:</b> 타임라인 장소와 장소 사이의 파란색 이동 박스를 누르면 출발지와 목적지가 자동 입력된 네이버 지도 길찾기가 바로 열립니다.</p>
-                <p>• <b>엑셀 백업 생활화:</b> 중요한 일정 입력 후에는 첫 화면의 <b>[엑셀 백업]</b> 버튼을 눌러 스마트폰이나 PC에 안전하게 보관해 주세요.</p>
+            <div class="bg-black rounded-2xl overflow-hidden border border-white/20 flex items-center justify-center max-h-[78vh]">
+                <img id="photo-modal-img" src="" alt="첨부 이미지" class="max-w-full max-h-[75vh] object-contain">
             </div>
-            <button onclick="toggleRulesModal()" class="w-full bg-blue-600 text-white py-2 rounded-xl text-xs font-bold cursor-pointer">확인</button>
         </div>
     </div>
 
     <!-- ========================================== -->
-    <!-- 화면 1: 여행 일정 목록 (대분류 1·2 폴더 및 백업) -->
+    <!-- 화면 1: 여행 일정 목록 (대분류 1·2 폴더, 백업 및 coffee-1 배너) -->
     <!-- ========================================== -->
     <main id="trip-selector-screen" class="max-w-3xl mx-auto p-3 space-y-4">
 
@@ -94,7 +109,7 @@
                 </h2>
                 <span id="backup-cache-status" class="text-[11px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold">백업 준비중</span>
             </div>
-            <p class="text-xs text-slate-500">모든 여행의 예상 일정, 가계부, 차량 배치, 5대분류 체크리스트를 엑셀 파일 하나로 백업하거나 복원합니다.</p>
+            <p class="text-xs text-slate-500">모든 여행의 예상 일정(사진 포함), 가계부(영수증 포함), 차량 배치, 체크리스트를 엑셀 파일 하나로 백업하거나 복원합니다.</p>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                 <button type="button" onclick="exportExcelBackup('mobile')" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
                     <i class="fa-solid fa-mobile-screen-button"></i> 폰 저장/공유
@@ -149,7 +164,6 @@
                             <input type="number" id="trip-count" value="8" min="1" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm">
                         </div>
                     </div>
-                    <!-- 수정 1 반영: 국내/해외 구분 및 지역 소분류 선택 드롭다운 -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">국내 / 해외 구분</label>
@@ -172,7 +186,7 @@
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">출발일 (연도별 자동 분류 기준)</label>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">출발일 (1일차 날짜·요일 자동 계산 기준)</label>
                             <input type="date" id="trip-start" required class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm">
                         </div>
                         <div>
@@ -187,6 +201,14 @@
                 </form>
             </div>
         </section>
+
+        <!-- [Ver 1.2] 첫 화면 배너 광고 (coffee-1.png -> Blue Bottle Dialer 이동) -->
+        <section class="pt-1">
+            <a href="https://ohyaksa.github.io/bluebottle-dialer/" target="_blank" class="block overflow-hidden rounded-2xl shadow-md border border-slate-200 hover:opacity-95 transition">
+                <img src="coffee-1.png" alt="Blue Bottle Dialer - 좋은 커피 한 번에!" class="w-full h-auto object-cover">
+            </a>
+        </section>
+
     </main>
 
     <!-- ========================================== -->
@@ -239,7 +261,7 @@
                 <div class="flex justify-between items-center">
                     <div>
                         <h3 class="text-sm font-extrabold text-slate-800"><i class="fa-regular fa-calendar-check text-blue-600 mr-1"></i>예상 일정 타임라인 (계획)</h3>
-                        <p class="text-[11px] text-slate-500 mt-0.5">[방문전]↔[방문완료] 양방향 전환 및 구간별 [네이버 길찾기]를 바로 실행할 수 있습니다.</p>
+                        <p class="text-[11px] text-slate-500 mt-0.5">[방문전]↔[방문완료] 양방향 전환, 첨부 사진 확대 및 구간별 [길찾기]를 실행할 수 있습니다.</p>
                     </div>
                     <span id="exp-count-badge" class="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-bold shrink-0">총 0곳</span>
                 </div>
@@ -264,7 +286,7 @@
             </div>
         </section>
 
-        <!-- [탭 3] 일정관리 (예상 일정 입력/수정 + 전체 목록) -->
+        <!-- [탭 3] 일정관리 (예상 일정 입력/수정 + 사진 3장 첨부 + 전체 목록) -->
         <section id="tab-expected" class="hidden space-y-4">
             <div id="exp-accordion-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <button type="button" onclick="toggleExpFormAccordion()" class="w-full p-4 flex justify-between items-center bg-blue-50/60 hover:bg-blue-50 cursor-pointer text-left">
@@ -294,6 +316,9 @@
                                     <option value="2">2일차</option>
                                     <option value="3">3일차</option>
                                     <option value="4">4일차</option>
+                                    <option value="5">5일차</option>
+                                    <option value="6">6일차</option>
+                                    <option value="7">7일차</option>
                                 </select>
                             </div>
                             <div>
@@ -302,12 +327,15 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">카테고리</label>
-                                <select id="exp-category" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs bg-white">
+                                <select id="exp-category" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs bg-white font-semibold">
                                     <option value="관광">관광</option>
                                     <option value="식당">식당</option>
                                     <option value="카페">카페</option>
-                                    <option value="숙소">숙소</option>
+                                    <option value="숙박">숙박</option>
                                     <option value="장보기">장보기</option>
+                                    <option value="쇼핑">쇼핑</option>
+                                    <option value="교통비">교통비</option>
+                                    <option value="통신,보험">통신,보험</option>
                                     <option value="휴게소">휴게소</option>
                                     <option value="출발/귀가">출발/귀가</option>
                                     <option value="기타">기타</option>
@@ -317,8 +345,8 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             <div class="sm:col-span-1">
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">장소명</label>
-                                <input type="text" id="exp-place-name" required placeholder="장소 이름" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">장소명 / 일정명</label>
+                                <input type="text" id="exp-place-name" required placeholder="장소 또는 일정 이름" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">전화번호</label>
@@ -344,6 +372,21 @@
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">메모 및 안내사항</label>
                             <input type="text" id="exp-memo" placeholder="예: 곤드레마늘정식 8인 예약 필수" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                        </div>
+
+                        <!-- [Ver 1.2] 일정관리 사진 첨부 영역 (최대 3장) -->
+                        <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-200 space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-extrabold text-blue-800">
+                                    <i class="fa-solid fa-camera mr-1"></i>장소 참고 사진 첨부 <span id="exp-photo-count" class="text-[11px] text-blue-600 font-bold">(0/3장)</span>
+                                </span>
+                                <label class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer flex items-center gap-1 shadow-sm">
+                                    <i class="fa-solid fa-plus"></i> 사진 선택/촬영
+                                    <input type="file" id="exp-photo-input" accept="image/*" multiple onchange="handleExpPhotosSelect(event)" class="hidden">
+                                </label>
+                            </div>
+                            <p class="text-[11px] text-slate-500">* 메뉴판, 풍경, 예약 화면 등 최대 3장까지 등록할 수 있습니다.</p>
+                            <div id="exp-photo-preview" class="grid grid-cols-3 gap-2 pt-1"></div>
                         </div>
 
                         <!-- 대안 장소 섹션 -->
@@ -379,7 +422,7 @@
             </div>
         </section>
 
-        <!-- [탭 4] 가계부·회비 -->
+        <!-- [탭 4] 가계부·회비 (영수증 첨부 및 coffee-2 배너 포함) -->
         <section id="tab-actual" class="hidden space-y-4">
             <!-- 정산 요약 및 1/N 계산기 -->
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
@@ -415,11 +458,11 @@
                 </button>
             </div>
 
-            <!-- 가계부 직접 입력 / 수정 아코디언 -->
+            <!-- 가계부 직접 입력 / 수정 아코디언 (영수증 첨부 기능 포함) -->
             <div id="act-accordion-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <button type="button" onclick="toggleActFormAccordion()" class="w-full p-4 flex justify-between items-center bg-emerald-50/60 hover:bg-emerald-50 cursor-pointer text-left">
                     <span id="act-form-title" class="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">
-                        <i class="fa-solid fa-circle-plus text-emerald-600"></i> 실제 방문 및 지출 내역 입력하기 (터치하여 열기)
+                        <i class="fa-solid fa-circle-plus text-emerald-600"></i> 실제 방문 및 지출 내역 · 영수증 입력하기 (터치하여 열기)
                     </span>
                     <i id="act-form-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
                 </button>
@@ -442,7 +485,7 @@
 
                     <form id="actual-form" class="space-y-3">
                         <input type="hidden" id="act-edit-id">
-                        <div class="grid grid-cols-3 gap-2">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">일차</label>
                                 <select id="act-day" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs bg-white font-bold">
@@ -450,11 +493,30 @@
                                     <option value="2">2일차</option>
                                     <option value="3">3일차</option>
                                     <option value="4">4일차</option>
+                                    <option value="5">5일차</option>
+                                    <option value="6">6일차</option>
+                                    <option value="7">7일차</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">시간</label>
                                 <input type="time" id="act-time" value="12:00" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">카테고리</label>
+                                <select id="act-category" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs bg-white font-semibold">
+                                    <option value="식당">식당</option>
+                                    <option value="카페">카페</option>
+                                    <option value="관광">관광</option>
+                                    <option value="숙박">숙박</option>
+                                    <option value="장보기">장보기</option>
+                                    <option value="쇼핑">쇼핑</option>
+                                    <option value="교통비">교통비</option>
+                                    <option value="통신,보험">통신,보험</option>
+                                    <option value="휴게소">휴게소</option>
+                                    <option value="출발/귀가">출발/귀가</option>
+                                    <option value="기타">기타</option>
+                                </select>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">결제자</label>
@@ -466,8 +528,8 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">방문 장소명</label>
-                                <input type="text" id="act-place" required placeholder="방문 장소" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">방문 장소명 / 지출 항목</label>
+                                <input type="text" id="act-place" required placeholder="방문 장소 또는 지출 항목" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-slate-600 mb-1">전화번호</label>
@@ -495,6 +557,26 @@
                             <input type="text" id="act-action" placeholder="예: 점심 곤드레정식 8인 결제" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
                         </div>
 
+                        <!-- [Ver 1.2] 가계부 영수증 사진 첨부 영역 -->
+                        <div class="bg-emerald-50/60 p-3 rounded-xl border border-emerald-200 space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-extrabold text-emerald-800">
+                                    <i class="fa-solid fa-receipt mr-1"></i>영수증 사진 첨부 (선택사항)
+                                </span>
+                                <label class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer flex items-center gap-1 shadow-sm">
+                                    <i class="fa-solid fa-camera"></i> 영수증 촬영/선택
+                                    <input type="file" id="act-receipt-input" accept="image/*" onchange="handleActReceiptSelect(event)" class="hidden">
+                                </label>
+                            </div>
+                            <div id="act-receipt-preview-wrap" class="hidden pt-1 flex items-center gap-3">
+                                <img id="act-receipt-img" src="" alt="영수증 미리보기" onclick="openPhotoModal(this.src, '첨부 영수증 미리보기')" class="w-20 h-20 object-cover rounded-lg border border-emerald-300 cursor-pointer shadow-sm">
+                                <div class="text-xs space-y-1">
+                                    <p class="text-emerald-800 font-bold">✓ 영수증 사진이 첨부되었습니다.</p>
+                                    <button type="button" onclick="clearActReceipt()" class="text-red-500 font-bold underline cursor-pointer text-[11px]">영수증 삭제 ✕</button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="space-y-1.5">
                             <div id="map-actual" class="map-box"></div>
                             <div class="grid grid-cols-2 gap-2">
@@ -514,6 +596,13 @@
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
                 <h3 class="text-sm font-extrabold text-slate-800"><i class="fa-solid fa-coins text-emerald-600 mr-1"></i>전체 가계부 지출 내역 관리</h3>
                 <div id="actual-manage-list" class="space-y-4"></div>
+            </div>
+
+            <!-- [Ver 1.2] 가계부·회비 페이지 배너 광고 (coffee-2.png -> Blue Bottle Dialer 이동) -->
+            <div class="pt-1">
+                <a href="https://ohyaksa.github.io/bluebottle-dialer/" target="_blank" class="block overflow-hidden rounded-2xl shadow-md border border-slate-200 hover:opacity-95 transition">
+                    <img src="coffee-2.png" alt="Blue Bottle Dialer - 완벽한 드립 커피 이제 더 쉽게!" class="w-full h-auto object-cover">
+                </a>
             </div>
         </section>
 
@@ -669,13 +758,17 @@
 
     <!-- 2부 코드를 여기에 이어서 붙여넣으세요 -->
     <!-- ========================================== -->
-    <!-- 2부: 카카오/구글 듀얼 지도, 네비 길찾기, 대분류 폴더 스크립트 -->
+    <!-- 2부: 사진·영수증 압축 엔진, 지도 제어, 길찾기 및 타임라인 렌더링 -->
     <!-- ========================================== -->
     <script>
         let currentTripId = null;
         let currentMemberCount = 8;
         let currentRegion = 'kr'; // 'kr' (국내: 카카오맵) 또는 'global' (해외: 구글맵)
         let isEditLocked = false; // 실수 삭제/수정 방지용 잠금 상태
+
+        // [Ver 1.2] 일정관리 사진(최대 3장) 및 가계부 영수증(1장) 임시 보관 상태
+        let currentExpPhotos = [];
+        let currentActReceipt = '';
 
         let mapPlan = null, mapVisit = null, mapExp = null, mapAct = null;
         let expMarker = null, actMarker = null, myGpsMarker = null;
@@ -723,6 +816,175 @@
             return String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
         }
 
+        // 날짜 문자열(YYYY-MM-DD)에 요일을 붙여 반환하는 함수
+        function formatWithDayOfWeek(dateStr) {
+            if (!dateStr) return '날짜미정';
+            const parts = String(dateStr).split('-');
+            if (parts.length !== 3) return dateStr;
+            const dt = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+            if (isNaN(dt.getTime())) return dateStr;
+            const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
+            return `${dateStr}(${weekDays[dt.getDay()]})`;
+        }
+
+        // "1일차 예상 일정" 옆에 표시할 해당 일차의 날짜와 요일 자동 계산 함수
+        function getDayDateLabel(dayNum) {
+            const trip = tripsData.find(t => t.id === currentTripId);
+            if (!trip || !trip.startDate) return '';
+            const parts = String(trip.startDate).split('-');
+            if (parts.length !== 3) return '';
+            const dt = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+            if (isNaN(dt.getTime())) return '';
+            dt.setDate(dt.getDate() + (Number(dayNum || 1) - 1));
+            const yyyy = dt.getFullYear();
+            const mm = String(dt.getMonth() + 1).padStart(2, '0');
+            const dd = String(dt.getDate()).padStart(2, '0');
+            const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
+            return `(${yyyy}.${mm}.${dd} ${weekDays[dt.getDay()]}요일)`;
+        }
+
+        // ==========================================
+        // [Ver 1.2] 사진·영수증 자동 압축 엔진 및 이미지 모달 뷰어
+        // ==========================================
+        function compressImageFile(file, maxWidth = 720, quality = 0.65) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let w = img.width;
+                        let h = img.height;
+                        if (w > maxWidth) {
+                            h = Math.round((h * maxWidth) / w);
+                            w = maxWidth;
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        window.openPhotoModal = function(src, caption) {
+            if (!src) return;
+            const modal = document.getElementById('photo-modal');
+            const imgEl = document.getElementById('photo-modal-img');
+            const capEl = document.getElementById('photo-modal-caption');
+            if (!modal || !imgEl) return;
+            imgEl.src = src;
+            if (capEl) capEl.innerText = caption || '첨부 이미지 크게 보기';
+            modal.classList.remove('hidden');
+        };
+
+        window.closePhotoModal = function() {
+            const modal = document.getElementById('photo-modal');
+            const imgEl = document.getElementById('photo-modal-img');
+            if (modal) modal.classList.add('hidden');
+            if (imgEl) imgEl.src = '';
+        };
+
+        window.viewExpPhoto = function(expId, photoIdx) {
+            const item = expectedData.find(x => x.id === expId);
+            if (!item || !Array.isArray(item.photos) || !item.photos[photoIdx]) return;
+            openPhotoModal(item.photos[photoIdx], `📸 [${item.place_name}] 사진 (${photoIdx + 1}/${item.photos.length})`);
+        };
+
+        window.viewActReceipt = function(actId) {
+            const item = actualData.find(x => x.id === actId);
+            if (!item || !item.receipt) return;
+            openPhotoModal(item.receipt, `🧾 [${item.place}] 영수증 (${Number(item.expense || 0).toLocaleString()}원)`);
+        };
+
+        // 일정관리 사진 선택 (최대 3장)
+        window.handleExpPhotosSelect = async function(event) {
+            const files = Array.from(event.target.files || []);
+            if (!files.length) return;
+            const remain = 3 - currentExpPhotos.length;
+            if (remain <= 0) {
+                alert('일정 사진은 최대 3장까지만 첨부할 수 있습니다.');
+                event.target.value = '';
+                return;
+            }
+            const targetFiles = files.slice(0, remain);
+            if (files.length > remain) {
+                alert(`최대 3장 제한으로 인해 앞의 ${remain}장만 추가됩니다.`);
+            }
+            for (const f of targetFiles) {
+                try {
+                    const dataUrl = await compressImageFile(f, 720, 0.65);
+                    currentExpPhotos.push(dataUrl);
+                } catch (err) {
+                    console.error('사진 압축 오류:', err);
+                }
+            }
+            event.target.value = '';
+            renderExpPhotoPreviews();
+        };
+
+        window.renderExpPhotoPreviews = function() {
+            const container = document.getElementById('exp-photo-preview');
+            const countEl = document.getElementById('exp-photo-count');
+            if (countEl) countEl.innerText = `(${currentExpPhotos.length}/3장)`;
+            if (!container) return;
+
+            if (currentExpPhotos.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            container.innerHTML = currentExpPhotos.map((src, idx) => `
+                <div class="relative group rounded-xl overflow-hidden border border-blue-200 bg-white h-20 shadow-sm">
+                    <img src="${src}" onclick="openPhotoModal(currentExpPhotos[${idx}], '일정 첨부 사진 미리보기 (${idx + 1}/3)')" class="w-full h-full object-cover cursor-pointer">
+                    <button type="button" onclick="removeExpPhoto(${idx})" class="absolute top-1 right-1 bg-red-600 text-white w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shadow cursor-pointer">✕</button>
+                </div>
+            `).join('');
+        };
+
+        window.removeExpPhoto = function(idx) {
+            currentExpPhotos.splice(idx, 1);
+            renderExpPhotoPreviews();
+        };
+
+        // 가계부 영수증 사진 선택 (1장)
+        window.handleActReceiptSelect = async function(event) {
+            const file = (event.target.files || [])[0];
+            if (!file) return;
+            try {
+                // 영수증 글씨가 잘 보이도록 세로 해상도 여유 및 800px 기준 압축
+                currentActReceipt = await compressImageFile(file, 800, 0.7);
+                renderActReceiptPreview();
+            } catch (err) {
+                alert('영수증 이미지를 처리하는 중 오류가 발생했습니다.');
+            } finally {
+                event.target.value = '';
+            }
+        };
+
+        window.renderActReceiptPreview = function() {
+            const wrap = document.getElementById('act-receipt-preview-wrap');
+            const img = document.getElementById('act-receipt-img');
+            if (!wrap || !img) return;
+            if (currentActReceipt) {
+                img.src = currentActReceipt;
+                wrap.classList.remove('hidden');
+            } else {
+                img.src = '';
+                wrap.classList.add('hidden');
+            }
+        };
+
+        window.clearActReceipt = function() {
+            currentActReceipt = '';
+            renderActReceiptPreview();
+        };
+
         function showError(msg) {
             const banner = document.getElementById('error-banner');
             const text = document.getElementById('error-text');
@@ -736,7 +998,7 @@
             const badge = document.getElementById('sync-status');
             if (!badge) return;
             badge.innerText = text;
-            badge.className = `text-xs ${colorClass} px-2 py-1 rounded-full text-white font-semibold shrink-0`;
+            badge.className = `text-[11px] ${colorClass} px-2 py-1 rounded-full text-white font-semibold shrink-0`;
         }
 
         // 편집 잠금 토글 (실수로 삭제/초기화하는 것 방지)
@@ -746,10 +1008,10 @@
             if (!btn) return;
             if (isEditLocked) {
                 btn.innerHTML = `<i class="fa-solid fa-lock mr-0.5"></i>잠금됨`;
-                btn.className = "bg-rose-600 hover:bg-rose-700 px-2.5 py-1 rounded-full text-[11px] font-bold cursor-pointer text-white";
+                btn.className = "bg-rose-600 hover:bg-rose-700 px-2 py-1 rounded-full text-[11px] font-bold cursor-pointer text-white";
             } else {
                 btn.innerHTML = `<i class="fa-solid fa-lock-open mr-0.5"></i>편집중`;
-                btn.className = "bg-blue-700 hover:bg-blue-800 px-2.5 py-1 rounded-full text-[11px] font-semibold cursor-pointer text-white";
+                btn.className = "bg-blue-700 hover:bg-blue-800 px-2 py-1 rounded-full text-[11px] font-semibold cursor-pointer text-white";
             }
         };
 
@@ -760,10 +1022,6 @@
             }
             return true;
         }
-
-        window.toggleRulesModal = function() {
-            document.getElementById('rules-modal').classList.toggle('hidden');
-        };
 
         // 아코디언(접이식) 개폐 헬퍼
         window.toggleAccordion = function(bodyId, chevronId, forceOpen) {
@@ -885,7 +1143,7 @@
             scheduleBackupCache();
         };
 
-        // 여행 선택 시 이전 여행 잔상 즉시 초기화 후 진입
+        // 여행 선택 시 상단 헤더에 긴 여행 제목과 전체 기간(요일 포함)이 잘리지 않고 모두 보이도록 개선
         window.selectTrip = function(tripId) {
             const trip = tripsData.find(t => t.id === tripId);
             if (!trip) return;
@@ -908,7 +1166,7 @@
             document.getElementById('header-trip-title').innerText = trip.name || '여행 일정';
             const subReg = inferTripSubRegion(trip);
             const dateEl = document.getElementById('header-trip-dates');
-            dateEl.innerText = `[${subReg}] ${trip.startDate || ''} ~ ${trip.endDate || ''} · ${currentMemberCount}인`;
+            dateEl.innerText = `📍 [${subReg}] ${formatWithDayOfWeek(trip.startDate)} ~ ${formatWithDayOfWeek(trip.endDate)} · 총 ${currentMemberCount}인`;
             dateEl.classList.remove('hidden');
 
             updateMapProviderUI();
@@ -933,10 +1191,10 @@
             if (!btn) return;
             if (currentRegion === 'kr') {
                 btn.innerHTML = "🇰🇷 국내(카카오)";
-                btn.className = "bg-amber-400 text-slate-900 px-2.5 py-1 rounded-full text-[11px] font-extrabold cursor-pointer shadow-sm";
+                btn.className = "bg-amber-400 text-slate-900 px-2 py-1 rounded-full text-[11px] font-extrabold cursor-pointer shadow-sm";
             } else {
                 btn.innerHTML = "🌍 해외(구글)";
-                btn.className = "bg-emerald-400 text-slate-900 px-2.5 py-1 rounded-full text-[11px] font-extrabold cursor-pointer shadow-sm";
+                btn.className = "bg-emerald-400 text-slate-900 px-2 py-1 rounded-full text-[11px] font-extrabold cursor-pointer shadow-sm";
             }
         }
 
@@ -1249,7 +1507,7 @@
             list.forEach((item, idx) => {
                 html += `
                 <div onclick="applySearchedCoord('${target}', ${idx})" class="p-2 bg-white hover:bg-blue-50 border border-slate-200 rounded-lg cursor-pointer text-xs flex justify-between items-center gap-2">
-                    <div class="truncate">
+                    <div class="break-words">
                         <b>${esc(item.name)}</b>
                         <span class="text-slate-500 text-[11px] ml-1">(${esc(item.address)})</span>
                         ${item.phone ? `<span class="text-blue-600 text-[10px] ml-1">📞${esc(item.phone)}</span>` : ''}
@@ -1649,7 +1907,7 @@
             });
         };
 
-        // [방문전 <-> 방문완료] 양방향 연동 (취소 시 가계부 자동 삭제)
+        // [방문전 <-> 방문완료] 양방향 연동
         window.toggleVisitStatus = async function(expId) {
             if (!checkEditable() || !currentTripId || !db) return;
             const item = expectedData.find(x => x.id === expId);
@@ -1667,6 +1925,7 @@
                         linkedExpId: expId,
                         day: Number(item.day || 1),
                         time: item.time || "12:00",
+                        category: item.category || "관광",
                         traveler: "총무(공통)",
                         place: item.place_name,
                         phone: item.phone || '',
@@ -1674,7 +1933,8 @@
                         expense: Number(item.budget || 0),
                         action: item.memo || `${item.place_name} 방문 완료`,
                         lat: item.lat || null,
-                        lng: item.lng || null
+                        lng: item.lng || null,
+                        receipt: ''
                     });
                 }
             } else {
@@ -1698,7 +1958,6 @@
 
             if (currentRegion === 'kr') {
                 if (startItem.lat && startItem.lng && endItem.lat && endItem.lng) {
-                    // 네이버 지도 길찾기 (출발지명·좌표 -> 도착지명·좌표 자동 입력, 자동차 경로)
                     const naverRouteUrl = `https://m.map.naver.com/route.nhn?menu=route&sname=${encodeURIComponent(sName)}&sx=${startItem.lng}&sy=${startItem.lat}&ename=${encodeURIComponent(eName)}&ex=${endItem.lng}&ey=${endItem.lat}&pathType=0&showMap=true`;
                     window.open(naverRouteUrl, '_blank');
                 } else {
@@ -1713,6 +1972,7 @@
             }
         };
 
+        // [Ver 1.2] 예상 일정 목록 렌더링 (날짜·요일 표시 + 장소 사진 3장 갤러리 노출)
         function buildExpListHtml(list) {
             const expGroups = {};
             list.forEach(item => {
@@ -1724,11 +1984,12 @@
             let html = '';
             Object.keys(expGroups).sort((a, b) => Number(a) - Number(b)).forEach(day => {
                 const dayItems = expGroups[day];
+                const dayDateLabel = getDayDateLabel(day);
                 html += `
                 <div class="space-y-2">
-                    <div class="bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex justify-between items-center">
-                        <span>📅 ${esc(day)}일차 예상 일정</span>
-                        <span>${dayItems.length}곳</span>
+                    <div class="bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded-lg flex flex-wrap justify-between items-center gap-1">
+                        <span>📅 ${esc(day)}일차 예상 일정 <span class="text-amber-200 font-extrabold ml-1">${esc(dayDateLabel)}</span></span>
+                        <span class="bg-blue-700 px-2 py-0.5 rounded-full text-[11px]">${dayItems.length}곳</span>
                     </div>
                     <div class="relative border-l-2 border-blue-200 ml-3 space-y-3 py-1">`;
 
@@ -1754,6 +2015,20 @@
                            </a>`
                         : '';
 
+                    // [Ver 1.2] 첨부된 장소 사진 (최대 3장) 썸네일 갤러리 생성
+                    let photosGalleryHtml = '';
+                    if (Array.isArray(item.photos) && item.photos.length > 0) {
+                        photosGalleryHtml = `<div class="grid grid-cols-3 gap-1.5 pt-1.5">`;
+                        item.photos.forEach((pSrc, pIdx) => {
+                            photosGalleryHtml += `
+                            <div onclick="event.stopPropagation(); viewExpPhoto('${item.id}', ${pIdx})" class="relative h-20 rounded-lg overflow-hidden border border-slate-200 bg-white cursor-pointer group shadow-sm">
+                                <img src="${pSrc}" alt="장소사진" class="w-full h-full object-cover group-hover:scale-105 transition">
+                                <span class="absolute bottom-1 right-1 bg-black/60 text-white text-[9px] px-1.5 py-0.2 rounded font-bold"><i class="fa-solid fa-magnifying-glass-plus"></i> ${pIdx + 1}</span>
+                            </div>`;
+                        });
+                        photosGalleryHtml += `</div>`;
+                    }
+
                     let altButtonsHtml = '';
                     if (Array.isArray(item.alternatives) && item.alternatives.length > 0) {
                         altButtonsHtml = `<div class="flex flex-wrap items-center gap-1.5 pt-1">
@@ -1774,7 +2049,7 @@
                         let distTimeText = '길찾기 경로 확인하기';
                         if (item.lat && item.lng && nextItem.lat && nextItem.lng) {
                             const straightKm = getDistanceFromLatLonInKm(Number(item.lat), Number(item.lng), Number(nextItem.lat), Number(nextItem.lng));
-                            const roadKm = straightKm * 1.3; // 네비게이션 도로 굴곡 보정거리
+                            const roadKm = straightKm * 1.3;
                             const estMin = Math.max(5, Math.round((roadKm / 55) * 60));
                             const timeFormatted = estMin >= 60
                                 ? `약 ${Math.floor(estMin / 60)}시간 ${estMin % 60}분`
@@ -1803,24 +2078,26 @@
                     <div class="relative pl-5">
                         <span class="absolute -left-[7px] top-3 w-3 h-3 rounded-full ${dotColor} ring-2 ring-white"></span>
                         <div class="${isVisited ? 'bg-emerald-50/50 border-emerald-200' : 'bg-slate-50 border-slate-200/80'} p-3.5 rounded-xl border space-y-2">
-                            <div class="flex justify-between items-center gap-1">
+                            <div class="flex flex-wrap justify-between items-center gap-1">
                                 <div class="flex items-center gap-1.5">
                                     <span class="text-xs font-extrabold text-blue-700 bg-blue-100 px-2 py-0.5 rounded"><i class="fa-regular fa-clock mr-1"></i>${esc(item.time || '시간미정')}</span>
                                     ${isVisited ? `<button type="button" onclick="focusVisitByExpId('${item.id}')" class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded cursor-pointer">✓ 방문지도보기</button>` : ''}
+                                    ${Array.isArray(item.photos) && item.photos.length > 0 ? `<span class="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded"><i class="fa-solid fa-camera mr-0.5"></i>사진 ${item.photos.length}</span>` : ''}
                                 </div>
                                 <span class="text-xs font-bold text-slate-700">예상 ${Number(item.budget || 0).toLocaleString()}원</span>
                             </div>
 
                             <div onclick="${isVisited ? `focusVisitByExpId('${item.id}')` : ''}" class="w-full space-y-1 ${isVisited ? 'cursor-pointer' : ''}">
-                                <h4 class="font-bold text-slate-800 text-sm sm:text-base truncate w-full">${item.category ? `[${esc(item.category)}] ` : ''}${esc(item.place_name)}</h4>
+                                <h4 class="font-bold text-slate-800 text-sm sm:text-base leading-snug break-words w-full">${item.category ? `<span class="text-blue-700">[${esc(item.category)}]</span> ` : ''}${esc(item.place_name)}</h4>
                                 ${item.address ? `
-                                <div class="flex items-center gap-1.5 text-xs text-slate-600">
-                                    <i class="fa-solid fa-location-dot text-slate-400"></i>
-                                    <span class="truncate">${esc(item.address)}</span>
-                                    <button type="button" onclick="event.stopPropagation(); copyExpAddressById('${item.id}')" class="text-[10px] bg-white border border-slate-300 px-1.5 py-0.2 rounded text-slate-700 font-semibold shrink-0 cursor-pointer">복사</button>
+                                <div class="flex items-start gap-1.5 text-xs text-slate-600">
+                                    <i class="fa-solid fa-location-dot text-slate-400 mt-0.5 shrink-0"></i>
+                                    <span class="break-words flex-1 leading-relaxed">${esc(item.address)}</span>
+                                    <button type="button" onclick="event.stopPropagation(); copyExpAddressById('${item.id}')" class="text-[10px] bg-white border border-slate-300 px-1.5 py-0.5 rounded text-slate-700 font-semibold shrink-0 cursor-pointer">복사</button>
                                 </div>` : ''}
                                 ${item.phone ? `<p class="text-xs text-blue-700 font-semibold"><i class="fa-solid fa-phone mr-1"></i>${esc(item.phone)}</p>` : ''}
-                                ${item.memo ? `<p class="text-xs text-slate-500 leading-relaxed break-words">${esc(item.memo)}</p>` : ''}
+                                ${item.memo ? `<p class="text-xs text-slate-600 leading-relaxed break-words">${esc(item.memo)}</p>` : ''}
+                                ${photosGalleryHtml}
                                 ${altButtonsHtml}
                             </div>
 
@@ -1845,6 +2122,7 @@
             return html;
         }
 
+        // [Ver 1.2] 실제 방문 및 가계부 목록 렌더링 (영수증 미리보기 & 영수증 확대 보기 버튼 포함)
         function buildActListHtml(list) {
             const actGroups = {};
             list.forEach(item => {
@@ -1855,11 +2133,12 @@
 
             let html = '';
             Object.keys(actGroups).sort((a, b) => Number(a) - Number(b)).forEach(day => {
+                const dayDateLabel = getDayDateLabel(day);
                 html += `
                 <div class="space-y-2">
-                    <div class="bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex justify-between items-center">
-                        <span>🧾 ${esc(day)}일차 방문완료 및 가계부</span>
-                        <span>${actGroups[day].length}건</span>
+                    <div class="bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-lg flex flex-wrap justify-between items-center gap-1">
+                        <span>🧾 ${esc(day)}일차 방문완료 및 가계부 <span class="text-amber-200 font-extrabold ml-1">${esc(dayDateLabel)}</span></span>
+                        <span class="bg-emerald-700 px-2 py-0.5 rounded-full text-[11px]">${actGroups[day].length}건</span>
                     </div>
                     <div class="relative border-l-2 border-emerald-200 ml-3 space-y-3 py-1">`;
 
@@ -1872,26 +2151,44 @@
                            </a>`
                         : '';
 
+                    const receiptBtnHtml = item.receipt
+                        ? `<button type="button" onclick="viewActReceipt('${item.id}')" class="bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer flex items-center gap-1 shadow-sm">
+                             <i class="fa-solid fa-receipt text-amber-600"></i> 영수증 보기
+                           </button>`
+                        : '';
+
+                    const receiptThumbHtml = item.receipt
+                        ? `<div onclick="event.stopPropagation(); viewActReceipt('${item.id}')" class="pt-1.5 inline-flex items-center gap-2 bg-white p-1.5 rounded-lg border border-emerald-200 cursor-pointer hover:bg-emerald-50 transition">
+                             <img src="${item.receipt}" alt="영수증" class="w-12 h-12 object-cover rounded border border-slate-200">
+                             <span class="text-[11px] font-bold text-emerald-800 pr-1"><i class="fa-solid fa-magnifying-glass-plus mr-0.5"></i>첨부 영수증 크게보기</span>
+                           </div>`
+                        : '';
+
                     html += `
                     <div class="relative pl-5">
                         <span class="absolute -left-[7px] top-3 w-3 h-3 rounded-full bg-emerald-600 ring-2 ring-white"></span>
                         <div class="bg-emerald-50/40 hover:bg-emerald-50 p-3.5 rounded-xl border border-emerald-200/80 space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded"><i class="fa-regular fa-clock mr-1"></i>${esc(item.time || '')} · ${esc(item.traveler || '공통')}</span>
+                            <div class="flex flex-wrap justify-between items-center gap-1">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded"><i class="fa-regular fa-clock mr-1"></i>${esc(item.time || '')} · ${esc(item.traveler || '공통')}</span>
+                                    ${item.receipt ? `<span class="text-[10px] font-extrabold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">🧾영수증</span>` : ''}
+                                </div>
                                 <span class="text-xs font-extrabold text-emerald-700">${Number(item.expense || 0).toLocaleString()}원</span>
                             </div>
 
                             <div onclick="focusVisitByActId('${item.id}')" class="cursor-pointer w-full space-y-1">
-                                <h4 class="font-bold text-slate-800 text-sm sm:text-base truncate w-full">${esc(item.place)}</h4>
-                                ${item.address ? `<p class="text-xs text-slate-500 truncate"><i class="fa-solid fa-location-dot mr-1"></i>${esc(item.address)}</p>` : ''}
+                                <h4 class="font-bold text-slate-800 text-sm sm:text-base leading-snug break-words w-full">${item.category ? `<span class="text-emerald-700">[${esc(item.category)}]</span> ` : ''}${esc(item.place)}</h4>
+                                ${item.address ? `<p class="text-xs text-slate-500 break-words leading-relaxed"><i class="fa-solid fa-location-dot mr-1"></i>${esc(item.address)}</p>` : ''}
                                 ${item.phone ? `<p class="text-xs text-blue-700 font-semibold"><i class="fa-solid fa-phone mr-1"></i>${esc(item.phone)}</p>` : ''}
                                 <p class="text-xs text-slate-600 leading-relaxed break-words">${esc(item.action || '')}</p>
+                                ${receiptThumbHtml}
                             </div>
 
                             <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-emerald-200/60">
                                 <button type="button" onclick="focusVisitByActId('${item.id}')" class="bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer flex items-center gap-1">
                                     <i class="fa-solid fa-route"></i> 방문지도확인
                                 </button>
+                                ${receiptBtnHtml}
                                 ${phoneBtnHtml}
                                 <a href="${navMapUrl}" target="_blank" class="bg-white border border-slate-300 text-emerald-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
                                     <i class="fa-solid fa-location-dot"></i> 지도
@@ -1955,8 +2252,9 @@
             document.getElementById('act-preset-select').innerHTML = presetHtml;
         }
 
+        // <!-- 3부 코드를 바로 아래에 이어서 붙여넣으세요 -->
         // ==========================================
-        // 5대 분류 체크리스트 제어 및 중복없는 가계부 반영
+        // 3부: 사진·영수증 폼 저장/수정, 체크리스트, 대분류 폴더, 엑셀 백업·복원
         // ==========================================
         function syncParticipantDropdowns() {
             const namesSet = new Set();
@@ -2101,11 +2399,11 @@
                                 <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleChkItem('${item.id}')" class="mt-0.5 w-4 h-4 accent-emerald-600 shrink-0 cursor-pointer">
                                 <div class="text-xs flex-1">
                                     <div class="flex flex-wrap items-center gap-1.5">
-                                        <span class="font-bold ${isChecked ? 'line-through text-slate-400' : 'text-slate-800'} text-sm">${esc(item.title)}</span>
+                                        <span class="font-bold ${isChecked ? 'line-through text-slate-400' : 'text-slate-800'} text-sm break-words">${esc(item.title)}</span>
                                         <span class="bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.2 rounded text-[10px] font-bold">👤 ${esc(item.person || '공통')}</span>
                                         ${priceNum > 0 ? `<span class="bg-emerald-50 text-emerald-700 px-1.5 py-0.2 rounded text-[11px] font-extrabold">${priceNum.toLocaleString()}원</span>` : ''}
                                     </div>
-                                    ${item.memo ? `<p class="text-[11px] text-slate-500 mt-0.5">${esc(item.memo)}</p>` : ''}
+                                    ${item.memo ? `<p class="text-[11px] text-slate-500 mt-0.5 break-words">${esc(item.memo)}</p>` : ''}
                                 </div>
                             </label>
                             <div class="flex items-center justify-end gap-1 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-100">
@@ -2154,6 +2452,7 @@
                 linkedChkId: chkId,
                 day: targetDay,
                 time: targetTime,
+                category: matchedExp ? (matchedExp.category || "장보기") : "장보기",
                 traveler: item.person || "총무(공통)",
                 place: item.minor || "현지 마트/시장",
                 phone: matchedExp ? (matchedExp.phone || '') : '',
@@ -2161,7 +2460,8 @@
                 expense: Number(item.price || 0),
                 action: `[구입] ${item.title} ${item.memo ? '(' + item.memo + ')' : ''}`,
                 lat: matchedExp ? (matchedExp.lat || null) : null,
-                lng: matchedExp ? (matchedExp.lng || null) : null
+                lng: matchedExp ? (matchedExp.lng || null) : null,
+                receipt: ''
             });
 
             await db.collection("trips").doc(currentTripId).collection("checklists").doc(chkId).update({
@@ -2244,10 +2544,12 @@
             const roundPer = Math.ceil(totalAct / members / 100) * 100;
 
             let text = `📋 [${trip ? trip.name : '단체 여행'}] 가계부 정산 내역\n`;
-            text += `• 일정: ${trip ? trip.startDate : ''} ~ ${trip ? trip.endDate : ''} (${members}명)\n`;
+            text += `• 일정: ${trip ? formatWithDayOfWeek(trip.startDate) : ''} ~ ${trip ? formatWithDayOfWeek(trip.endDate) : ''} (${members}명)\n`;
             text += `--------------------------\n`;
             sortedAct.forEach(item => {
-                text += `[${item.day || 1}일차] ${item.place}: ${Number(item.expense || 0).toLocaleString()}원 (${item.traveler || '공통'})\n`;
+                const catTag = item.category ? `[${item.category}] ` : '';
+                const rcptTag = item.receipt ? ' (🧾영수증첨부)' : '';
+                text += `[${item.day || 1}일차] ${catTag}${item.place}: ${Number(item.expense || 0).toLocaleString()}원 (${item.traveler || '공통'})${rcptTag}\n`;
             });
             text += `--------------------------\n`;
             text += `💰 총 실제 사용금액: ${totalAct.toLocaleString()}원\n`;
@@ -2266,6 +2568,8 @@
             document.getElementById('act-day').value = item.day || 1;
             const normT = normalizeTime(item.time);
             document.getElementById('act-time').value = normT !== '99:99' ? normT : '12:00';
+            const mappedCat = (item.category === '숙소') ? '숙박' : (item.category || '식당');
+            document.getElementById('act-category').value = mappedCat;
             document.getElementById('act-place').value = item.place_name || '';
             document.getElementById('act-phone').value = item.phone || '';
             document.getElementById('act-address').value = item.address || '';
@@ -2276,6 +2580,7 @@
             if (item.lat && item.lng) placePickerMarker('act', item.lat, item.lng);
         };
 
+        // [Ver 1.2] 예상 일정 수정 시 기존 첨부 사진(최대 3장) 불러오기
         window.editExp = function(id) {
             if (!checkEditable()) return;
             const item = expectedData.find(x => x.id === id);
@@ -2286,7 +2591,8 @@
             document.getElementById('exp-day').value = item.day || 1;
             const normT = normalizeTime(item.time);
             document.getElementById('exp-time').value = normT !== '99:99' ? normT : '10:00';
-            document.getElementById('exp-category').value = item.category || '관광';
+            const mappedCat = (item.category === '숙소') ? '숙박' : (item.category || '관광');
+            document.getElementById('exp-category').value = mappedCat;
             document.getElementById('exp-place-name').value = item.place_name || '';
             document.getElementById('exp-phone').value = item.phone || '';
             document.getElementById('exp-address').value = item.address || '';
@@ -2294,6 +2600,9 @@
             document.getElementById('exp-memo').value = item.memo || '';
             document.getElementById('exp-lat').value = item.lat ?? '';
             document.getElementById('exp-lng').value = item.lng ?? '';
+
+            currentExpPhotos = Array.isArray(item.photos) ? [...item.photos] : [];
+            renderExpPhotoPreviews();
 
             const altContainer = document.getElementById('exp-alternatives-container');
             altContainer.innerHTML = '';
@@ -2311,11 +2620,14 @@
             document.getElementById('expected-form').reset();
             document.getElementById('exp-edit-id').value = '';
             document.getElementById('exp-alternatives-container').innerHTML = '';
+            currentExpPhotos = [];
+            renderExpPhotoPreviews();
             document.getElementById('exp-form-title').innerHTML = `<i class="fa-solid fa-circle-plus text-blue-600"></i> 예상 일정 추가 / 수정하기 (터치하여 열기)`;
             document.getElementById('exp-submit-btn').innerText = "예상 일정 저장하기";
             if (!keepOpen) toggleExpFormAccordion(false);
         };
 
+        // [Ver 1.2] 가계부 지출 수정 시 기존 첨부 영수증 불러오기
         window.editAct = function(id) {
             if (!checkEditable()) return;
             const item = actualData.find(x => x.id === id);
@@ -2326,6 +2638,8 @@
             document.getElementById('act-day').value = item.day || 1;
             const normT = normalizeTime(item.time);
             document.getElementById('act-time').value = normT !== '99:99' ? normT : '12:00';
+            const mappedCat = (item.category === '숙소') ? '숙박' : (item.category || '식당');
+            document.getElementById('act-category').value = mappedCat;
             document.getElementById('act-traveler').value = item.traveler || '총무(공통)';
             document.getElementById('act-place').value = item.place || '';
             document.getElementById('act-phone').value = item.phone || '';
@@ -2334,6 +2648,10 @@
             document.getElementById('act-action').value = item.action || '';
             document.getElementById('act-lat').value = item.lat ?? '';
             document.getElementById('act-lng').value = item.lng ?? '';
+
+            currentActReceipt = item.receipt || '';
+            renderActReceiptPreview();
+
             document.getElementById('act-form-title').innerHTML = `<i class="fa-solid fa-pen text-emerald-600"></i> [${esc(item.place)}] 방문·지출 수정하기`;
             document.getElementById('act-submit-btn').innerText = "수정 완료";
             if (item.lat && item.lng) setTimeout(() => placePickerMarker('act', item.lat, item.lng), 250);
@@ -2343,7 +2661,9 @@
         window.resetActForm = function(keepOpen = false) {
             document.getElementById('actual-form').reset();
             document.getElementById('act-edit-id').value = '';
-            document.getElementById('act-form-title').innerHTML = `<i class="fa-solid fa-circle-plus text-emerald-600"></i> 실제 방문 및 지출 내역 입력하기 (터치하여 열기)`;
+            currentActReceipt = '';
+            renderActReceiptPreview();
+            document.getElementById('act-form-title').innerHTML = `<i class="fa-solid fa-circle-plus text-emerald-600"></i> 실제 방문 및 지출 내역 · 영수증 입력하기 (터치하여 열기)`;
             document.getElementById('act-submit-btn').innerText = "가계부 지출 내역 저장하기";
             if (!keepOpen) toggleActFormAccordion(false);
         };
@@ -2382,13 +2702,13 @@
 
             return `
             <div class="bg-white border border-slate-200 p-3.5 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-3 shadow-sm">
-                <div onclick="selectTrip('${trip.id}')" class="cursor-pointer flex-1">
+                <div onclick="selectTrip('${trip.id}')" class="cursor-pointer flex-1 min-w-0">
                     <div class="flex flex-wrap items-center gap-1.5">
-                        <h3 class="font-bold text-slate-800 text-sm sm:text-base hover:text-blue-600 transition">${esc(trip.name || '제목 없음')}</h3>
+                        <h3 class="font-bold text-slate-800 text-sm sm:text-base hover:text-blue-600 transition break-words">${esc(trip.name || '제목 없음')}</h3>
                         <span class="text-[11px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">${Number(trip.memberCount || 8)}인</span>
                         ${regionBadge}
                     </div>
-                    <p class="text-xs text-slate-500 mt-1"><i class="fa-regular fa-calendar mr-1"></i>${esc(trip.startDate || '날짜미정')} ~ ${esc(trip.endDate || '날짜미정')}</p>
+                    <p class="text-xs text-slate-500 mt-1 break-words"><i class="fa-regular fa-calendar mr-1"></i>${esc(formatWithDayOfWeek(trip.startDate))} ~ ${esc(formatWithDayOfWeek(trip.endDate))}</p>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
                     <button type="button" onclick="selectTrip('${trip.id}')" class="flex-1 sm:flex-none bg-blue-600 active:bg-blue-800 text-white px-3.5 py-2 rounded-lg text-xs font-bold cursor-pointer">입장하기</button>
@@ -2512,7 +2832,6 @@
                         </div>
                     </button>
                     <div id="major-region-body" class="hidden p-3.5 space-y-4 bg-slate-100/70">
-                        <!-- 국내 여행 소분류 (강원도, 수도권, 충청권, 전라도, 경상도, 제주도) -->
                         <div class="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2.5">
                             <div class="flex justify-between items-center border-b pb-2">
                                 <h4 class="text-xs sm:text-sm font-extrabold text-slate-800">🇰🇷 국내 여행 (강원도 · 수도권 · 충청권 · 전라도 · 경상도 · 제주도)</h4>
@@ -2523,7 +2842,6 @@
                             </div>
                         </div>
 
-                        <!-- 해외 여행 소분류 (일본, 중국, 아시아, 유럽, 북아메리카, 남아메리카, 오세아니아, 아프리카) -->
                         <div class="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2.5">
                             <div class="flex justify-between items-center border-b pb-2">
                                 <h4 class="text-xs sm:text-sm font-extrabold text-slate-800">🌍 해외 여행 (일본 · 중국 · 아시아 · 유럽 · 북미 · 남미 · 오세아니아 · 아프리카)</h4>
@@ -2698,6 +3016,7 @@
                             위도: x.lat ?? '',
                             경도: x.lng ?? '',
                             방문완료여부: x.visited ? 'Y' : 'N',
+                            사진첨부수: Array.isArray(x.photos) ? x.photos.length : 0,
                             대안장소JSON: Array.isArray(x.alternatives) && x.alternatives.length ? JSON.stringify(x.alternatives) : ''
                         });
                     });
@@ -2710,6 +3029,7 @@
                             여행제목: tData.name || '',
                             일차: x.day || 1,
                             시간: x.time || '',
+                            구분: x.category || '식당',
                             결제자: x.traveler || '',
                             방문장소: x.place || '',
                             전화번호: x.phone || '',
@@ -2717,7 +3037,8 @@
                             실제지출금액: Number(x.expense || 0),
                             상세내역: x.action || '',
                             위도: x.lat ?? '',
-                            경도: x.lng ?? ''
+                            경도: x.lng ?? '',
+                            영수증첨부여부: x.receipt ? 'Y' : 'N'
                         });
                     });
 
@@ -2834,9 +3155,12 @@
                         return;
                     }
 
-                    const overwriteExisting = confirm(`[${file.name}] 파일을 복원합니다.\n\n• [확인] 클릭 시: 동일한 제목·날짜의 여행이 있으면 기존 데이터를 덮어씁니다 (중복 생성 방지 권장)\n• [취소] 클릭 시: 기존 여행을 두고 별도의 새 여행으로 추가합니다.`);
+                    const overwriteExisting = confirm(`[${file.name}] 파일을 복원합니다.\n\n• [확인] 클릭 시: 동일한 제목·날짜의 여행이 있으면 기존 데이터를 덮어씁니다 (기존 첨부 사진·영수증은 자동 보존됩니다)\n• [취소] 클릭 시: 기존 여행을 두고 별도의 새 여행으로 추가합니다.`);
 
                     const idMap = {};
+                    const preservedPhotosMap = {};
+                    const preservedReceiptMap = {};
+
                     for (const tRow of tripsSheet) {
                         if (!tRow.여행제목) continue;
                         const existingTrip = tripsData.find(t => t.name === String(tRow.여행제목) && t.startDate === String(tRow.시작일 || ''));
@@ -2850,6 +3174,22 @@
                         };
 
                         if (overwriteExisting && existingTrip) {
+                            // 덮어쓰기 전 기존 일정 사진과 영수증 데이터를 메모리에 보존
+                            const oldExpSnap = await db.collection("trips").doc(existingTrip.id).collection("expected_places").get();
+                            oldExpSnap.forEach(doc => {
+                                const d = doc.data();
+                                if (Array.isArray(d.photos) && d.photos.length) {
+                                    preservedPhotosMap[`${existingTrip.id}_${d.day}_${d.place_name}`] = d.photos;
+                                }
+                            });
+                            const oldActSnap = await db.collection("trips").doc(existingTrip.id).collection("actual_visits").get();
+                            oldActSnap.forEach(doc => {
+                                const d = doc.data();
+                                if (d.receipt) {
+                                    preservedReceiptMap[`${existingTrip.id}_${d.day}_${d.place}`] = d.receipt;
+                                }
+                            });
+
                             await deleteTripSubcollections(existingTrip.id);
                             await db.collection("trips").doc(existingTrip.id).update(tripPayload);
                             idMap[tRow.여행ID] = existingTrip.id;
@@ -2876,6 +3216,7 @@
                         if (eRow.대안장소JSON) {
                             try { parsedAlts = JSON.parse(eRow.대안장소JSON); } catch (_) {}
                         }
+                        const pKey = `${targetTripId}_${Number(eRow.일차 || 1)}_${String(eRow.장소명)}`;
                         const ref = db.collection("trips").doc(targetTripId).collection("expected_places").doc();
                         batch.set(ref, {
                             day: Number(eRow.일차 || 1),
@@ -2889,6 +3230,7 @@
                             lat: (eRow.위도 !== undefined && eRow.위도 !== '') ? Number(eRow.위도) : null,
                             lng: (eRow.경도 !== undefined && eRow.경도 !== '') ? Number(eRow.경도) : null,
                             visited: String(eRow.방문완료여부).toUpperCase() === 'Y',
+                            photos: preservedPhotosMap[pKey] || [],
                             alternatives: parsedAlts
                         });
                         opCount++;
@@ -2898,10 +3240,12 @@
                     for (const aRow of actSheet) {
                         const targetTripId = idMap[aRow.여행ID];
                         if (!targetTripId || !aRow.방문장소) continue;
+                        const rKey = `${targetTripId}_${Number(aRow.일차 || 1)}_${String(aRow.방문장소)}`;
                         const ref = db.collection("trips").doc(targetTripId).collection("actual_visits").doc();
                         batch.set(ref, {
                             day: Number(aRow.일차 || 1),
                             time: String(aRow.시간 || '12:00'),
+                            category: String(aRow.구분 || '식당'),
                             traveler: String(aRow.결제자 || '총무(공통)'),
                             place: String(aRow.방문장소),
                             phone: String(aRow.전화번호 || ''),
@@ -2909,7 +3253,8 @@
                             expense: Number(aRow.실제지출금액 || 0),
                             action: String(aRow.상세내역 || ''),
                             lat: (aRow.위도 !== undefined && aRow.위도 !== '') ? Number(aRow.위도) : null,
-                            lng: (aRow.경도 !== undefined && aRow.경도 !== '') ? Number(aRow.경도) : null
+                            lng: (aRow.경도 !== undefined && aRow.경도 !== '') ? Number(aRow.경도) : null,
+                            receipt: preservedReceiptMap[rKey] || ''
                         });
                         opCount++;
                         await commitBatchIfNeeded();
@@ -2977,27 +3322,27 @@
             ];
 
             const initialPlaces = [
-                { day: 1, time: "08:30", category: "출발/귀가", place_name: "용인 죽전 출발", phone: "", address: "경기도 용인시 수지구 죽전동", budget: 150000, lat: 37.3248, lng: 127.1077, memo: "차량 2대 교통비 정액 (팰리세이드 10만 + 전기차 5만)", visited: false, alternatives: [] },
-                { day: 1, time: "09:55", category: "휴게소", place_name: "천등산휴게소 (제천방향)", phone: "", address: "충북 충주시 산척면 평택제천고속도로 106", budget: 0, lat: 37.0785, lng: 127.9123, memo: "커피·간식 및 전기차 충전 가능", visited: false, alternatives: [] },
-                { day: 1, time: "10:55", category: "관광", place_name: "도담삼봉", phone: "", address: "충북 단양군 매포읍 삼봉로 644", budget: 4500, lat: 36.9997, lng: 128.3435, memo: "단양 대표 인증샷 / 주차비(소형 3,000 + 전기차 1,500)", visited: false, alternatives: [] },
-                { day: 1, time: "11:45", category: "식당", place_name: "단양구경시장·돌집식당", phone: "043-422-2842", address: "충북 단양군 단양읍 중앙2로 11", budget: 160000, lat: 36.9822, lng: 128.3688, memo: "곤드레마늘정식 8인 점심(16만) / 시장 간식은 체크리스트 구입품목에서 별도 관리", visited: false, alternatives: [
+                { day: 1, time: "08:30", category: "교통비", place_name: "용인 죽전 출발", phone: "", address: "경기도 용인시 수지구 죽전동", budget: 150000, lat: 37.3248, lng: 127.1077, memo: "차량 2대 교통비 정액 (팰리세이드 10만 + 전기차 5만)", visited: false, photos: [], alternatives: [] },
+                { day: 1, time: "09:55", category: "휴게소", place_name: "천등산휴게소 (제천방향)", phone: "", address: "충북 충주시 산척면 평택제천고속도로 106", budget: 0, lat: 37.0785, lng: 127.9123, memo: "커피·간식 및 전기차 충전 가능", visited: false, photos: [], alternatives: [] },
+                { day: 1, time: "10:55", category: "관광", place_name: "도담삼봉", phone: "", address: "충북 단양군 매포읍 삼봉로 644", budget: 4500, lat: 36.9997, lng: 128.3435, memo: "단양 대표 인증샷 / 주차비(소형 3,000 + 전기차 1,500)", visited: false, photos: [], alternatives: [] },
+                { day: 1, time: "11:45", category: "식당", place_name: "단양구경시장·돌집식당", phone: "043-422-2842", address: "충북 단양군 단양읍 중앙2로 11", budget: 160000, lat: 36.9822, lng: 128.3688, memo: "곤드레마늘정식 8인 점심(16만) / 시장 간식은 체크리스트 구입품목에서 별도 관리", visited: false, photos: [], alternatives: [
                     { name: "서울식당 (대안)", phone: "0507-1459-2808", address: "충북 단양군 단양읍 고수동굴길 4-10", budget: 136000, memo: "마늘수제떡갈비+산채한정식 17,000원", lat: 36.9865, lng: 128.3792 }
                 ] },
-                { day: 1, time: "13:05", category: "관광", place_name: "만천하스카이워크", phone: "", address: "충북 단양군 적성면 옷바위길 10", budget: 24000, lat: 36.9708, lng: 128.3389, memo: "전망대 입장료 3,000원×8명 (무료 셔틀 이동)", visited: false, alternatives: [] },
-                { day: 1, time: "15:25", category: "카페", place_name: "카페 산", phone: "", address: "충북 단양군 가곡면 두산길 196-86", budget: 56000, lat: 37.0094, lng: 128.3995, memo: "해발 600m 전망 카페 (음료 8잔)", visited: false, alternatives: [
+                { day: 1, time: "13:05", category: "관광", place_name: "만천하스카이워크", phone: "", address: "충북 단양군 적성면 옷바위길 10", budget: 24000, lat: 36.9708, lng: 128.3389, memo: "전망대 입장료 3,000원×8명 (무료 셔틀 이동)", visited: false, photos: [], alternatives: [] },
+                { day: 1, time: "15:25", category: "카페", place_name: "카페 산", phone: "", address: "충북 단양군 가곡면 두산길 196-86", budget: 56000, lat: 37.0094, lng: 128.3995, memo: "해발 600m 전망 카페 (음료 8잔)", visited: false, photos: [], alternatives: [
                     { name: "만천하 스카이라운지 (대안)", phone: "", address: "충북 단양군 적성면 옷바위길 60-186", budget: 56000, memo: "만천하 단지 내 카페", lat: 36.9712, lng: 128.3395 }
                 ] },
-                { day: 1, time: "16:40", category: "장보기", place_name: "하나로마트 가곡점", phone: "043-422-8030", address: "충북 단양군 가곡면 남한강로 504", budget: 0, lat: 37.0315, lng: 128.3965, memo: "바비큐 장보기 품목은 [체크·차량] 탭의 구입품목에서 가계부로 반영", visited: false, alternatives: [
+                { day: 1, time: "16:40", category: "장보기", place_name: "하나로마트 가곡점", phone: "043-422-8030", address: "충북 단양군 가곡면 남한강로 504", budget: 0, lat: 37.0315, lng: 128.3965, memo: "바비큐 장보기 품목은 [체크·차량] 탭의 구입품목에서 가계부로 반영", visited: false, photos: [], alternatives: [
                     { name: "단양농협 하나로마트 본점 (대안)", phone: "043-421-5959", address: "충북 단양군 단양읍 삼봉로 287", budget: 0, memo: "21:00까지 영업", lat: 36.9845, lng: 128.3680 }
                 ] },
-                { day: 1, time: "17:55", category: "숙소", place_name: "더릴지즈 in 캠블리", phone: "", address: "강원 영월군 영월읍", budget: 256468, lat: 37.1835, lng: 128.4618, memo: "201호 결제완료 / 18:30~ 바비큐 및 자쿠지", visited: false, alternatives: [] },
-                { day: 2, time: "11:10", category: "관광", place_name: "옥순봉 출렁다리", phone: "", address: "충북 제천시 수산면 옥순봉로 342", budget: 24000, lat: 36.9427, lng: 128.2036, memo: "입장료 3,000원×8명 (지역화폐 환급)", visited: false, alternatives: [] },
-                { day: 2, time: "12:40", category: "식당", place_name: "느티나무횟집", phone: "043-647-0089", address: "충북 제천시 청풍면 배시론로 4", budget: 200000, lat: 37.0016, lng: 128.1742, memo: "송어비빔회 8명 사전 전화예약 필수", visited: false, alternatives: [
+                { day: 1, time: "17:55", category: "숙박", place_name: "더릴지즈 in 캠블리", phone: "", address: "강원 영월군 영월읍", budget: 256468, lat: 37.1835, lng: 128.4618, memo: "201호 결제완료 / 18:30~ 바비큐 및 자쿠지", visited: false, photos: [], alternatives: [] },
+                { day: 2, time: "11:10", category: "관광", place_name: "옥순봉 출렁다리", phone: "", address: "충북 제천시 수산면 옥순봉로 342", budget: 24000, lat: 36.9427, lng: 128.2036, memo: "입장료 3,000원×8명 (지역화폐 환급)", visited: false, photos: [], alternatives: [] },
+                { day: 2, time: "12:40", category: "식당", place_name: "느티나무횟집", phone: "043-647-0089", address: "충북 제천시 청풍면 배시론로 4", budget: 200000, lat: 37.0016, lng: 128.1742, memo: "송어비빔회 8명 사전 전화예약 필수", visited: false, photos: [], alternatives: [
                     { name: "청풍 황금떡갈비 (대안)", phone: "0507-1347-6303", address: "충북 제천시 청풍면 청풍호로 1682", budget: 192000, memo: "울금떡갈비정식", lat: 37.0025, lng: 128.1760 }
                 ] },
-                { day: 2, time: "13:50", category: "관광", place_name: "청풍호반케이블카", phone: "", address: "충북 제천시 청풍면 문화재길 166", budget: 144000, lat: 37.0039, lng: 128.1755, memo: "왕복 대인 18,000원×8명 (온라인 예매 권장)", visited: false, alternatives: [] },
-                { day: 2, time: "15:50", category: "카페", place_name: "콘크리트월", phone: "", address: "충북 제천시 금성면 청풍호로 1566", budget: 56000, lat: 37.0583, lng: 128.1585, memo: "서리태크림라떼 등 음료 8잔", visited: false, alternatives: [
-                    { name: "커피라끄 (대안)", phone: "0507-1344-9741", address: "충북 제천시 금성면 청풍호로 1226", budget: 56000, memo: "대형 호수뷰 카페", lat: 37.0380, lng: 128.1650 }
+                { day: 2, time: "13:50", category: "관광", place_name: "청풍호반케이블카", phone: "", address: "충북 제천시 청풍면 문화재길 166", budget: 144000, lat: 37.0039, lng: 128.1755, memo: "왕복 대인 18,000원×8명 (온라인 예매 권장)", visited: false, photos: [], alternatives: [] },
+                { day: 2, time: "15:50", category: "카페", place_name: "콘크리트월", phone: "", address: "충북 제천시 금성면 청풍호로 1566", budget: 56000, lat: 37.0583, lng: 128.1585, memo: "서리태크림라떼 등 음료 8잔", visited: false, photos: [], alternatives: [
+                    { name: "커피라끄 (대안)", phone: "0507-1344-9741", address: "충북 제천시 금성면 청풍호로 1226", budget: 56000, memo: "대형 호수뷰 카페", lat: 36.0380, lng: 128.1650 }
                 ] }
             ];
 
@@ -3070,6 +3415,7 @@
                 selectTrip(tripId);
             };
 
+            // [Ver 1.2] 예상 일정 저장 시 사진 배열(최대 3장) 함께 저장
             document.getElementById('expected-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!checkEditable() || !currentTripId || !db) return;
@@ -3089,6 +3435,7 @@
                     lat: latVal ? Number(latVal) : null,
                     lng: lngVal ? Number(lngVal) : null,
                     visited: existing ? Boolean(existing.visited) : false,
+                    photos: currentExpPhotos.slice(0, 3),
                     alternatives: collectAlternativesFromForm()
                 };
                 if (editId) await db.collection("trips").doc(currentTripId).collection("expected_places").doc(editId).update(payload);
@@ -3096,6 +3443,7 @@
                 resetExpForm(false);
             });
 
+            // [Ver 1.2] 가계부 저장 시 영수증 사진 데이터 함께 저장
             document.getElementById('actual-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!checkEditable() || !currentTripId || !db) return;
@@ -3105,6 +3453,7 @@
                 const payload = {
                     day: Number(document.getElementById('act-day').value),
                     time: document.getElementById('act-time').value,
+                    category: document.getElementById('act-category').value,
                     traveler: document.getElementById('act-traveler').value.trim(),
                     place: document.getElementById('act-place').value.trim(),
                     phone: document.getElementById('act-phone').value.trim(),
@@ -3112,7 +3461,8 @@
                     expense: Number(document.getElementById('act-expense').value || 0),
                     action: document.getElementById('act-action').value.trim(),
                     lat: latVal ? Number(latVal) : null,
-                    lng: lngVal ? Number(lngVal) : null
+                    lng: lngVal ? Number(lngVal) : null,
+                    receipt: currentActReceipt || ''
                 };
                 if (editId) await db.collection("trips").doc(currentTripId).collection("actual_visits").doc(editId).update(payload);
                 else await db.collection("trips").doc(currentTripId).collection("actual_visits").add(payload);
