@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>스마트 단체 여행 매니저 Ver 1.2</title>
+    <title>스마트 단체 여행 매니저 Ver 1.22</title>
 
     <!-- 스마트폰 바탕화면 아이콘 및 웹사이트 링크 공유(오픈그래프) 설정 -->
     <link rel="icon" type="image/png" href="apple-touch-icon.png">
@@ -24,8 +24,8 @@
     <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
     <!-- 국내용: 카카오맵 SDK (autoload=false 적용) -->
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=421e90b13a87b1868e381924faab6e44&libraries=services&autoload=false"></script>
-    <!-- 해외용: 구글맵 SDK (기존 API 키 복원 적용) -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBVXAi7WTQJ0sm7FXOjWwAMzmnvw1wSt0M&libraries=places" async defer></script>
+    <!-- 해외용: 구글맵 SDK (콜백 함수 initMaps 지정으로 로드 오류 방지) -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBVXAi7WTQJ0sm7FXOjWwAMzmnvw1wSt0M&libraries=places&callback=initMaps" async defer></script>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -48,7 +48,7 @@
                     <button id="btn-back" onclick="goTripSelector()" class="hidden bg-blue-700 hover:bg-blue-800 px-2.5 py-1 rounded-full text-xs font-bold shrink-0 cursor-pointer flex items-center gap-1 shadow-sm">
                         <i class="fa-solid fa-arrow-left"></i> 목록
                     </button>
-                    <span class="text-[10px] bg-blue-800/90 text-blue-100 px-2 py-0.5 rounded-full font-extrabold">Ver 1.21</span>
+                    <span class="text-[10px] bg-blue-800/90 text-blue-100 px-2 py-0.5 rounded-full font-extrabold">Ver 1.22</span>
                 </div>
                 <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
                     <button id="btn-map-provider" onclick="toggleMapProvider()" class="hidden bg-amber-400 text-slate-900 px-2 py-1 rounded-full text-[11px] font-extrabold cursor-pointer shadow-sm">
@@ -1182,11 +1182,18 @@
 
        // [Ver 1.2 수정] 국내(카카오맵) <-> 해외(구글맵) 지도 뷰어만 전환 (여행 본래의 국내/해외 속성은 변경 안 함)
         // 국내 일정에서도 카카오맵과 구글맵을 자유롭게 전환하여 볼 수 있도록 허용
+      // [Ver 1.22 수정] 구글맵 전환 시 회색 빈 화면 방지를 위한 강제 리사이즈 트리거 추가
         window.toggleMapProvider = async function() {
             currentRegion = (currentRegion === 'kr') ? 'global' : 'kr';
             updateMapProviderUI();
             initMaps();
-            setTimeout(() => renderTimelineMaps(), 300);
+            setTimeout(() => {
+                if (currentRegion === 'global' && window.google && google.maps) {
+                    if (mapPlan) google.maps.event.trigger(mapPlan, 'resize');
+                    if (mapVisit) google.maps.event.trigger(mapVisit, 'resize');
+                }
+                renderTimelineMaps();
+            }, 350);
         };
 
         function updateMapProviderUI() {
