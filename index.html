@@ -2757,7 +2757,7 @@
             </div>`;
         }
 
-        function renderTripCards() {
+  function renderTripCards() {
             const container = document.getElementById('trip-cards-container');
             if (!container) return;
 
@@ -2768,7 +2768,7 @@
 
             const sortedTrips = [...tripsData].sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''));
 
-            // 1. 대분류 1: 연도별 그룹핑
+            // 1. 연도별 그룹핑
             const yearGroups = {};
             sortedTrips.forEach(t => {
                 const yr = (t.startDate && t.startDate.length >= 4) ? `${t.startDate.slice(0, 4)}년` : '연도미정';
@@ -2796,7 +2796,7 @@
                 </div>`;
             });
 
-            // 2. 대분류 2: 국내 여행(6대 권역) & 해외 여행(8대 권역) 그룹핑
+            // 2. 국내 여행(6대 권역) & 해외 여행(8대 권역) 그룹핑
             const krGroups = {};
             KR_SUBREGIONS.forEach(r => krGroups[r] = []);
             const globalGroups = {};
@@ -2841,12 +2841,11 @@
             const totalGlobalCount = Object.values(globalGroups).reduce((acc, arr) => acc + arr.length, 0);
 
             container.innerHTML = `
-                <!-- [대분류 1] 연도별 여행 일정 -->
+                <!-- 연도별 여행 일정 ('대분류 1' 배지 제거) -->
                 <div class="border-2 border-blue-200 rounded-2xl overflow-hidden shadow-sm">
                     <button type="button" onclick="toggleAccordion('major-year-body', 'major-year-chev')" class="w-full p-4 bg-blue-600 text-white flex justify-between items-center cursor-pointer text-left">
                         <div>
-                            <span class="text-[10px] bg-blue-800 px-2 py-0.5 rounded-full font-extrabold">대분류 1</span>
-                            <h3 class="text-sm sm:text-base font-extrabold mt-1"><i class="fa-solid fa-calendar-days mr-1.5"></i>연도별 여행 일정 보기</h3>
+                            <h3 class="text-sm sm:text-base font-extrabold"><i class="fa-solid fa-calendar-days mr-1.5"></i>연도별 여행 일정 보기</h3>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="text-xs bg-white text-blue-700 px-2.5 py-0.5 rounded-full font-extrabold">총 ${sortedTrips.length}건</span>
@@ -2858,12 +2857,11 @@
                     </div>
                 </div>
 
-                <!-- [대분류 2] 국내 여행 / 해외 여행 지역별 일정 -->
+                <!-- 국내 여행 / 해외 여행 지역별 일정 ('대분류 2' 배지 제거) -->
                 <div class="border-2 border-emerald-200 rounded-2xl overflow-hidden shadow-sm">
                     <button type="button" onclick="toggleAccordion('major-region-body', 'major-region-chev')" class="w-full p-4 bg-emerald-600 text-white flex justify-between items-center cursor-pointer text-left">
                         <div>
-                            <span class="text-[10px] bg-emerald-800 px-2 py-0.5 rounded-full font-extrabold">대분류 2</span>
-                            <h3 class="text-sm sm:text-base font-extrabold mt-1"><i class="fa-solid fa-earth-asia mr-1.5"></i>국내 여행 · 해외 여행 지역별 보기</h3>
+                            <h3 class="text-sm sm:text-base font-extrabold"><i class="fa-solid fa-earth-asia mr-1.5"></i>국내 여행 · 해외 여행 지역별 보기</h3>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="text-xs bg-white text-emerald-700 px-2.5 py-0.5 rounded-full font-extrabold">국내 ${totalKrCount} · 해외 ${totalGlobalCount}</span>
@@ -3407,6 +3405,20 @@
             return tripId;
         }
 
+// [Ver 1.23] 앱 재접속 시 개인 휴대폰에 저장된 마지막 여행 및 탭 화면 자동 복원
+        let hasRestoredInitialSession = false;
+        function restoreLastSessionOnce() {
+            if (hasRestoredInitialSession) return;
+            hasRestoredInitialSession = true;
+            try {
+                const lastTripId = localStorage.getItem('last_trip_id');
+                const lastTabId = localStorage.getItem('last_tab_id') || 'plan';
+                if (lastTripId && tripsData.some(t => t.id === lastTripId)) {
+                    selectTrip(lastTripId, lastTabId);
+                }
+            } catch (_) {}
+        }
+
         // 초기 실행 및 폼 이벤트 바인딩
         window.addEventListener('DOMContentLoaded', () => {
             try {
@@ -3420,6 +3432,7 @@
                     tripsData = [];
                     snap.forEach(d => tripsData.push({ id: d.id, ...d.data() }));
                     renderTripCards();
+                    restoreLastSessionOnce();
                     scheduleBackupCache();
                 }, (err) => {
                     setSyncBadge("연결오류", "bg-red-600");
@@ -3429,7 +3442,7 @@
                 setSyncBadge("초기화오류", "bg-red-600");
                 showError("Firebase 초기화 오류: " + err.message);
             }
-
+        
             document.getElementById('trip-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!checkEditable() || !db) return;
