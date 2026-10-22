@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스마트 단체 여행 매니저 - 종합 이용 가이드 (Ver 1.1)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-slate-50 text-slate-800 p-4 max-w-2xl mx-auto space-y-4">
+    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-5">
+        
+        <!-- 상단 헤더 -->
+        <div class="flex justify-between items-center border-b pb-3">
+            <div>
+                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] font-extrabold">Official Guide</span>
+                <h1 class="font-extrabold text-base text-slate-900 mt-1 flex items-center gap-2">
+                    <i class="fa-solid fa-book-open text-blue-600"></i> 스마트 단체 여행 매니저 도움말
+                </h1>
+            </div>
+            <button onclick="window.close()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">닫기 ✕</button>
+        </div>
+        
+        <!-- 버전별 히스토리 -->
+        <div class="bg-blue-50/60 p-3.5 rounded-xl border border-blue-200 space-y-2">
+            <h2 class="font-extrabold text-blue-900 text-xs flex items-center gap-1.5">
+                <i class="fa-solid fa-code-branch text-blue-600"></i> 버전 업데이트 히스토리
+            </h2>
+            <div class="text-xs text-blue-950 space-y-1.5 leading-relaxed">
+                <p>• <b>Ver 1.1 (최신):</b> 구글 지도 API 키 복원, 긴 일정·주소 줄바꿈 전체 노출, 일차별 날짜·요일 자동 계산, 카테고리 확장(쇼핑·교통비·통신,보험), 홈 화면 앱 아이콘 및 링크 썸네일 지원.</p>
+                <p>• <b>Ver 1.0:</b> 타임라인 계획/방문 동선 지도(카카오·구글 듀얼), 대분류 폴더(연도별/지역별), 구간 거리·소요시간 및 네이버 길찾기 연동, 1/N 가계부 정산, 5대 분류 체크리스트 및 엑셀 통합 백업·복원.</p>
+            </div>
+        </div>
+
+        <!-- 본문 도움말 목록 -->
+        <div class="space-y-4 text-xs text-slate-700 leading-relaxed">
+            
+            <!-- 섹션 1 -->
+            <section class="space-y-1.5 border-b pb-3">
+                <h2 class="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
+                    <i class="fa-solid fa-folder-tree text-indigo-600"></i> 1. 여행 목록 폴더 시스템 (대분류 1 · 2)
+                </h2>
+                <p>• <b>[대분류 1: 연도별 여행 일정]</b> 여행 시작일 연도별(2026년, 2025년 등)로 폴더가 자동 분류되어 과거와 현재의 여행을 모아 볼 수 있습니다.</p>
+                <p>• <b>[대분류 2: 국내·해외 지역별 일정]</b> 국내 6대 권역(강원도, 수도권, 충청권, 전라도, 경상도, 제주도) 및 해외 8대 권역 소분류 폴더로 일정이 체계적으로 관리됩니다.</p>
+            </section>
+
+            <!-- 섹션 2 -->
+            <section class="space-y-1.5 border-b pb-3">
+                <h2 class="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
+                    <i class="fa-solid fa-map-location-dot text-blue-600"></i> 2. 타임라인 및 길찾기 연동 (Ver 1.1 개선)
+                </h2>
+                <p>• <b>날짜 및 요일 자동 표시:</b> 각 일차 타이틀 옆에 <b>(2026.10.23 금요일)</b> 형식으로 실제 날짜와 요일이 자동 계산되어 표시됩니다.</p>
+                <p>• <b>구간 이동 거리·소요시간:</b> 장소와 장소 사이 연결선 아래의 파란색 박스를 누르면 출발지·목적지가 자동 입력된 네이버 지도(국내) 또는 구글맵(해외) 자동차 길찾기가 즉시 실행됩니다.</p>
+                <p>• <b>대안 장소 교체:</b> 등록된 대안 후보 장소가 있다면 [🔄 대안 교체]를 눌러 1초 만에 메인 일정과 맞바꿀 수 있습니다.</p>
+            </section>
+
+            <!-- 섹션 3 -->
+            <section class="space-y-1.5 border-b pb-3">
+                <h2 class="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
+                    <i class="fa-solid fa-calculator text-emerald-600"></i> 3. 가계부 · 회비 및 1/N 정산 (Ver 1.1 카테고리 확장)
+                </h2>
+                <p>• <b>상세 카테고리:</b> <code>식당</code>, <code>카페</code>, <code>관광</code>, <code>숙박</code>, <code>장보기</code>뿐만 아니라 새로 추가된 <code>쇼핑</code>, <code>교통비</code>, <code>통신,보험</code> 항목으로 지출을 세분화하여 관리할 수 있습니다.</p>
+                <p>• <b>방문 완료 연동:</b> 타임라인에서 [방문전]을 눌러 [방문완료]로 전환하면 해당 예산이 가계부 지출로 자동 기록됩니다.</p>
+                <p>• <b>카카오톡 정산 공유:</b> 총 지출액을 정산 인원으로 나눈 1인당 회비(100원 단위 올림 계산 포함)를 [카카오톡 공유용 정산 내역 복사하기]로 단톡방에 간편하게 공유할 수 있습니다.</p>
+            </section>
+
+            <!-- 섹션 4 -->
+            <section class="space-y-1.5 border-b pb-3">
+                <h2 class="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
+                    <i class="fa-solid fa-clipboard-check text-purple-600"></i> 4. 5대 분류 체크리스트 & 차량 배치
+                </h2>
+                <p>• <b>차량 배치 연동:</b> 차량별 운전자와 동승자 명단을 등록하면 체크리스트 담당자 및 가계부 결제자 목록에 자동으로 연동됩니다.</p>
+                <p>• <b>현장 구입품목 연동:</b> <code>4. 여행중 현장 구입품목</code>에서 장보기 금액을 입력하고 [가계부반영]을 누르면 해당 지출이 가계부로 즉시 등록됩니다.</p>
+            </section>
+
+            <!-- 섹션 5 -->
+            <section class="space-y-1.5 border-b pb-3">
+                <h2 class="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
+                    <i class="fa-solid fa-shield-halved text-rose-600"></i> 5. 보안 및 데이터 백업
+                </h2>
+                <p>• <b>[🔓 편집중 ⇄ 🔒 잠금됨]:</b> 상단 버튼을 눌러 잠금 상태로 전환하면 일행들이 실수로 일정을 터치해 지우거나 수정하는 사고를 원천 차단합니다.</p>
+                <p>• <b>엑셀 백업 및 복원:</b> 첫 화면의 [엑셀 백업] 버튼을 통해 모든 데이터(예상일정, 가계부, 차량, 체크리스트)를 엑셀 파일로 안전하게 보관하고 [엑셀 복원]으로 언제든 복구할 수 있습니다.</p>
+            </section>
+
+        </div>
+
+        <button onclick="window.close()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs font-bold cursor-pointer">
+            도움말 닫기
+        </button>
+    </div>
+</body>
+</html>
