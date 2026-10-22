@@ -228,4 +228,105 @@
 
             <!-- 페이지 4: 가계부·회비 탭 -->
             <div class="border border-slate-200 rounded-xl bg-white overflow-hidden shadow-sm">
-                <button type="button" onclick="toggleSection('page-4-content', 'page-4-
+                <button type="button" onclick="toggleSection('page-4-content', 'page-4-chev')" class="w-full p-3.5 hover:bg-slate-50 flex justify-between items-center text-xs font-bold text-slate-800 cursor-pointer text-left">
+                    <div class="space-y-0.5">
+                        <span class="text-blue-600 font-extrabold">[가계부·회비 탭]</span> 영수증 첨부 기능, 예산 비교 및 1/N 회비 정산
+                    </div>
+                    <i id="page-4-chev" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
+                </button>
+                <div id="page-4-content" class="hidden p-3.5 border-t border-slate-100 text-xs text-slate-600 space-y-2 leading-relaxed bg-slate-50/50">
+                    <p>• <b>영수증 첨부 기능:</b> 지출 입력 시 영수증 사진을 촬영·첨부하고, 썸네일이나 [영수증 보기]를 눌러 크게 확대해 확인할 수 있습니다.</p>
+                    <p>• <b>지출 내역 간편 수정:</b> 등록된 지출 카드의 [수정] 버튼을 누르면 선택한 장소명이 상단에 표시되며 금액과 영수증을 손쉽게 고칠 수 있습니다.</p>
+                    <p>• <b>카테고리 세분화 및 1/N 정산:</b> 식당, 카페, 관광, 숙박, 장보기, 쇼핑, 교통비, 통신,보험 항목으로 지출을 관리하고 단톡방에 정산 내역을 공유할 수 있습니다.</p>
+                </div>
+            </div>
+
+            <!-- 페이지 5: 체크·차량 탭 -->
+            <div class="border border-slate-200 rounded-xl bg-white overflow-hidden shadow-sm">
+                <button type="button" onclick="toggleSection('page-5-content', 'page-5-chev')" class="w-full p-3.5 hover:bg-slate-50 flex justify-between items-center text-xs font-bold text-slate-800 cursor-pointer text-left">
+                    <div class="space-y-0.5">
+                        <span class="text-blue-600 font-extrabold">[체크·차량 탭]</span> 차량 배치 명단, 5대 분류 준비물 및 현장 구입품목 가계부 연동
+                    </div>
+                    <i id="page-5-chev" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
+                </button>
+                <div id="page-5-content" class="hidden p-3.5 border-t border-slate-100 text-xs text-slate-600 space-y-2 leading-relaxed bg-slate-50/50">
+                    <p>• <b>차량 배치 연동:</b> 등록된 운전자와 동승자 이름이 체크리스트 담당자 및 가계부 결제자 목록에 자동으로 연동됩니다.</p>
+                    <p>• <b>현장 구입품목 가계부 연동:</b> '4. 여행중 현장 구입품목'에서 금액을 입력하고 [가계부반영]을 누르면 가계부 지출로 즉시 등록됩니다.</p>
+                    <p>• <b>미완료 복사:</b> 체크되지 않은 준비물만 골라 단톡방에 복사하여 공유할 수 있습니다.</p>
+                </div>
+            </div>
+
+            <!-- 보안 및 잠금 기능 -->
+            <div class="border border-slate-200 rounded-xl bg-white overflow-hidden shadow-sm">
+                <button type="button" onclick="toggleSection('page-6-content', 'page-6-chev')" class="w-full p-3.5 hover:bg-slate-50 flex justify-between items-center text-xs font-bold text-slate-800 cursor-pointer text-left">
+                    <div class="space-y-0.5">
+                        <span class="text-rose-600 font-extrabold">[상단 제어 버튼]</span> 편집중 ⇄ 잠금됨 (실수 수정 방지 모드)
+                    </div>
+                    <i id="page-6-chev" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
+                </button>
+                <div id="page-6-content" class="hidden p-3.5 border-t border-slate-100 text-xs text-slate-600 space-y-2 leading-relaxed bg-slate-50/50">
+                    <p>• <b>읽기 전용 잠금:</b> 상단 [🔓 편집중] 버튼을 눌러 [🔒 잠금됨]으로 전환하면, 일행들이 스마트폰으로 일정을 볼 때 실수로 내용을 지우거나 수정하는 사고를 원천 차단할 수 있습니다.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ========================================== -->
+        <!-- [배너 광고 2] 도움말 화면 마지막 (coffee-2.png) -->
+        <!-- ========================================== -->
+        <div class="py-2">
+            <a href="https://ohyaksa.github.io/bluebottle-dialer/" target="_blank" class="block overflow-hidden rounded-2xl shadow-md border border-slate-200 hover:opacity-95 transition">
+                <img src="coffee-2.png" alt="Blue Bottle Dialer 광고 배너 2" class="w-full h-auto object-cover">
+            </a>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- [하단 이동 완료] 인스타그램 개발자 & 채널 소개 -->
+        <!-- ========================================== -->
+        <section class="bg-gradient-to-r from-pink-50 via-purple-50 to-indigo-50 p-4 rounded-2xl border border-pink-200/80 space-y-3">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 text-white flex items-center justify-center text-sm shrink-0 shadow-sm">
+                    <i class="fa-brands fa-instagram"></i>
+                </div>
+                <div>
+                    <h3 class="font-extrabold text-xs sm:text-sm text-slate-900">✨ 개발자 오찬욱의 인스타그램 채널</h3>
+                    <p class="text-[11px] text-slate-600">유익한 정보와 일상을 나누고 있어요! 팔로우와 응원 부탁드립니다 🙏</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                <!-- 첫 번째: 개인 인스타그램 -->
+                <a href="https://www.instagram.com/chanwuk_oh?rpxt=M21hZ3F0a3F6YXNs" target="_blank" class="bg-white hover:bg-pink-50 border border-pink-200/70 p-2.5 rounded-xl flex items-center justify-between gap-1.5 transition shadow-sm group">
+                    <div class="truncate">
+                        <p class="font-extrabold text-[11px] text-slate-800 group-hover:text-pink-600 truncate">👤 오찬욱 개인</p>
+                        <p class="text-[10px] text-slate-400">일상 소통 공간</p>
+                    </div>
+                    <span class="bg-pink-100 text-pink-700 text-[10px] font-bold px-2.5 py-1 rounded-lg shrink-0">팔로우</span>
+                </a>
+
+                <!-- 두 번째: 약물정보 안내 약찬욱 -->
+                <a href="https://www.instagram.com/yakchanwuk?dlrf=Mjk1OW94MGVocHU5" target="_blank" class="bg-white hover:bg-purple-50 border border-purple-200/70 p-2.5 rounded-xl flex items-center justify-between gap-1.5 transition shadow-sm group">
+                    <div class="truncate">
+                        <p class="font-extrabold text-[11px] text-slate-800 group-hover:text-purple-600 truncate">💊 약찬욱 (약물정보)</p>
+                        <p class="text-[10px] text-slate-400">유용한 복약 정보</p>
+                    </div>
+                    <span class="bg-purple-100 text-purple-700 text-[10px] font-bold px-2.5 py-1 rounded-lg shrink-0">팔로우</span>
+                </a>
+
+                <!-- 세 번째: 일상 라이프 -->
+                <a href="https://www.instagram.com/daily_life_of_oh?dlrf=cTZ1MWN5NHpvMGRx" target="_blank" class="bg-white hover:bg-indigo-50 border border-indigo-200/70 p-2.5 rounded-xl flex items-center justify-between gap-1.5 transition shadow-sm group">
+                    <div class="truncate">
+                        <p class="font-extrabold text-[11px] text-slate-800 group-hover:text-indigo-600 truncate">☕ 일상 라이프</p>
+                        <p class="text-[10px] text-slate-400">소소한 취미 생활</p>
+                    </div>
+                    <span class="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2.5 py-1 rounded-lg shrink-0">팔로우</span>
+                </a>
+            </div>
+        </section>
+
+        <button onclick="window.close()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs font-bold cursor-pointer">
+            도움말 닫기
+        </button>
+    </div>
+</body>
+</html>
