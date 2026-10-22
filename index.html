@@ -1130,8 +1130,14 @@
             }
         }
 
-        // 목록 화면으로 돌아가기
+   
+// [Ver 1.23] 목록 화면으로 돌아가기 (돌아갈 때 기억된 마지막 화면 초기화)
         window.goTripSelector = function() {
+            try {
+                localStorage.removeItem('last_trip_id');
+                localStorage.removeItem('last_tab_id');
+            } catch (_) {}
+
             currentTripId = null;
             if (unsubExp) { unsubExp(); unsubExp = null; }
             if (unsubAct) { unsubAct(); unsubAct = null; }
@@ -1147,10 +1153,15 @@
             scheduleBackupCache();
         };
 
-        // 여행 선택 시 상단 헤더에 긴 여행 제목과 전체 기간(요일 포함)이 잘리지 않고 모두 보이도록 개선
-        window.selectTrip = function(tripId) {
+        // [Ver 1.23] 여행 선택 시 개인 휴대폰에 마지막 여행 ID 저장 및 지정 탭 진입
+        window.selectTrip = function(tripId, initialTab = 'plan') {
             const trip = tripsData.find(t => t.id === tripId);
             if (!trip) return;
+
+            try {
+                localStorage.setItem('last_trip_id', tripId);
+            } catch (_) {}
+
             currentTripId = tripId;
             currentMemberCount = Number(trip.memberCount || 8);
             currentRegion = trip.region || 'kr';
@@ -1175,10 +1186,9 @@
 
             updateMapProviderUI();
             initMaps();
-            switchTab('plan');
+            switchTab(initialTab);
             subscribeTripData(tripId);
         };
-
        // [Ver 1.2 수정] 국내(카카오맵) <-> 해외(구글맵) 지도 뷰어만 전환 (여행 본래의 국내/해외 속성은 변경 안 함)
         // 국내 일정에서도 카카오맵과 구글맵을 자유롭게 전환하여 볼 수 있도록 허용
       // [Ver 1.22 수정] 구글맵 전환 시 회색 빈 화면 방지를 위한 강제 리사이즈 트리거 추가
@@ -1236,24 +1246,34 @@
             toggleAccordion('trip-form-body', 'trip-form-chevron', false);
         };
 
-        // 5개 탭 전환
+
+// [Ver 1.23] 5개 탭 전환 시 개인 휴대폰에 마지막으로 보던 탭 위치 저장
         window.switchTab = function(tabId) {
-            ['plan', 'visit', 'expected', 'actual', 'checklist'].forEach(id => {
+            const validTabs = ['plan', 'visit', 'expected', 'actual', 'checklist'];
+            const targetTab = validTabs.includes(tabId) ? tabId : 'plan';
+
+            if (currentTripId) {
+                try {
+                    localStorage.setItem('last_tab_id', targetTab);
+                } catch (_) {}
+            }
+
+            validTabs.forEach(id => {
                 document.getElementById(`tab-${id}`).classList.add('hidden');
                 document.getElementById(`btn-tab-${id}`).className = "flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer";
             });
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-            document.getElementById(`btn-tab-${tabId}`).className = "flex-1 py-3 px-1 text-center font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 whitespace-nowrap cursor-pointer";
+            document.getElementById(`tab-${targetTab}`).classList.remove('hidden');
+            document.getElementById(`btn-tab-${targetTab}`).className = "flex-1 py-3 px-1 text-center font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 whitespace-nowrap cursor-pointer";
 
             const filterBar = document.getElementById('common-day-filter-bar');
-            if (tabId === 'plan' || tabId === 'visit') filterBar.classList.remove('hidden');
+            if (targetTab === 'plan' || targetTab === 'visit') filterBar.classList.remove('hidden');
             else filterBar.classList.add('hidden');
 
             setTimeout(() => {
-                if (tabId === 'plan') { refreshSingleMapLayout(mapPlan); renderTimelineMaps(); }
-                if (tabId === 'visit') { refreshSingleMapLayout(mapVisit); renderTimelineMaps(); }
-                if (tabId === 'expected') refreshSingleMapLayout(mapExp);
-                if (tabId === 'actual') refreshSingleMapLayout(mapAct);
+                if (targetTab === 'plan') { refreshSingleMapLayout(mapPlan); renderTimelineMaps(); }
+                if (targetTab === 'visit') { refreshSingleMapLayout(mapVisit); renderTimelineMaps(); }
+                if (targetTab === 'expected') refreshSingleMapLayout(mapExp);
+                if (targetTab === 'actual') refreshSingleMapLayout(mapAct);
             }, 200);
         };
 
