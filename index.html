@@ -1180,13 +1180,11 @@
             subscribeTripData(tripId);
         };
 
-        // 국내(카카오맵) <-> 해외(구글맵) 전환
+       // [Ver 1.2 수정] 국내(카카오맵) <-> 해외(구글맵) 지도 뷰어만 전환 (여행 본래의 국내/해외 속성은 변경 안 함)
         window.toggleMapProvider = async function() {
             currentRegion = (currentRegion === 'kr') ? 'global' : 'kr';
             updateMapProviderUI();
-            if (currentTripId && db) {
-                await db.collection("trips").doc(currentTripId).update({ region: currentRegion });
-            }
+            // ✨ [해결] DB 업데이트 코드를 제거하여 지도 보기만 전환되고, 국내 여행(강원도 등)의 지역 속성은 안전하게 유지되도록 수정
             initMaps();
             setTimeout(() => renderTimelineMaps(), 300);
         };
