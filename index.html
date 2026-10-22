@@ -98,51 +98,24 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- 화면 1: 여행 일정 목록 (대분류 1·2 폴더, 백업 및 coffee-1 배너) -->
+    <!-- 화면 1: 여행 일정 목록 (Ver 1.23: 여행목록 상단 배치 & 엑셀백업/배너/샘플버튼 하단 배치) -->
     <!-- ========================================== -->
     <main id="trip-selector-screen" class="max-w-3xl mx-auto p-3 space-y-4">
 
-        <!-- 엑셀 통합 백업 & 복원 카드 -->
-        <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-            <div class="flex justify-between items-center">
-                <h2 class="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">
-                    <i class="fa-solid fa-file-excel text-emerald-600"></i> 전체 여행 데이터 엑셀 백업 · 복원
-                </h2>
-                <span id="backup-cache-status" class="text-[11px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold">백업 준비중</span>
-            </div>
-            <p class="text-xs text-slate-500">모든 여행의 예상 일정(사진 포함), 가계부(영수증 포함), 차량 배치, 체크리스트를 엑셀 파일 하나로 백업하거나 복원합니다.</p>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-                <button type="button" onclick="exportExcelBackup('mobile')" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
-                    <i class="fa-solid fa-mobile-screen-button"></i> 폰 저장/공유
-                </button>
-                <button type="button" onclick="exportExcelBackup('pc')" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
-                    <i class="fa-solid fa-download"></i> PC 다운로드
-                </button>
-                <button type="button" onclick="exportExcelBackup('gdrive')" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
-                    <i class="fa-brands fa-google-drive"></i> 구글드라이브
-                </button>
-                <label class="bg-amber-500 hover:bg-amber-600 text-white py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm text-center">
-                    <i class="fa-solid fa-upload"></i> 엑셀 복원
-                    <input type="file" accept=".xlsx,.xls" onchange="restoreFromExcelFile(event)" class="hidden">
-                </label>
-            </div>
-        </section>
-
-        <!-- 내 여행 일정 목록 (대분류 1: 연도별 / 대분류 2: 국내·해외 지역별) -->
+        <!-- 1. 내 여행 일정 목록 ('대분류 1·2' 문구 제거 완료) -->
         <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
             <div class="flex justify-between items-center">
                 <div>
                     <h2 class="text-base font-extrabold text-slate-800"><i class="fa-solid fa-suitcase-rolling text-blue-600 mr-1.5"></i>내 여행 일정 목록</h2>
-                    <p class="text-[11px] text-slate-500 mt-0.5">연도별(대분류 1) 또는 국내·해외 지역별(대분류 2) 폴더를 눌러 일정을 확인하세요.</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">연도별 또는 국내·해외 지역별 폴더를 눌러 일정을 확인하세요.</p>
                 </div>
-                
             </div>
             <div id="trip-cards-container" class="space-y-3">
                 <p class="text-xs text-slate-400 py-4 text-center">여행 목록을 불러오는 중입니다...</p>
             </div>
         </section>
 
-        <!-- 새로운 여행 직접 만들기 / 수정 (아코디언) -->
+        <!-- 2. 새로운 여행 직접 만들기 / 수정 (아코디언) -->
         <section id="trip-accordion-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <button type="button" onclick="toggleAccordion('trip-form-body', 'trip-form-chevron')" class="w-full p-4 flex justify-between items-center bg-slate-50 hover:bg-slate-100 cursor-pointer text-left">
                 <span id="trip-form-title" class="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">
@@ -201,22 +174,47 @@
             </div>
         </section>
 
-        <!-- [Ver 1.2] 단양 샘플 생성 버튼을 제일 하단에 흐리게 배치 -->
-        <div class="text-center pt-2 pb-1">
-            <button id="btn-create-danyang" type="button" class="text-slate-400 hover:text-slate-600 hover:bg-slate-100/60 border border-slate-200/80 bg-transparent px-4 py-2 rounded-xl text-[11px] font-semibold transition cursor-pointer inline-flex items-center gap-1.5">
-                <i class="fa-solid fa-wand-magic-sparkles text-slate-300"></i> + 단양 샘플 여행 생성하기
-            </button>
-        </div>
+        <!-- 3. [첫 화면 아래로 이동 완료] 엑셀 통합 백업 & 복원 카드 -->
+        <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+            <div class="flex justify-between items-center">
+                <h2 class="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-excel text-emerald-600"></i> 전체 여행 데이터 엑셀 백업 · 복원
+                </h2>
+                <span id="backup-cache-status" class="text-[11px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold">백업 준비중</span>
+            </div>
+            <p class="text-xs text-slate-500">모든 여행의 예상 일정(사진 포함), 가계부(영수증 포함), 차량 배치, 체크리스트를 엑셀 파일 하나로 백업하거나 복원합니다.</p>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                <button type="button" onclick="exportExcelBackup('mobile')" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
+                    <i class="fa-solid fa-mobile-screen-button"></i> 폰 저장/공유
+                </button>
+                <button type="button" onclick="exportExcelBackup('pc')" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
+                    <i class="fa-solid fa-download"></i> PC 다운로드
+                </button>
+                <button type="button" onclick="exportExcelBackup('gdrive')" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
+                    <i class="fa-brands fa-google-drive"></i> 구글드라이브
+                </button>
+                <label class="bg-amber-500 hover:bg-amber-600 text-white py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm text-center">
+                    <i class="fa-solid fa-upload"></i> 엑셀 복원
+                    <input type="file" accept=".xlsx,.xls" onchange="restoreFromExcelFile(event)" class="hidden">
+                </label>
+            </div>
+        </section>
 
-        <!-- [Ver 1.2] 첫 화면 배너 광고 (coffee-1.png -> Blue Bottle Dialer 이동) -->
+        <!-- 4. 첫 화면 배너 광고 (coffee-1.png -> Blue Bottle Dialer 이동) -->
         <section class="pt-1">
             <a href="https://ohyaksa.github.io/bluebottle-dialer/" target="_blank" class="block overflow-hidden rounded-2xl shadow-md border border-slate-200 hover:opacity-95 transition">
                 <img src="coffee-1.png" alt="Blue Bottle Dialer - 좋은 커피 한 번에!" class="w-full h-auto object-cover">
             </a>
         </section>
 
-    </main>
+        <!-- 5. 단양 샘플 생성 버튼 (제일 하단에 흐리게 배치) -->
+        <div class="text-center pt-2 pb-1">
+            <button id="btn-create-danyang" type="button" class="text-slate-400 hover:text-slate-600 hover:bg-slate-100/60 border border-slate-200/80 bg-transparent px-4 py-2 rounded-xl text-[11px] font-semibold transition cursor-pointer inline-flex items-center gap-1.5">
+                <i class="fa-solid fa-wand-magic-sparkles text-slate-300"></i> + 단양 샘플 여행 생성하기
+            </button>
+        </div>
 
+    </main>
     <!-- ========================================== -->
     <!-- 화면 2: 개별 여행 메인 화면 (5개 탭 구성) -->
     <!-- ========================================== -->
