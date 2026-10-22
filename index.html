@@ -2628,6 +2628,7 @@
         };
 
         // [Ver 1.2] 가계부 지출 수정 시 기존 첨부 영수증 불러오기
+        // [Ver 1.2 수정] 가계부 지출 수정 시 선택한 장소 이름이 아코디언 제목에 정확히 반영되도록 수정
         window.editAct = function(id) {
             if (!checkEditable()) return;
             const item = actualData.find(x => x.id === id);
@@ -2652,6 +2653,7 @@
             currentActReceipt = item.receipt || '';
             renderActReceiptPreview();
 
+            // ✨ [해결] 선택한 지출 내역의 장소명(item.place)이 아코디언 제목에 정확히 들어가도록 추가함
             document.getElementById('act-form-title').innerHTML = `<i class="fa-solid fa-pen text-emerald-600"></i> [${esc(item.place)}] 방문·지출 수정하기`;
             document.getElementById('act-submit-btn').innerText = "수정 완료";
             if (item.lat && item.lng) setTimeout(() => placePickerMarker('act', item.lat, item.lng), 250);
