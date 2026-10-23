@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>스마트 단체 여행 매니저 Ver 1.23</title>
+    <title>스마트 단체 여행 매니저 Ver 1.25</title>
 
     <!-- 스마트폰 바탕화면 아이콘 및 웹사이트 링크 공유(오픈그래프) 설정 -->
     <link rel="icon" type="image/png" href="apple-touch-icon.png">
@@ -12,10 +12,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="여행매니저">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="스마트 단체 여행 매니저 Ver 1.23">
-    <meta property="og:description" content=" 찬욱과 함께 하는 스마트 여행 타임라인 지도, 네비게이션 길찾기, 영수증 가계부 1/N 정산, 준비물 체크리스트 통합 관리">
-  <meta property="og:image" content="image-link2.png">
-
+    <meta property="og:title" content="스마트 단체 여행 매니저 Ver 1.25">
+    <meta property="og:description" content="찬욱과 함께 하는 스마트 여행 타임라인 지도, 네비게이션 길찾기, 영수증 가계부 1/N 정산, 준비물 체크리스트 통합 관리">
+    <meta property="og:image" content="image-link2.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -40,7 +39,7 @@
 </head>
 <body class="text-slate-800 pb-20">
 
-    <!-- 상단 고정 헤더 (Ver 1.2: 도움말(help.html) 연결 버튼 및 전체 제목 표시) -->
+    <!-- 상단 고정 헤더 (Ver 1.25: 도움말(help.html) 연결 버튼 및 전체 제목 표시) -->
     <header class="bg-blue-600 text-white sticky top-0 z-40 shadow-md">
         <div class="max-w-3xl mx-auto px-3 py-2.5 space-y-1.5">
             <!-- 상단 1열: 목록 버튼 & 기능 제어 버튼 모음 -->
@@ -49,7 +48,7 @@
                     <button id="btn-back" onclick="goTripSelector()" class="hidden bg-blue-700 hover:bg-blue-800 px-2.5 py-1 rounded-full text-xs font-bold shrink-0 cursor-pointer flex items-center gap-1 shadow-sm">
                         <i class="fa-solid fa-arrow-left"></i> 목록
                     </button>
-                    <span class="text-[10px] bg-blue-800/90 text-blue-100 px-2 py-0.5 rounded-full font-extrabold">Ver 1.23</span>
+                    <span class="text-[10px] bg-blue-800/90 text-blue-100 px-2 py-0.5 rounded-full font-extrabold">Ver 1.25</span>
                 </div>
                 <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
                     <button id="btn-map-provider" onclick="toggleMapProvider()" class="hidden bg-amber-400 text-slate-900 px-2 py-1 rounded-full text-[11px] font-extrabold cursor-pointer shadow-sm">
@@ -58,7 +57,7 @@
                     <button id="btn-edit-lock" onclick="toggleEditLock()" class="bg-blue-700 hover:bg-blue-800 px-2 py-1 rounded-full text-[11px] font-semibold cursor-pointer text-white">
                         <i class="fa-solid fa-lock-open mr-0.5"></i>편집중
                     </button>
-                    <!-- [Ver 1.2] help.html 도움말 새창 열기 버튼 -->
+                    <!-- help.html 도움말 새창 열기 버튼 -->
                     <a href="help.html" target="_blank" title="도움말 보기" class="bg-amber-300 hover:bg-amber-400 text-slate-900 px-2.5 py-1 rounded-full text-[11px] font-extrabold flex items-center gap-1 cursor-pointer shadow-sm">
                         <i class="fa-solid fa-circle-question text-blue-800"></i> 도움말
                     </a>
@@ -84,7 +83,7 @@
         </div>
     </div>
 
-    <!-- [Ver 1.2] 사진 & 영수증 원본 크게 보기 모달 (Lightbox) -->
+    <!-- 사진 & 영수증 원본 크게 보기 모달 (Lightbox) -->
     <div id="photo-modal" onclick="closePhotoModal()" class="hidden fixed inset-0 bg-black/85 z-50 flex flex-col items-center justify-center p-4">
         <div class="max-w-lg w-full space-y-3" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center text-white px-1">
@@ -98,11 +97,11 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- 화면 1: 여행 일정 목록 (Ver 1.23: 여행목록 상단 배치 & 엑셀백업/배너/샘플버튼 하단 배치) -->
+    <!-- 화면 1: 여행 일정 목록 (여행목록 상단 배치 & 엑셀백업/배너/샘플버튼 하단 배치) -->
     <!-- ========================================== -->
     <main id="trip-selector-screen" class="max-w-3xl mx-auto p-3 space-y-4">
 
-        <!-- 1. 내 여행 일정 목록 ('대분류 1·2' 문구 제거 완료) -->
+        <!-- 1. 내 여행 일정 목록 -->
         <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
             <div class="flex justify-between items-center">
                 <div>
@@ -174,7 +173,7 @@
             </div>
         </section>
 
-        <!-- 3. [첫 화면 아래로 이동 완료] 엑셀 통합 백업 & 복원 카드 -->
+        <!-- 3. 엑셀 통합 백업 & 복원 카드 -->
         <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
             <div class="flex justify-between items-center">
                 <h2 class="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">
@@ -182,7 +181,7 @@
                 </h2>
                 <span id="backup-cache-status" class="text-[11px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold">백업 준비중</span>
             </div>
-            <p class="text-xs text-slate-500">모든 여행의 예상 일정(사진 포함), 가계부(영수증 포함), 차량 배치, 체크리스트를 엑셀 파일 하나로 백업하거나 복원합니다.</p>
+            <p class="text-xs text-slate-500">모든 여행의 예상 일정(사진·수동거리 포함), 가계부(영수증 포함), 차량 배치, 체크리스트를 엑셀 파일 하나로 백업하거나 복원합니다.</p>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                 <button type="button" onclick="exportExcelBackup('mobile')" class="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
                     <i class="fa-solid fa-mobile-screen-button"></i> 폰 저장/공유
@@ -215,15 +214,15 @@
         </div>
 
     </main>
+
     <!-- ========================================== -->
-    <!-- 화면 2: 개별 여행 메인 화면 (5개 탭 구성) -->
+    <!-- 화면 2: 개별 여행 메인 화면 (Ver 1.25: 4개 탭 구성 - 통합 타임라인) -->
     <!-- ========================================== -->
     <main id="main-app-screen" class="hidden max-w-3xl mx-auto p-3 space-y-4">
 
-        <!-- 5개 탭 네비게이션 -->
+        <!-- 4개 탭 네비게이션 (계획·방문 타임라인 통합) -->
         <nav class="bg-white rounded-2xl shadow-sm border border-slate-200 flex overflow-x-auto no-scrollbar text-xs sm:text-sm">
-            <button id="btn-tab-plan" onclick="switchTab('plan')" class="flex-1 py-3 px-1 text-center font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 whitespace-nowrap cursor-pointer">타임라인(계획)</button>
-            <button id="btn-tab-visit" onclick="switchTab('visit')" class="flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer">타임라인(방문)</button>
+            <button id="btn-tab-plan" onclick="switchTab('plan')" class="flex-1 py-3 px-1 text-center font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 whitespace-nowrap cursor-pointer">타임라인</button>
             <button id="btn-tab-expected" onclick="switchTab('expected')" class="flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer">일정관리</button>
             <button id="btn-tab-actual" onclick="switchTab('actual')" class="flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer">가계부·회비</button>
             <button id="btn-tab-checklist" onclick="switchTab('checklist')" class="flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer">체크·차량</button>
@@ -247,11 +246,11 @@
             </div>
         </div>
 
-        <!-- [탭 1] 타임라인(계획) -->
+        <!-- [탭 1] 통합 타임라인 (계획전 = 연한 노랑 / 방문완료·지출 = 연한 블루 한 페이지 표시) -->
         <section id="tab-plan" class="space-y-4">
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2">
-                <h3 class="text-xs sm:text-sm font-extrabold text-blue-800"><i class="fa-solid fa-map-location-dot mr-1"></i>계획 타임라인 지도 (방문전=실선 / 방문완료=점선)</h3>
-                <p class="text-[11px] text-slate-500">* 마커나 선을 클릭하면 장소 정보와 구간 이동거리·소요시간이 표시됩니다.</p>
+            <div id="plan-map-card" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2">
+                <h3 class="text-xs sm:text-sm font-extrabold text-blue-800"><i class="fa-solid fa-map-location-dot mr-1"></i>통합 여행 타임라인 지도 (방문전=실선 / 방문완료=굵은강조선)</h3>
+                <p class="text-[11px] text-slate-500">* 마커나 선을 클릭하면 장소 정보와 구간 이동거리·소요시간(자동/수동)이 표시됩니다. 아래 목록을 터치하면 지도가 해당 위치로 확대됩니다.</p>
                 <div class="flex flex-wrap gap-3 text-[11px] font-bold pt-0.5 pb-1">
                     <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span>1일차 오전</span>
                     <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-purple-600 inline-block"></span>1일차 오후</span>
@@ -262,35 +261,30 @@
             </div>
 
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-                <div class="flex justify-between items-center">
+                <div class="flex flex-wrap justify-between items-center gap-2">
                     <div>
-                        <h3 class="text-sm font-extrabold text-slate-800"><i class="fa-regular fa-calendar-check text-blue-600 mr-1"></i>예상 일정 타임라인 (계획)</h3>
-                        <p class="text-[11px] text-slate-500 mt-0.5">[방문전]↔[방문완료] 양방향 전환, 첨부 사진 확대 및 구간별 [길찾기]를 실행할 수 있습니다.</p>
+                        <h3 class="text-sm font-extrabold text-slate-800"><i class="fa-regular fa-calendar-check text-blue-600 mr-1"></i>통합 여행 타임라인 (계획전 & 방문완료)</h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">[방문전]↔[방문완료] 전환, 구간별 거리·시간 수동입력 및 [길찾기]를 한 화면에서 실행합니다.</p>
                     </div>
-                    <span id="exp-count-badge" class="text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-bold shrink-0">총 0곳</span>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <span id="exp-count-badge" class="text-[11px] bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-full font-bold">계획 0곳</span>
+                        <span id="act-count-badge" class="text-[11px] bg-sky-50 text-sky-800 border border-sky-200 px-2.5 py-1 rounded-full font-bold">방문·지출 0건</span>
+                    </div>
+                </div>
+                <!-- 색상 구분 범례 바 -->
+                <div class="flex flex-wrap items-center gap-2 pt-1 text-[11px] font-bold">
+                    <span class="inline-flex items-center gap-1.5 bg-yellow-50 border border-amber-300 text-amber-900 px-2.5 py-1 rounded-lg shadow-sm">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span> 연한 노랑 박스 = 계획전 (방문전 일정)
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 bg-sky-50 border border-sky-300 text-sky-900 px-2.5 py-1 rounded-lg shadow-sm">
+                        <span class="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block"></span> 연한 블루 박스 = 방문완료 및 실제 지출
+                    </span>
                 </div>
                 <div id="expected-timeline-list" class="space-y-4"></div>
             </div>
         </section>
 
-        <!-- [탭 2] 타임라인(방문) -->
-        <section id="tab-visit" class="hidden space-y-4">
-            <div id="visit-map-card" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2">
-                <h3 class="text-xs sm:text-sm font-extrabold text-emerald-800"><i class="fa-solid fa-route mr-1"></i>실제 방문 완료 강조 지도 (완료구간=굵은실선 / 미방문=점선)</h3>
-                <p class="text-[11px] text-slate-500">* 아래 목록에서 장소를 터치하면 해당 위치로 지도가 즉시 확대 이동합니다.</p>
-                <div id="map-visit" class="map-box"></div>
-            </div>
-
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-sm font-extrabold text-slate-800"><i class="fa-solid fa-receipt text-emerald-600 mr-1"></i>실제 방문 및 지출 타임라인</h3>
-                    <span id="act-count-badge" class="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-bold">방문·지출 0건</span>
-                </div>
-                <div id="actual-timeline-list" class="space-y-4"></div>
-            </div>
-        </section>
-
-        <!-- [탭 3] 일정관리 (예상 일정 입력/수정 + 사진 3장 첨부 + 전체 목록) -->
+        <!-- [탭 2] 일정관리 (예상 일정 입력/수정 + 수동 거리·시간 + 사진 3장 첨부 + 전체 목록) -->
         <section id="tab-expected" class="hidden space-y-4">
             <div id="exp-accordion-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <button type="button" onclick="toggleExpFormAccordion()" class="w-full p-4 flex justify-between items-center bg-blue-50/60 hover:bg-blue-50 cursor-pointer text-left">
@@ -378,7 +372,28 @@
                             <input type="text" id="exp-memo" placeholder="예: 곤드레마늘정식 8인 예약 필수" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
                         </div>
 
-                        <!-- [Ver 1.2] 일정관리 사진 첨부 영역 (최대 3장) -->
+                        <!-- [Ver 1.25] 다음 장소까지 이동 거리·소요시간 수동 입력 (비워두면 자동 계산) -->
+                        <div class="bg-blue-50/60 p-3 rounded-xl border border-blue-200 space-y-2">
+                            <div class="flex justify-between items-center">
+                                <label class="block text-xs font-extrabold text-blue-900">
+                                    <i class="fa-solid fa-route text-blue-600 mr-1"></i>이곳 ➔ 다음 장소까지 이동거리·시간 (선택사항)
+                                </label>
+                                <span class="text-[10px] bg-white text-blue-600 px-2 py-0.5 rounded-full border border-blue-200 font-bold">미입력 시 자동계산</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">다음 구간 거리 (km)</label>
+                                    <input type="text" id="exp-manual-km" placeholder="예: 24.5 (비워두면 자동)" class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 mb-1">다음 구간 소요시간 (분)</label>
+                                    <input type="text" id="exp-manual-mins" placeholder="예: 35 (비워두면 자동)" class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs bg-white">
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-slate-500">* 네이버(국내) 또는 구글맵(해외) 길찾기의 실제 거리·시간을 입력하면 타임라인과 지도에 우선 반영됩니다.</p>
+                        </div>
+
+                        <!-- 일정관리 사진 첨부 영역 (최대 3장) -->
                         <div class="bg-blue-50/50 p-3 rounded-xl border border-blue-200 space-y-2">
                             <div class="flex justify-between items-center">
                                 <span class="text-xs font-extrabold text-blue-800">
@@ -426,7 +441,7 @@
             </div>
         </section>
 
-        <!-- [탭 4] 가계부·회비 (영수증 첨부 및 coffee-2 배너 포함) -->
+        <!-- [탭 3] 가계부·회비 (영수증 첨부 및 coffee-2 배너 포함) -->
         <section id="tab-actual" class="hidden space-y-4">
             <!-- 정산 요약 및 1/N 계산기 -->
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
@@ -561,7 +576,7 @@
                             <input type="text" id="act-action" placeholder="예: 점심 곤드레정식 8인 결제" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
                         </div>
 
-                        <!-- [Ver 1.2] 가계부 영수증 사진 첨부 영역 -->
+                        <!-- 가계부 영수증 사진 첨부 영역 -->
                         <div class="bg-emerald-50/60 p-3 rounded-xl border border-emerald-200 space-y-2">
                             <div class="flex justify-between items-center">
                                 <span class="text-xs font-extrabold text-emerald-800">
@@ -602,7 +617,7 @@
                 <div id="actual-manage-list" class="space-y-4"></div>
             </div>
 
-            <!-- [Ver 1.2] 가계부·회비 페이지 배너 광고 (coffee-2.png -> Blue Bottle Dialer 이동) -->
+            <!-- 가계부·회비 페이지 배너 광고 (coffee-2.png -> Blue Bottle Dialer 이동) -->
             <div class="pt-1">
                 <a href="https://ohyaksa.github.io/bluebottle-dialer/" target="_blank" class="block overflow-hidden rounded-2xl shadow-md border border-slate-200 hover:opacity-95 transition">
                     <img src="coffee-2.png" alt="Blue Bottle Dialer - 완벽한 드립 커피 이제 더 쉽게!" class="w-full h-auto object-cover">
@@ -610,7 +625,7 @@
             </div>
         </section>
 
-        <!-- [탭 5] 체크리스트 & 차량 배치 -->
+        <!-- [탭 4] 체크리스트 & 차량 배치 -->
         <section id="tab-checklist" class="hidden space-y-4">
 
             <!-- 1. 차량 배치 및 참가자 명단 -->
@@ -762,7 +777,7 @@
 
     <!-- 2부 코드를 여기에 이어서 붙여넣으세요 -->
     <!-- ========================================== -->
-    <!-- 2부: 사진·영수증 압축 엔진, 지도 제어, 길찾기 및 타임라인 렌더링 -->
+    <!-- 2부: 사진·영수증 압축 엔진, 지도 제어, 수동/자동 거리계산 및 통합 타임라인 렌더링 -->
     <!-- ========================================== -->
     <script>
         let currentTripId = null;
@@ -770,14 +785,14 @@
         let currentRegion = 'kr'; // 'kr' (국내: 카카오맵) 또는 'global' (해외: 구글맵)
         let isEditLocked = false; // 실수 삭제/수정 방지용 잠금 상태
 
-        // [Ver 1.2] 일정관리 사진(최대 3장) 및 가계부 영수증(1장) 임시 보관 상태
+        // 일정관리 사진(최대 3장) 및 가계부 영수증(1장) 임시 보관 상태
         let currentExpPhotos = [];
         let currentActReceipt = '';
 
-        let mapPlan = null, mapVisit = null, mapExp = null, mapAct = null;
+        let mapPlan = null, mapExp = null, mapAct = null;
         let expMarker = null, actMarker = null, myGpsMarker = null;
         let activeInfoWindow = null;
-        let planOverlays = [], visitOverlays = [];
+        let planOverlays = [];
         let tripsData = [], expectedData = [], actualData = [], carsData = [], checklistData = [];
         let lastSearchResults = { exp: [], act: [] };
         let selectedDayFilter = 'all';
@@ -831,7 +846,7 @@
             return `${dateStr}(${weekDays[dt.getDay()]})`;
         }
 
-        // "1일차 예상 일정" 옆에 표시할 해당 일차의 날짜와 요일 자동 계산 함수
+        // 일차 타이틀 옆에 표시할 실제 날짜와 요일 자동 계산 함수
         function getDayDateLabel(dayNum) {
             const trip = tripsData.find(t => t.id === currentTripId);
             if (!trip || !trip.startDate) return '';
@@ -848,7 +863,7 @@
         }
 
         // ==========================================
-        // [Ver 1.2] 사진·영수증 자동 압축 엔진 및 이미지 모달 뷰어
+        // 사진·영수증 자동 압축 엔진 및 이미지 모달 뷰어
         // ==========================================
         function compressImageFile(file, maxWidth = 720, quality = 0.65) {
             return new Promise((resolve, reject) => {
@@ -961,7 +976,6 @@
             const file = (event.target.files || [])[0];
             if (!file) return;
             try {
-                // 영수증 글씨가 잘 보이도록 세로 해상도 여유 및 800px 기준 압축
                 currentActReceipt = await compressImageFile(file, 800, 0.7);
                 renderActReceiptPreview();
             } catch (err) {
@@ -1005,7 +1019,7 @@
             badge.className = `text-[11px] ${colorClass} px-2 py-1 rounded-full text-white font-semibold shrink-0`;
         }
 
-        // 편집 잠금 토글 (실수로 삭제/초기화하는 것 방지)
+        // 편집 잠금 토글
         window.toggleEditLock = function() {
             isEditLocked = !isEditLocked;
             const btn = document.getElementById('btn-edit-lock');
@@ -1130,8 +1144,7 @@
             }
         }
 
-   
-// [Ver 1.23] 목록 화면으로 돌아가기 (돌아갈 때 기억된 마지막 화면 초기화)
+        // 목록 화면으로 돌아가기 (기억된 마지막 화면 초기화)
         window.goTripSelector = function() {
             try {
                 localStorage.removeItem('last_trip_id');
@@ -1153,7 +1166,7 @@
             scheduleBackupCache();
         };
 
-        // [Ver 1.23] 여행 선택 시 개인 휴대폰에 마지막 여행 ID 저장 및 지정 탭 진입
+        // 여행 선택 시 개인 휴대폰에 마지막 여행 ID 저장 및 지정 탭 진입
         window.selectTrip = function(tripId, initialTab = 'plan') {
             const trip = tripsData.find(t => t.id === tripId);
             if (!trip) return;
@@ -1189,10 +1202,8 @@
             switchTab(initialTab);
             subscribeTripData(tripId);
         };
-       // [Ver 1.2 수정] 국내(카카오맵) <-> 해외(구글맵) 지도 뷰어만 전환 (여행 본래의 국내/해외 속성은 변경 안 함)
-        // 국내 일정에서도 카카오맵과 구글맵을 자유롭게 전환하여 볼 수 있도록 허용
-      // [Ver 1.22 수정] 구글맵 전환 시 회색 빈 화면 방지를 위한 강제 리사이즈 트리거 추가
-       // [Ver 1.22 패치] 구글맵 전환 시 회색 빈 화면 방지를 위한 강제 리사이즈 트리거 추가
+
+        // 국내(카카오맵) <-> 해외(구글맵) 지도 뷰어 전환
         window.toggleMapProvider = async function() {
             currentRegion = (currentRegion === 'kr') ? 'global' : 'kr';
             updateMapProviderUI();
@@ -1200,7 +1211,6 @@
             setTimeout(() => {
                 if (currentRegion === 'global' && window.google && google.maps) {
                     if (mapPlan) google.maps.event.trigger(mapPlan, 'resize');
-                    if (mapVisit) google.maps.event.trigger(mapVisit, 'resize');
                 }
                 renderTimelineMaps();
             }, 350);
@@ -1246,10 +1256,9 @@
             toggleAccordion('trip-form-body', 'trip-form-chevron', false);
         };
 
-
-// [Ver 1.23] 5개 탭 전환 시 개인 휴대폰에 마지막으로 보던 탭 위치 저장
+        // [Ver 1.25] 4개 탭 전환 시 개인 휴대폰에 마지막으로 보던 탭 위치 저장 ('visit'은 'plan'으로 자동 통합)
         window.switchTab = function(tabId) {
-            const validTabs = ['plan', 'visit', 'expected', 'actual', 'checklist'];
+            const validTabs = ['plan', 'expected', 'actual', 'checklist'];
             const targetTab = validTabs.includes(tabId) ? tabId : 'plan';
 
             if (currentTripId) {
@@ -1259,19 +1268,24 @@
             }
 
             validTabs.forEach(id => {
-                document.getElementById(`tab-${id}`).classList.add('hidden');
-                document.getElementById(`btn-tab-${id}`).className = "flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer";
+                const secEl = document.getElementById(`tab-${id}`);
+                const btnEl = document.getElementById(`btn-tab-${id}`);
+                if (secEl) secEl.classList.add('hidden');
+                if (btnEl) btnEl.className = "flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer";
             });
-            document.getElementById(`tab-${targetTab}`).classList.remove('hidden');
-            document.getElementById(`btn-tab-${targetTab}`).className = "flex-1 py-3 px-1 text-center font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 whitespace-nowrap cursor-pointer";
+            const activeSec = document.getElementById(`tab-${targetTab}`);
+            const activeBtn = document.getElementById(`btn-tab-${targetTab}`);
+            if (activeSec) activeSec.classList.remove('hidden');
+            if (activeBtn) activeBtn.className = "flex-1 py-3 px-1 text-center font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 whitespace-nowrap cursor-pointer";
 
             const filterBar = document.getElementById('common-day-filter-bar');
-            if (targetTab === 'plan' || targetTab === 'visit') filterBar.classList.remove('hidden');
-            else filterBar.classList.add('hidden');
+            if (filterBar) {
+                if (targetTab === 'plan') filterBar.classList.remove('hidden');
+                else filterBar.classList.add('hidden');
+            }
 
             setTimeout(() => {
                 if (targetTab === 'plan') { refreshSingleMapLayout(mapPlan); renderTimelineMaps(); }
-                if (targetTab === 'visit') { refreshSingleMapLayout(mapVisit); renderTimelineMaps(); }
                 if (targetTab === 'expected') refreshSingleMapLayout(mapExp);
                 if (targetTab === 'actual') refreshSingleMapLayout(mapAct);
             }, 200);
@@ -1291,9 +1305,7 @@
         // ==========================================
         // 국내(카카오맵) & 해외(구글맵) 통합 지도 엔진
         // ==========================================
-       // 국내/해외 듀얼 지도 초기화 엔진 (구글맵 전환 시 국내 좌표 예외 처리 포함)
         function initMaps() {
-            // 현재 등록된 첫 번째 장소의 좌표가 있으면 그 위치를 중심 좌석으로 우선 활용
             let centerLat = 36.9997, centerLng = 128.3435;
             if (expectedData.length > 0 && expectedData[0].lat && expectedData[0].lng) {
                 centerLat = Number(expectedData[0].lat);
@@ -1326,7 +1338,6 @@
                     };
 
                     mapPlan = createKMap('map-plan');
-                    mapVisit = createKMap('map-visit');
                     mapExp = createKMap('map-expected');
                     mapAct = createKMap('map-actual');
 
@@ -1376,7 +1387,6 @@
                 };
 
                 mapPlan = createGMap('map-plan');
-                mapVisit = createGMap('map-visit');
                 mapExp = createGMap('map-expected');
                 mapAct = createGMap('map-actual');
 
@@ -1619,6 +1629,83 @@
             return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
         }
 
+        // [Ver 1.25] 구간 이동 거리·시간 계산 (수동 입력값 우선 적용 + 미입력 시 좌표 기반 자동 계산)
+        function getSegmentMoveInfo(startItem, endItem) {
+            let autoKm = '0.0';
+            let autoMin = 5;
+            if (startItem && endItem && startItem.lat && startItem.lng && endItem.lat && endItem.lng) {
+                const straightKm = getDistanceFromLatLonInKm(Number(startItem.lat), Number(startItem.lng), Number(endItem.lat), Number(endItem.lng));
+                const roadKm = straightKm * 1.3;
+                autoKm = roadKm.toFixed(1);
+                autoMin = Math.max(5, Math.round((roadKm / 55) * 60));
+            }
+
+            const manualKm = (startItem && startItem.manualKm !== undefined && startItem.manualKm !== null)
+                ? String(startItem.manualKm).trim().replace(/[^0-9.]/g, '') : '';
+            const manualMins = (startItem && startItem.manualMins !== undefined && startItem.manualMins !== null)
+                ? String(startItem.manualMins).trim().replace(/[^0-9]/g, '') : '';
+
+            const isManual = (manualKm !== '' || manualMins !== '');
+            const finalKm = manualKm !== '' ? manualKm : autoKm;
+            const finalMin = manualMins !== '' ? Number(manualMins) : autoMin;
+            const timeFormatted = finalMin >= 60
+                ? `약 ${Math.floor(finalMin / 60)}시간 ${finalMin % 60 > 0 ? (finalMin % 60) + '분' : ''}`.trim()
+                : `약 ${finalMin}분`;
+
+            return {
+                km: finalKm,
+                mins: finalMin,
+                timeFormatted,
+                isManual,
+                hasCoords: Boolean(startItem && endItem && startItem.lat && startItem.lng && endItem.lat && endItem.lng)
+            };
+        }
+
+        // [Ver 1.25] 타임라인 구간 박스에서 즉시 거리·시간을 수동 입력하거나 자동계산으로 되돌리는 함수
+        window.promptManualMoveInfo = async function(startId, endId) {
+            if (!checkEditable() || !currentTripId || !db) return;
+            const startItem = expectedData.find(x => x.id === startId);
+            const endItem = expectedData.find(x => x.id === endId);
+            if (!startItem) return;
+
+            const sName = startItem.place_name || '출발 장소';
+            const eName = endItem ? (endItem.place_name || '다음 장소') : '다음 장소';
+            const move = getSegmentMoveInfo(startItem, endItem);
+
+            const initKm = startItem.manualKm ? String(startItem.manualKm) : '';
+            const initMins = startItem.manualMins ? String(startItem.manualMins) : '';
+
+            const inputKm = prompt(
+                `🚗 [${sName} ➔ ${eName}] 구간 이동 거리(km) 설정\n\n` +
+                `• 현재 표시 거리: 약 ${move.km}km (${move.isManual ? '수동입력' : '자동계산'})\n` +
+                `• 네이버/구글 길찾기의 실제 거리를 숫자로 입력하세요 (예: 24.5)\n` +
+                `• 글자를 모두 지우고 [확인]을 누르면 '자동 계산'으로 돌아갑니다.`,
+                initKm
+            );
+            if (inputKm === null) return;
+
+            const inputMins = prompt(
+                `⏱️ [${sName} ➔ ${eName}] 구간 소요 시간(분) 설정\n\n` +
+                `• 현재 표시 시간: ${move.timeFormatted} (${move.mins}분)\n` +
+                `• 실제 소요 시간을 분 단위 숫자로 입력하세요 (예: 35)\n` +
+                `• 글자를 모두 지우고 [확인]을 누르면 '자동 계산'으로 돌아갑니다.`,
+                initMins
+            );
+            if (inputMins === null) return;
+
+            const cleanKm = inputKm.trim().replace(/[^0-9.]/g, '');
+            const cleanMins = inputMins.trim().replace(/[^0-9]/g, '');
+
+            try {
+                await db.collection("trips").doc(currentTripId).collection("expected_places").doc(startId).update({
+                    manualKm: cleanKm,
+                    manualMins: cleanMins
+                });
+            } catch (err) {
+                showError("구간 거리·시간 저장 오류: " + err.message);
+            }
+        };
+
         function getSegmentColor(day, timeStr) {
             const norm = normalizeTime(timeStr);
             const hour = norm !== '99:99' ? parseInt(norm.split(':')[0], 10) : 12;
@@ -1627,7 +1714,7 @@
             return isPM ? '#d97706' : '#059669';
         }
 
-        // 계획 지도 & 방문 지도 동선 렌더링
+        // [Ver 1.25] 단일 통합 지도(mapPlan) 동선 렌더링 (국내 카카오맵 & 해외 구글맵 공통)
         function renderTimelineMaps() {
             const sortedExp = sortByDayAndTime(expectedData).filter(item => {
                 if (selectedDayFilter === 'all') return true;
@@ -1636,187 +1723,157 @@
             });
 
             if (currentRegion === 'kr') {
-                if (!window.kakao || !kakao.maps || !mapPlan || !mapVisit) return;
+                if (!window.kakao || !kakao.maps || !mapPlan) return;
 
                 planOverlays.forEach(o => o.setMap(null));
                 planOverlays = [];
-                visitOverlays.forEach(o => o.setMap(null));
-                visitOverlays = [];
 
-                const drawKRoute = (targetMap, storeArr, mode) => {
-                    const bounds = new kakao.maps.LatLngBounds();
-                    const validPts = [];
+                const bounds = new kakao.maps.LatLngBounds();
+                const validPts = [];
 
-                    sortedExp.forEach((item, idx) => {
-                        const lat = Number(item.lat), lng = Number(item.lng);
-                        if (!lat || !lng) return;
-                        const pos = new kakao.maps.LatLng(lat, lng);
-                        bounds.extend(pos);
-                        validPts.push({ pos, item });
+                sortedExp.forEach((item, idx) => {
+                    const lat = Number(item.lat), lng = Number(item.lng);
+                    if (!lat || !lng) return;
+                    const pos = new kakao.maps.LatLng(lat, lng);
+                    bounds.extend(pos);
+                    validPts.push({ pos, item });
 
-                        const isVisited = Boolean(item.visited);
-                        const color = isVisited ? '#059669' : getSegmentColor(item.day, item.time);
-                        const el = document.createElement('div');
-                        el.style.cssText = `width:22px;height:22px;border-radius:50%;background:${color};border:2px solid #fff;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(0,0,0,0.35);cursor:pointer;`;
-                        el.innerText = idx + 1;
+                    const isVisited = Boolean(item.visited);
+                    const color = isVisited ? '#0284c7' : getSegmentColor(item.day, item.time);
+                    const el = document.createElement('div');
+                    el.style.cssText = `width:23px;height:23px;border-radius:50%;background:${color};border:2px solid #fff;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(0,0,0,0.35);cursor:pointer;`;
+                    el.innerText = idx + 1;
 
-                        el.onclick = () => {
-                            if (activeInfoWindow) activeInfoWindow.close();
-                            activeInfoWindow = new kakao.maps.InfoWindow({
-                                position: pos,
-                                removable: true,
-                                content: `<div style="padding:8px 10px;font-size:11px;line-height:1.4;min-width:160px;">
-                                    <b>[${esc(item.day || 1)}일차 · ${esc(item.time || '')}] ${esc(item.place_name)}</b><br>
-                                    <span style="color:#64748b;">${esc(item.address || '')}</span><br>
-                                    상태: <b style="color:${isVisited ? '#059669' : '#2563eb'};">${isVisited ? '✓ 방문완료' : '방문전'}</b> · 예산 ${Number(item.budget || 0).toLocaleString()}원
-                                </div>`
-                            });
-                            activeInfoWindow.open(targetMap);
-                        };
+                    el.onclick = () => {
+                        if (activeInfoWindow) activeInfoWindow.close();
+                        activeInfoWindow = new kakao.maps.InfoWindow({
+                            position: pos,
+                            removable: true,
+                            content: `<div style="padding:8px 10px;font-size:11px;line-height:1.4;min-width:165px;">
+                                <b>[${esc(item.day || 1)}일차 · ${esc(item.time || '')}] ${esc(item.place_name)}</b><br>
+                                <span style="color:#64748b;">${esc(item.address || '')}</span><br>
+                                상태: <b style="color:${isVisited ? '#0284c7' : '#d97706'};">${isVisited ? '✓ 방문완료(블루)' : '계획전(노랑)'}</b> · 예산 ${Number(item.budget || 0).toLocaleString()}원
+                            </div>`
+                        });
+                        activeInfoWindow.open(mapPlan);
+                    };
 
-                        const overlay = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 0.5 });
-                        overlay.setMap(targetMap);
-                        storeArr.push(overlay);
+                    const overlay = new kakao.maps.CustomOverlay({ position: pos, content: el, yAnchor: 0.5 });
+                    overlay.setMap(mapPlan);
+                    planOverlays.push(overlay);
+                });
+
+                for (let i = 0; i < validPts.length - 1; i++) {
+                    const p1 = validPts[i], p2 = validPts[i + 1];
+                    const move = getSegmentMoveInfo(p1.item, p2.item);
+                    const modeLabel = move.isManual ? '수동입력' : '자동계산';
+                    const segColor = getSegmentColor(p1.item.day, p1.item.time);
+                    const isVisited = Boolean(p1.item.visited);
+
+                    const line = new kakao.maps.Polyline({
+                        path: [p1.pos, p2.pos],
+                        strokeWeight: isVisited ? 7 : 4,
+                        strokeColor: segColor,
+                        strokeOpacity: 0.9,
+                        strokeStyle: 'solid'
                     });
+                    line.setMap(mapPlan);
+                    planOverlays.push(line);
 
-                    for (let i = 0; i < validPts.length - 1; i++) {
-                        const p1 = validPts[i], p2 = validPts[i + 1];
-                        const distKm = getDistanceFromLatLonInKm(p1.item.lat, p1.item.lng, p2.item.lat, p2.item.lng);
-                        const roadKm = distKm * 1.3;
-                        const estMin = Math.max(5, Math.round((roadKm / 55) * 60));
-                        const segColor = getSegmentColor(p1.item.day, p1.item.time);
-                        const isVisited = Boolean(p1.item.visited);
-
-                        const strokeWeight = (mode === 'standard') ? 4 : (isVisited ? 7 : 3);
-                        const strokeStyle = (mode === 'standard')
-                            ? (isVisited ? 'shortdash' : 'solid')
-                            : (isVisited ? 'solid' : 'shortdash');
-
-                        const line = new kakao.maps.Polyline({
-                            path: [p1.pos, p2.pos],
-                            strokeWeight,
-                            strokeColor: segColor,
-                            strokeOpacity: 0.9,
-                            strokeStyle
+                    kakao.maps.event.addListener(line, 'click', (mouseEvent) => {
+                        if (activeInfoWindow) activeInfoWindow.close();
+                        activeInfoWindow = new kakao.maps.InfoWindow({
+                            position: mouseEvent.latLng,
+                            removable: true,
+                            content: `<div style="padding:8px 10px;font-size:11px;line-height:1.4;min-width:175px;">
+                                <b style="color:#1d4ed8;">🚗 구간 이동 정보 (${esc(p1.item.day || 1)}일차 · ${modeLabel})</b><br>
+                                <b>${esc(p1.item.place_name)}</b> ➔ <b>${esc(p2.item.place_name)}</b><br>
+                                📏 이동거리: <b>약 ${move.km} km</b><br>
+                                ⏱️ 소요시간: <b>${move.timeFormatted}</b>
+                            </div>`
                         });
-                        line.setMap(targetMap);
-                        storeArr.push(line);
+                        activeInfoWindow.open(mapPlan);
+                    });
+                }
 
-                        kakao.maps.event.addListener(line, 'click', (mouseEvent) => {
-                            if (activeInfoWindow) activeInfoWindow.close();
-                            activeInfoWindow = new kakao.maps.InfoWindow({
-                                position: mouseEvent.latLng,
-                                removable: true,
-                                content: `<div style="padding:8px 10px;font-size:11px;line-height:1.4;min-width:170px;">
-                                    <b style="color:#1d4ed8;">🚗 구간 이동 정보 (${esc(p1.item.day || 1)}일차)</b><br>
-                                    <b>${esc(p1.item.place_name)}</b> ➔ <b>${esc(p2.item.place_name)}</b><br>
-                                    📏 예상 이동거리: <b>약 ${roadKm.toFixed(1)} km</b><br>
-                                    ⏱️ 예상 소요시간: <b>약 ${estMin}분</b>
-                                </div>`
-                            });
-                            activeInfoWindow.open(targetMap);
-                        });
-                    }
-
-                    if (validPts.length > 0) {
-                        targetMap.relayout();
-                        targetMap.setBounds(bounds);
-                    }
-                };
-
-                drawKRoute(mapPlan, planOverlays, 'standard');
-                drawKRoute(mapVisit, visitOverlays, 'highlightCompleted');
+                if (validPts.length > 0) {
+                    mapPlan.relayout();
+                    mapPlan.setBounds(bounds);
+                }
 
             } else {
-                if (!window.google || !google.maps || !mapPlan || !mapVisit) return;
+                if (!window.google || !google.maps || !mapPlan) return;
 
                 planOverlays.forEach(o => o.setMap(null));
                 planOverlays = [];
-                visitOverlays.forEach(o => o.setMap(null));
-                visitOverlays = [];
 
                 const gInfo = new google.maps.InfoWindow();
+                const bounds = new google.maps.LatLngBounds();
+                const validPts = [];
 
-                const drawGRoute = (targetMap, storeArr, mode) => {
-                    const bounds = new google.maps.LatLngBounds();
-                    const validPts = [];
+                sortedExp.forEach((item, idx) => {
+                    const lat = Number(item.lat), lng = Number(item.lng);
+                    if (!lat || !lng) return;
+                    const pos = { lat, lng };
+                    bounds.extend(pos);
+                    validPts.push({ pos, item });
 
-                    sortedExp.forEach((item, idx) => {
-                        const lat = Number(item.lat), lng = Number(item.lng);
-                        if (!lat || !lng) return;
-                        const pos = { lat, lng };
-                        bounds.extend(pos);
-                        validPts.push({ pos, item });
+                    const isVisited = Boolean(item.visited);
+                    const color = isVisited ? '#0284c7' : getSegmentColor(item.day, item.time);
 
-                        const isVisited = Boolean(item.visited);
-                        const color = isVisited ? '#059669' : getSegmentColor(item.day, item.time);
-
-                        const marker = new google.maps.Marker({
-                            position: pos,
-                            map: targetMap,
-                            label: { text: String(idx + 1), color: '#fff', fontSize: '10px', fontWeight: 'bold' },
-                            icon: {
-                                path: google.maps.SymbolPath.CIRCLE,
-                                scale: isVisited ? 11 : 9,
-                                fillColor: color,
-                                fillOpacity: 0.95,
-                                strokeColor: '#fff',
-                                strokeWeight: 2
-                            }
-                        });
-
-                        marker.addListener('click', () => {
-                            gInfo.setContent(`<div style="font-size:11px;line-height:1.4;">
-                                <b>[${esc(item.day || 1)}일차 · ${esc(item.time || '')}] ${esc(item.place_name)}</b><br>
-                                ${esc(item.address || '')}<br>
-                                예산: ${Number(item.budget || 0).toLocaleString()}원
-                            </div>`);
-                            gInfo.open(targetMap, marker);
-                        });
-                        storeArr.push(marker);
+                    const marker = new google.maps.Marker({
+                        position: pos,
+                        map: mapPlan,
+                        label: { text: String(idx + 1), color: '#fff', fontSize: '10px', fontWeight: 'bold' },
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: isVisited ? 11 : 9,
+                            fillColor: color,
+                            fillOpacity: 0.95,
+                            strokeColor: '#fff',
+                            strokeWeight: 2
+                        }
                     });
 
-                    for (let i = 0; i < validPts.length - 1; i++) {
-                        const p1 = validPts[i], p2 = validPts[i + 1];
-                        const distKm = getDistanceFromLatLonInKm(p1.item.lat, p1.item.lng, p2.item.lat, p2.item.lng);
-                        const roadKm = distKm * 1.3;
-                        const estMin = Math.max(5, Math.round((roadKm / 55) * 60));
-                        const segColor = getSegmentColor(p1.item.day, p1.item.time);
-                        const isVisited = Boolean(p1.item.visited);
+                    marker.addListener('click', () => {
+                        gInfo.setContent(`<div style="font-size:11px;line-height:1.4;">
+                            <b>[${esc(item.day || 1)}일차 · ${esc(item.time || '')}] ${esc(item.place_name)}</b><br>
+                            ${esc(item.address || '')}<br>
+                            상태: <b>${isVisited ? '✓ 방문완료(블루)' : '계획전(노랑)'}</b> · 예산: ${Number(item.budget || 0).toLocaleString()}원
+                        </div>`);
+                        gInfo.open(mapPlan, marker);
+                    });
+                    planOverlays.push(marker);
+                });
 
-                        const isDashed = (mode === 'standard') ? isVisited : !isVisited;
-                        const weight = (mode === 'standard') ? 4 : (isVisited ? 7 : 3);
+                for (let i = 0; i < validPts.length - 1; i++) {
+                    const p1 = validPts[i], p2 = validPts[i + 1];
+                    const move = getSegmentMoveInfo(p1.item, p2.item);
+                    const modeLabel = move.isManual ? '수동입력' : '자동계산';
+                    const segColor = getSegmentColor(p1.item.day, p1.item.time);
+                    const isVisited = Boolean(p1.item.visited);
 
-                        const line = new google.maps.Polyline({
-                            path: [p1.pos, p2.pos],
-                            map: targetMap,
-                            strokeColor: segColor,
-                            strokeOpacity: isDashed ? 0 : 0.9,
-                            strokeWeight: weight,
-                            icons: isDashed ? [{
-                                icon: { path: 'M 0,-1 0,1', strokeOpacity: 0.9, strokeColor: segColor, scale: weight },
-                                offset: '0',
-                                repeat: '14px'
-                            }] : []
-                        });
+                    const line = new google.maps.Polyline({
+                        path: [p1.pos, p2.pos],
+                        map: mapPlan,
+                        strokeColor: segColor,
+                        strokeOpacity: 0.9,
+                        strokeWeight: isVisited ? 7 : 4
+                    });
 
-                        line.addListener('click', (e) => {
-                            gInfo.setPosition(e.latLng);
-                            gInfo.setContent(`<div style="font-size:11px;line-height:1.4;">
-                                <b style="color:#1d4ed8;">🚗 구간 이동 정보</b><br>
-                                <b>${esc(p1.item.place_name)}</b> ➔ <b>${esc(p2.item.place_name)}</b><br>
-                                📏 약 ${roadKm.toFixed(1)} km / ⏱️ 약 ${estMin}분
-                            </div>`);
-                            gInfo.open(targetMap);
-                        });
-                        storeArr.push(line);
-                    }
+                    line.addListener('click', (e) => {
+                        gInfo.setPosition(e.latLng);
+                        gInfo.setContent(`<div style="font-size:11px;line-height:1.4;">
+                            <b style="color:#1d4ed8;">🚗 구간 이동 정보 (${modeLabel})</b><br>
+                            <b>${esc(p1.item.place_name)}</b> ➔ <b>${esc(p2.item.place_name)}</b><br>
+                            📏 약 ${move.km} km / ⏱️ ${move.timeFormatted}
+                        </div>`);
+                        gInfo.open(mapPlan);
+                    });
+                    planOverlays.push(line);
+                }
 
-                    if (validPts.length > 0) targetMap.fitBounds(bounds);
-                };
-
-                drawGRoute(mapPlan, planOverlays, 'standard');
-                drawGRoute(mapVisit, visitOverlays, 'highlightCompleted');
+                if (validPts.length > 0) mapPlan.fitBounds(bounds);
             }
         }
 
@@ -1832,20 +1889,21 @@
             focusMapCoordinates(item.lat, item.lng);
         };
 
+        // [Ver 1.25] 통합 타임라인 지도(mapPlan)로 즉시 포커스 및 줌인
         function focusMapCoordinates(lat, lng) {
-            switchTab('visit');
-            const mapCard = document.getElementById('visit-map-card');
+            switchTab('plan');
+            const mapCard = document.getElementById('plan-map-card');
             if (mapCard) mapCard.scrollIntoView({ behavior: 'smooth' });
             const numLat = Number(lat), numLng = Number(lng);
             if (!numLat || !numLng) return;
 
             setTimeout(() => {
-                if (currentRegion === 'kr' && mapVisit && window.kakao) {
-                    mapVisit.setCenter(new kakao.maps.LatLng(numLat, numLng));
-                    mapVisit.setLevel(4);
-                } else if (mapVisit && window.google) {
-                    mapVisit.setCenter({ lat: numLat, lng: numLng });
-                    mapVisit.setZoom(14);
+                if (currentRegion === 'kr' && mapPlan && window.kakao) {
+                    mapPlan.setCenter(new kakao.maps.LatLng(numLat, numLng));
+                    mapPlan.setLevel(4);
+                } else if (mapPlan && window.google) {
+                    mapPlan.setCenter({ lat: numLat, lng: numLng });
+                    mapPlan.setZoom(14);
                 }
             }, 250);
         }
@@ -1983,7 +2041,7 @@
         };
 
         // ==========================================
-        // 장소 간 거리·소요시간 박스 및 네이버 지도 길찾기 연동
+        // 장소 간 거리·소요시간 박스 및 네이버/구글 길찾기 연동
         // ==========================================
         window.openRouteByExpId = function(startId, endId) {
             const startItem = expectedData.find(x => x.id === startId);
@@ -2009,157 +2067,267 @@
             }
         };
 
-        // [Ver 1.2] 예상 일정 목록 렌더링 (날짜·요일 표시 + 장소 사진 3장 갤러리 노출)
-        function buildExpListHtml(list) {
-            const expGroups = {};
-            list.forEach(item => {
-                const d = item.day || 1;
-                if (!expGroups[d]) expGroups[d] = [];
-                expGroups[d].push(item);
-            });
+        // [Ver 1.25] 계획전(연한 노랑) & 방문완료·현장지출(연한 블루) 통합 타임라인 렌더링
+        function buildExpListHtml(list, includeStandaloneActuals = false) {
+            const daySet = new Set();
+            list.forEach(item => daySet.add(Number(item.day || 1)));
+
+            // 통합 타임라인 모드일 때는 예상 일정과 연결되지 않은 단독 지출(장보기 반영·현장 추가 지출)도 해당 일차에 함께 표시
+            const expIdsSet = new Set(expectedData.map(e => e.id));
+            const standaloneActs = includeStandaloneActuals
+                ? actualData.filter(a => {
+                    if (a.linkedExpId && expIdsSet.has(a.linkedExpId)) return false;
+                    if (selectedDayFilter === 'all') return true;
+                    if (selectedDayFilter === '3') return Number(a.day || 1) >= 3;
+                    return String(a.day || 1) === selectedDayFilter;
+                })
+                : [];
+
+            standaloneActs.forEach(a => daySet.add(Number(a.day || 1)));
 
             let html = '';
-            Object.keys(expGroups).sort((a, b) => Number(a) - Number(b)).forEach(day => {
-                const dayItems = expGroups[day];
+            Array.from(daySet).sort((a, b) => a - b).forEach(day => {
+                const dayExpItems = sortByDayAndTime(list.filter(x => Number(x.day || 1) === day));
+                const dayStandaloneActs = sortByDayAndTime(standaloneActs.filter(a => Number(a.day || 1) === day));
                 const dayDateLabel = getDayDateLabel(day);
+
+                // 시간순 통합 정렬용 배열 생성 (계획/방문완료 일정 + 단독 현장지출)
+                const mergedDayEntries = [
+                    ...dayExpItems.map((expItem, expIdx) => ({
+                        entryType: 'exp',
+                        time: expItem.time,
+                        data: expItem,
+                        nextExp: (expIdx < dayExpItems.length - 1) ? dayExpItems[expIdx + 1] : null
+                    })),
+                    ...dayStandaloneActs.map(actItem => ({
+                        entryType: 'standalone_act',
+                        time: actItem.time,
+                        data: actItem,
+                        nextExp: null
+                    }))
+                ].sort((a, b) => normalizeTime(a.time).localeCompare(normalizeTime(b.time)));
+
+                const visitedCnt = dayExpItems.filter(x => x.visited).length + dayStandaloneActs.length;
+
                 html += `
                 <div class="space-y-2">
                     <div class="bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded-lg flex flex-wrap justify-between items-center gap-1">
-                        <span>📅 ${esc(day)}일차 예상 일정 <span class="text-amber-200 font-extrabold ml-1">${esc(dayDateLabel)}</span></span>
-                        <span class="bg-blue-700 px-2 py-0.5 rounded-full text-[11px]">${dayItems.length}곳</span>
+                        <span>📅 ${esc(day)}일차 여행 타임라인 <span class="text-amber-200 font-extrabold ml-1">${esc(dayDateLabel)}</span></span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="bg-yellow-100 text-amber-900 px-2 py-0.5 rounded-full text-[10px] font-extrabold">계획전 ${dayExpItems.length - dayExpItems.filter(x => x.visited).length}</span>
+                            <span class="bg-sky-100 text-sky-900 px-2 py-0.5 rounded-full text-[10px] font-extrabold">방문 ${visitedCnt}</span>
+                        </div>
                     </div>
                     <div class="relative border-l-2 border-blue-200 ml-3 space-y-3 py-1">`;
 
-                dayItems.forEach((item, idx) => {
-                    const isVisited = Boolean(item.visited);
-                    const t = normalizeTime(item.time);
-                    const isPM = parseInt(t.split(':')[0], 10) >= 12;
-                    const dotColor = isVisited ? 'bg-emerald-600' : (day == 1 ? (isPM ? 'bg-purple-600' : 'bg-blue-600') : (isPM ? 'bg-amber-500' : 'bg-emerald-600'));
+                mergedDayEntries.forEach(entry => {
+                    if (entry.entryType === 'exp') {
+                        const item = entry.data;
+                        const nextItem = entry.nextExp;
+                        const isVisited = Boolean(item.visited);
+                        const linkedAct = actualData.find(a => a.linkedExpId === item.id);
 
-                    const visitBtnHtml = isVisited
-                        ? `<button type="button" onclick="toggleVisitStatus('${item.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-600 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer shadow-sm flex items-center gap-1">
-                             <i class="fa-solid fa-check"></i> 방문완료
-                           </button>`
-                        : `<button type="button" onclick="toggleVisitStatus('${item.id}')" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer shadow-sm flex items-center gap-1">
-                             <i class="fa-regular fa-circle"></i> 방문전
-                           </button>`;
+                        // [Ver 1.25] 계획전 = 연한 노랑 박스 / 방문완료 = 연한 블루 박스
+                        const cardBgClass = isVisited
+                            ? 'bg-sky-50/90 border-sky-300 hover:bg-sky-100/60'
+                            : 'bg-yellow-50/90 border-amber-200 hover:bg-yellow-100/50';
+                        const dotColor = isVisited ? 'bg-sky-500' : 'bg-amber-400';
 
-                    const navMapUrl = `https://map.naver.com/p/search/${encodeURIComponent(item.address || item.place_name)}`;
-                    const navReviewUrl = `https://search.naver.com/search.naver?where=view&query=${encodeURIComponent(item.place_name + ' 후기 리뷰')}`;
-                    const phoneBtnHtml = item.phone
-                        ? `<a href="tel:${esc(item.phone)}" class="bg-white hover:bg-slate-100 border border-blue-300 text-blue-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
-                             <i class="fa-solid fa-phone"></i> 전화
-                           </a>`
-                        : '';
+                        const statusTagHtml = isVisited
+                            ? `<span class="text-[10px] font-extrabold text-sky-800 bg-sky-200/80 px-2 py-0.5 rounded-full">✓ 방문완료</span>`
+                            : `<span class="text-[10px] font-extrabold text-amber-900 bg-amber-200/80 px-2 py-0.5 rounded-full">계획전</span>`;
 
-                    // [Ver 1.2] 첨부된 장소 사진 (최대 3장) 썸네일 갤러리 생성
-                    let photosGalleryHtml = '';
-                    if (Array.isArray(item.photos) && item.photos.length > 0) {
-                        photosGalleryHtml = `<div class="grid grid-cols-3 gap-1.5 pt-1.5">`;
-                        item.photos.forEach((pSrc, pIdx) => {
-                            photosGalleryHtml += `
-                            <div onclick="event.stopPropagation(); viewExpPhoto('${item.id}', ${pIdx})" class="relative h-20 rounded-lg overflow-hidden border border-slate-200 bg-white cursor-pointer group shadow-sm">
-                                <img src="${pSrc}" alt="장소사진" class="w-full h-full object-cover group-hover:scale-105 transition">
-                                <span class="absolute bottom-1 right-1 bg-black/60 text-white text-[9px] px-1.5 py-0.2 rounded font-bold"><i class="fa-solid fa-magnifying-glass-plus"></i> ${pIdx + 1}</span>
-                            </div>`;
-                        });
-                        photosGalleryHtml += `</div>`;
-                    }
+                        const visitBtnHtml = isVisited
+                            ? `<button type="button" onclick="toggleVisitStatus('${item.id}')" class="bg-sky-600 hover:bg-sky-700 text-white border border-sky-600 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer shadow-sm flex items-center gap-1">
+                                 <i class="fa-solid fa-check"></i> 방문완료 (취소클릭)
+                               </button>`
+                            : `<button type="button" onclick="toggleVisitStatus('${item.id}')" class="bg-amber-400 hover:bg-amber-500 text-slate-900 border border-amber-500 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer shadow-sm flex items-center gap-1">
+                                 <i class="fa-regular fa-circle"></i> 방문전 (완료체크)
+                               </button>`;
 
-                    let altButtonsHtml = '';
-                    if (Array.isArray(item.alternatives) && item.alternatives.length > 0) {
-                        altButtonsHtml = `<div class="flex flex-wrap items-center gap-1.5 pt-1">
-                            <span class="text-[11px] font-bold text-indigo-700"><i class="fa-solid fa-repeat mr-0.5"></i>대안 교체:</span>`;
-                        item.alternatives.forEach((alt, altIdx) => {
-                            altButtonsHtml += `
-                            <button type="button" onclick="swapWithAlternative('${item.id}', ${altIdx})" class="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer">
-                                🔄 ${esc(alt.name)} (${Number(alt.budget || 0).toLocaleString()}원)
-                            </button>`;
-                        });
-                        altButtonsHtml += `</div>`;
-                    }
+                        const navMapUrl = `https://map.naver.com/p/search/${encodeURIComponent(item.address || item.place_name)}`;
+                        const navReviewUrl = `https://search.naver.com/search.naver?where=view&query=${encodeURIComponent(item.place_name + ' 후기 리뷰')}`;
+                        const phoneBtnHtml = item.phone
+                            ? `<a href="tel:${esc(item.phone)}" class="bg-white hover:bg-slate-100 border border-blue-300 text-blue-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
+                                 <i class="fa-solid fa-phone"></i> 전화
+                               </a>`
+                            : '';
 
-                    // 다음 장소가 있을 경우: 장소와 장소 사이 라인 아래에 [이동거리 및 소요시간 + 네이버 길찾기] 박스 생성
-                    let routeBoxHtml = '';
-                    if (idx < dayItems.length - 1) {
-                        const nextItem = dayItems[idx + 1];
-                        let distTimeText = '길찾기 경로 확인하기';
-                        if (item.lat && item.lng && nextItem.lat && nextItem.lng) {
-                            const straightKm = getDistanceFromLatLonInKm(Number(item.lat), Number(item.lng), Number(nextItem.lat), Number(nextItem.lng));
-                            const roadKm = straightKm * 1.3;
-                            const estMin = Math.max(5, Math.round((roadKm / 55) * 60));
-                            const timeFormatted = estMin >= 60
-                                ? `약 ${Math.floor(estMin / 60)}시간 ${estMin % 60}분`
-                                : `약 ${estMin}분`;
-                            distTimeText = `이동거리 <b>약 ${roadKm.toFixed(1)}km</b> · 소요시간 <b>${timeFormatted}</b>`;
+                        // 첨부된 장소 사진 (최대 3장) 썸네일 갤러리
+                        let photosGalleryHtml = '';
+                        if (Array.isArray(item.photos) && item.photos.length > 0) {
+                            photosGalleryHtml = `<div class="grid grid-cols-3 gap-1.5 pt-1.5">`;
+                            item.photos.forEach((pSrc, pIdx) => {
+                                photosGalleryHtml += `
+                                <div onclick="event.stopPropagation(); viewExpPhoto('${item.id}', ${pIdx})" class="relative h-20 rounded-lg overflow-hidden border border-slate-200 bg-white cursor-pointer group shadow-sm">
+                                    <img src="${pSrc}" alt="장소사진" class="w-full h-full object-cover group-hover:scale-105 transition">
+                                    <span class="absolute bottom-1 right-1 bg-black/60 text-white text-[9px] px-1.5 py-0.2 rounded font-bold"><i class="fa-solid fa-magnifying-glass-plus"></i> ${pIdx + 1}</span>
+                                </div>`;
+                            });
+                            photosGalleryHtml += `</div>`;
                         }
-                        const routeBtnLabel = (currentRegion === 'kr') ? '네이버 길찾기 ▶' : '구글맵 길찾기 ▶';
-                        routeBoxHtml = `
-                        <div class="pt-2.5 pb-0.5 relative">
-                            <span class="absolute -left-[25px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-blue-100 border border-blue-400 text-blue-700 flex items-center justify-center text-[9px] shadow-sm">
-                                <i class="fa-solid fa-arrow-down"></i>
-                            </span>
-                            <button type="button" onclick="openRouteByExpId('${item.id}', '${nextItem.id}')" class="w-full bg-blue-50/90 hover:bg-blue-100 active:bg-blue-200 border border-blue-200 rounded-xl px-3 py-2 text-left flex flex-wrap justify-between items-center gap-2 cursor-pointer transition shadow-sm">
-                                <div class="text-xs text-blue-900 flex items-center gap-1.5">
-                                    <i class="fa-solid fa-car-side text-blue-600"></i>
-                                    <span>${distTimeText}</span>
+
+                        // 방문완료 시 연동된 가계부 지출 & 영수증 정보 통합 표시
+                        let linkedActInfoHtml = '';
+                        if (isVisited && linkedAct) {
+                            const receiptThumb = linkedAct.receipt
+                                ? `<button type="button" onclick="event.stopPropagation(); viewActReceipt('${linkedAct.id}')" class="bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 px-2 py-0.5 rounded-md text-[11px] font-extrabold cursor-pointer inline-flex items-center gap-1">
+                                     <i class="fa-solid fa-receipt text-amber-600"></i> 영수증 보기
+                                   </button>`
+                                : '';
+                            linkedActInfoHtml = `
+                            <div class="mt-1.5 p-2.5 bg-white/90 rounded-lg border border-sky-200 flex flex-wrap justify-between items-center gap-2 text-xs">
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    <span class="font-extrabold text-sky-900"><i class="fa-solid fa-coins text-sky-600 mr-1"></i>실제지출: ${Number(linkedAct.expense || 0).toLocaleString()}원</span>
+                                    <span class="text-[11px] text-slate-600">(결제: ${esc(linkedAct.traveler || '공통')})</span>
+                                    ${linkedAct.action ? `<span class="text-[11px] text-slate-500">· ${esc(linkedAct.action)}</span>` : ''}
                                 </div>
-                                <span class="text-[11px] font-extrabold text-emerald-700 bg-white border border-emerald-200 px-2 py-0.5 rounded-lg shrink-0 flex items-center gap-1">
-                                    <i class="fa-solid fa-diamond-turn-right"></i> ${routeBtnLabel}
+                                <div class="flex items-center gap-1.5">
+                                    ${receiptThumb}
+                                    <button type="button" onclick="event.stopPropagation(); editAct('${linkedAct.id}')" class="bg-sky-100 hover:bg-sky-200 text-sky-900 px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer">
+                                        ✏️ 지출·영수증 수정
+                                    </button>
+                                </div>
+                            </div>`;
+                        }
+
+                        let altButtonsHtml = '';
+                        if (Array.isArray(item.alternatives) && item.alternatives.length > 0) {
+                            altButtonsHtml = `<div class="flex flex-wrap items-center gap-1.5 pt-1">
+                                <span class="text-[11px] font-bold text-indigo-700"><i class="fa-solid fa-repeat mr-0.5"></i>대안 교체:</span>`;
+                            item.alternatives.forEach((alt, altIdx) => {
+                                altButtonsHtml += `
+                                <button type="button" onclick="swapWithAlternative('${item.id}', ${altIdx})" class="bg-white hover:bg-indigo-50 border border-indigo-200 text-indigo-800 px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer">
+                                    🔄 ${esc(alt.name)} (${Number(alt.budget || 0).toLocaleString()}원)
+                                </button>`;
+                            });
+                            altButtonsHtml += `</div>`;
+                        }
+
+                        // [Ver 1.25] 다음 장소까지 구간 이동 박스 (자동계산/수동입력 배지 + [거리·시간 입력] 버튼 + [길찾기] 버튼)
+                        let routeBoxHtml = '';
+                        if (nextItem) {
+                            const move = getSegmentMoveInfo(item, nextItem);
+                            const modeBadge = move.isManual
+                                ? `<span class="bg-emerald-600 text-white px-1.5 py-0.5 rounded text-[10px] font-extrabold shrink-0">수동입력</span>`
+                                : `<span class="bg-blue-200/80 text-blue-800 px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0">자동계산</span>`;
+                            const distTimeText = (move.hasCoords || move.isManual)
+                                ? `이동거리 <b>약 ${move.km}km</b> · 소요시간 <b>${move.timeFormatted}</b>`
+                                : '길찾기 경로 확인하기';
+                            const routeBtnLabel = (currentRegion === 'kr') ? '네이버 길찾기 ▶' : '구글맵 길찾기 ▶';
+                            routeBoxHtml = `
+                            <div class="pt-2.5 pb-0.5 relative">
+                                <span class="absolute -left-[25px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-blue-100 border border-blue-400 text-blue-700 flex items-center justify-center text-[9px] shadow-sm">
+                                    <i class="fa-solid fa-arrow-down"></i>
                                 </span>
-                            </button>
+                                <div class="w-full bg-blue-50/90 border border-blue-200 rounded-xl px-3 py-2 flex flex-wrap justify-between items-center gap-2 shadow-sm">
+                                    <div onclick="openRouteByExpId('${item.id}', '${nextItem.id}')" class="text-xs text-blue-900 flex flex-wrap items-center gap-1.5 cursor-pointer flex-1">
+                                        <i class="fa-solid fa-car-side text-blue-600"></i>
+                                        ${modeBadge}
+                                        <span>${distTimeText}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 shrink-0">
+                                        <button type="button" onclick="promptManualMoveInfo('${item.id}', '${nextItem.id}')" class="text-[11px] font-bold text-slate-700 bg-white hover:bg-slate-100 border border-blue-300 px-2 py-0.5 rounded-lg cursor-pointer flex items-center gap-1">
+                                            <i class="fa-solid fa-pen text-[10px] text-blue-600"></i> 거리·시간 입력
+                                        </button>
+                                        <button type="button" onclick="openRouteByExpId('${item.id}', '${nextItem.id}')" class="text-[11px] font-extrabold text-emerald-700 bg-white hover:bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg cursor-pointer flex items-center gap-1">
+                                            <i class="fa-solid fa-diamond-turn-right"></i> ${routeBtnLabel}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>`;
+                        }
+
+                        html += `
+                        <div class="relative pl-5">
+                            <span class="absolute -left-[7px] top-3 w-3 h-3 rounded-full ${dotColor} ring-2 ring-white"></span>
+                            <div class="${cardBgClass} p-3.5 rounded-xl border space-y-2 shadow-sm transition">
+                                <div class="flex flex-wrap justify-between items-center gap-1">
+                                    <div class="flex flex-wrap items-center gap-1.5">
+                                        <span class="text-xs font-extrabold text-slate-800 bg-white/90 border border-slate-200 px-2 py-0.5 rounded"><i class="fa-regular fa-clock mr-1 text-blue-600"></i>${esc(item.time || '시간미정')}</span>
+                                        ${statusTagHtml}
+                                        <button type="button" onclick="focusVisitByExpId('${item.id}')" class="text-[10px] font-bold text-blue-700 bg-white/90 border border-blue-200 px-1.5 py-0.5 rounded cursor-pointer">📍 지도확대</button>
+                                        ${Array.isArray(item.photos) && item.photos.length > 0 ? `<span class="text-[10px] font-bold text-blue-700 bg-white/90 border border-blue-200 px-1.5 py-0.5 rounded"><i class="fa-solid fa-camera mr-0.5"></i>사진 ${item.photos.length}</span>` : ''}
+                                    </div>
+                                    <span class="text-xs font-bold text-slate-700">예상 ${Number(item.budget || 0).toLocaleString()}원</span>
+                                </div>
+
+                                <div onclick="focusVisitByExpId('${item.id}')" class="w-full space-y-1 cursor-pointer">
+                                    <h4 class="font-bold text-slate-900 text-sm sm:text-base leading-snug break-words w-full">${item.category ? `<span class="text-blue-700">[${esc(item.category)}]</span> ` : ''}${esc(item.place_name)}</h4>
+                                    ${item.address ? `
+                                    <div class="flex items-start gap-1.5 text-xs text-slate-600">
+                                        <i class="fa-solid fa-location-dot text-slate-400 mt-0.5 shrink-0"></i>
+                                        <span class="break-words flex-1 leading-relaxed">${esc(item.address)}</span>
+                                        <button type="button" onclick="event.stopPropagation(); copyExpAddressById('${item.id}')" class="text-[10px] bg-white border border-slate-300 px-1.5 py-0.5 rounded text-slate-700 font-semibold shrink-0 cursor-pointer">복사</button>
+                                    </div>` : ''}
+                                    ${item.phone ? `<p class="text-xs text-blue-700 font-semibold"><i class="fa-solid fa-phone mr-1"></i>${esc(item.phone)}</p>` : ''}
+                                    ${item.memo ? `<p class="text-xs text-slate-700 leading-relaxed break-words">${esc(item.memo)}</p>` : ''}
+                                    ${photosGalleryHtml}
+                                    ${linkedActInfoHtml}
+                                    ${altButtonsHtml}
+                                </div>
+
+                                <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-300/60">
+                                    ${visitBtnHtml}
+                                    ${phoneBtnHtml}
+                                    <a href="${navMapUrl}" target="_blank" class="bg-white hover:bg-slate-100 border border-slate-300 text-emerald-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
+                                        <i class="fa-solid fa-location-dot"></i> 지도
+                                    </a>
+                                    <a href="${navReviewUrl}" target="_blank" class="bg-white hover:bg-slate-100 border border-amber-300 text-amber-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
+                                        <i class="fa-solid fa-star text-amber-500"></i> 리뷰
+                                    </a>
+                                    <button type="button" onclick="editExp('${item.id}')" class="ml-auto bg-white hover:bg-slate-100 border border-slate-300 text-blue-600 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">수정</button>
+                                    <button type="button" onclick="deleteSubItem('expected_places', '${item.id}')" class="bg-white hover:bg-slate-100 border border-slate-300 text-red-500 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">삭제</button>
+                                </div>
+                            </div>
+                            ${routeBoxHtml}
+                        </div>`;
+                    } else {
+                        // 단독 현장 방문·지출 항목 (연한 블루 박스로 통합 타임라인에 함께 표시)
+                        const act = entry.data;
+                        const receiptBtnHtml = act.receipt
+                            ? `<button type="button" onclick="viewActReceipt('${act.id}')" class="bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer flex items-center gap-1">
+                                 <i class="fa-solid fa-receipt text-amber-600"></i> 영수증 보기
+                               </button>`
+                            : '';
+
+                        html += `
+                        <div class="relative pl-5">
+                            <span class="absolute -left-[7px] top-3 w-3 h-3 rounded-full bg-sky-500 ring-2 ring-white"></span>
+                            <div class="bg-sky-50/90 hover:bg-sky-100/60 p-3.5 rounded-xl border border-sky-300 space-y-2 shadow-sm transition">
+                                <div class="flex flex-wrap justify-between items-center gap-1">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-xs font-extrabold text-slate-800 bg-white/90 border border-slate-200 px-2 py-0.5 rounded"><i class="fa-regular fa-clock mr-1 text-sky-600"></i>${esc(act.time || '')}</span>
+                                        <span class="text-[10px] font-extrabold text-sky-800 bg-sky-200/80 px-2 py-0.5 rounded-full">✓ 현장방문·지출 (${esc(act.traveler || '공통')})</span>
+                                        ${act.receipt ? `<span class="text-[10px] font-extrabold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">🧾영수증</span>` : ''}
+                                    </div>
+                                    <span class="text-xs font-extrabold text-sky-800">지출 ${Number(act.expense || 0).toLocaleString()}원</span>
+                                </div>
+
+                                <div onclick="focusVisitByActId('${act.id}')" class="cursor-pointer w-full space-y-1">
+                                    <h4 class="font-bold text-slate-900 text-sm sm:text-base leading-snug break-words w-full">${act.category ? `<span class="text-sky-700">[${esc(act.category)}]</span> ` : ''}${esc(act.place)}</h4>
+                                    ${act.address ? `<p class="text-xs text-slate-600 break-words leading-relaxed"><i class="fa-solid fa-location-dot mr-1"></i>${esc(act.address)}</p>` : ''}
+                                    <p class="text-xs text-slate-700 leading-relaxed break-words">${esc(act.action || '')}</p>
+                                </div>
+
+                                <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-sky-200">
+                                    <button type="button" onclick="focusVisitByActId('${act.id}')" class="bg-sky-600 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer flex items-center gap-1">
+                                        <i class="fa-solid fa-location-dot"></i> 지도확대
+                                    </button>
+                                    ${receiptBtnHtml}
+                                    <button type="button" onclick="editAct('${act.id}')" class="ml-auto bg-white border border-slate-300 text-blue-600 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">수정</button>
+                                    <button type="button" onclick="deleteSubItem('actual_visits', '${act.id}')" class="bg-white border border-slate-300 text-red-500 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">삭제</button>
+                                </div>
+                            </div>
                         </div>`;
                     }
-
-                    html += `
-                    <div class="relative pl-5">
-                        <span class="absolute -left-[7px] top-3 w-3 h-3 rounded-full ${dotColor} ring-2 ring-white"></span>
-                        <div class="${isVisited ? 'bg-emerald-50/50 border-emerald-200' : 'bg-slate-50 border-slate-200/80'} p-3.5 rounded-xl border space-y-2">
-                            <div class="flex flex-wrap justify-between items-center gap-1">
-                                <div class="flex items-center gap-1.5">
-                                    <span class="text-xs font-extrabold text-blue-700 bg-blue-100 px-2 py-0.5 rounded"><i class="fa-regular fa-clock mr-1"></i>${esc(item.time || '시간미정')}</span>
-                                    ${isVisited ? `<button type="button" onclick="focusVisitByExpId('${item.id}')" class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded cursor-pointer">✓ 방문지도보기</button>` : ''}
-                                    ${Array.isArray(item.photos) && item.photos.length > 0 ? `<span class="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded"><i class="fa-solid fa-camera mr-0.5"></i>사진 ${item.photos.length}</span>` : ''}
-                                </div>
-                                <span class="text-xs font-bold text-slate-700">예상 ${Number(item.budget || 0).toLocaleString()}원</span>
-                            </div>
-
-                            <div onclick="${isVisited ? `focusVisitByExpId('${item.id}')` : ''}" class="w-full space-y-1 ${isVisited ? 'cursor-pointer' : ''}">
-                                <h4 class="font-bold text-slate-800 text-sm sm:text-base leading-snug break-words w-full">${item.category ? `<span class="text-blue-700">[${esc(item.category)}]</span> ` : ''}${esc(item.place_name)}</h4>
-                                ${item.address ? `
-                                <div class="flex items-start gap-1.5 text-xs text-slate-600">
-                                    <i class="fa-solid fa-location-dot text-slate-400 mt-0.5 shrink-0"></i>
-                                    <span class="break-words flex-1 leading-relaxed">${esc(item.address)}</span>
-                                    <button type="button" onclick="event.stopPropagation(); copyExpAddressById('${item.id}')" class="text-[10px] bg-white border border-slate-300 px-1.5 py-0.5 rounded text-slate-700 font-semibold shrink-0 cursor-pointer">복사</button>
-                                </div>` : ''}
-                                ${item.phone ? `<p class="text-xs text-blue-700 font-semibold"><i class="fa-solid fa-phone mr-1"></i>${esc(item.phone)}</p>` : ''}
-                                ${item.memo ? `<p class="text-xs text-slate-600 leading-relaxed break-words">${esc(item.memo)}</p>` : ''}
-                                ${photosGalleryHtml}
-                                ${altButtonsHtml}
-                            </div>
-
-                            <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-200/60">
-                                ${visitBtnHtml}
-                                ${phoneBtnHtml}
-                                <a href="${navMapUrl}" target="_blank" class="bg-white hover:bg-slate-100 border border-slate-300 text-emerald-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
-                                    <i class="fa-solid fa-location-dot"></i> 지도
-                                </a>
-                                <a href="${navReviewUrl}" target="_blank" class="bg-white hover:bg-slate-100 border border-amber-300 text-amber-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
-                                    <i class="fa-solid fa-star text-amber-500"></i> 리뷰
-                                </a>
-                                <button type="button" onclick="editExp('${item.id}')" class="ml-auto bg-white hover:bg-slate-100 border border-slate-300 text-blue-600 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">수정</button>
-                                <button type="button" onclick="deleteSubItem('expected_places', '${item.id}')" class="bg-white hover:bg-slate-100 border border-slate-300 text-red-500 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">삭제</button>
-                            </div>
-                        </div>
-                        ${routeBoxHtml}
-                    </div>`;
                 });
                 html += `</div></div>`;
             });
             return html;
         }
 
-        // [Ver 1.2] 실제 방문 및 가계부 목록 렌더링 (영수증 미리보기 & 영수증 확대 보기 버튼 포함)
+        // 가계부·회비 관리 탭용 목록 렌더링 (연한 블루 스타일 적용)
         function buildActListHtml(list) {
             const actGroups = {};
             list.forEach(item => {
@@ -2177,7 +2345,7 @@
                         <span>🧾 ${esc(day)}일차 방문완료 및 가계부 <span class="text-amber-200 font-extrabold ml-1">${esc(dayDateLabel)}</span></span>
                         <span class="bg-emerald-700 px-2 py-0.5 rounded-full text-[11px]">${actGroups[day].length}건</span>
                     </div>
-                    <div class="relative border-l-2 border-emerald-200 ml-3 space-y-3 py-1">`;
+                    <div class="relative border-l-2 border-sky-200 ml-3 space-y-3 py-1">`;
 
                 actGroups[day].forEach(item => {
                     const navMapUrl = `https://map.naver.com/p/search/${encodeURIComponent(item.address || item.place)}`;
@@ -2195,35 +2363,35 @@
                         : '';
 
                     const receiptThumbHtml = item.receipt
-                        ? `<div onclick="event.stopPropagation(); viewActReceipt('${item.id}')" class="pt-1.5 inline-flex items-center gap-2 bg-white p-1.5 rounded-lg border border-emerald-200 cursor-pointer hover:bg-emerald-50 transition">
+                        ? `<div onclick="event.stopPropagation(); viewActReceipt('${item.id}')" class="pt-1.5 inline-flex items-center gap-2 bg-white p-1.5 rounded-lg border border-sky-200 cursor-pointer hover:bg-sky-50 transition">
                              <img src="${item.receipt}" alt="영수증" class="w-12 h-12 object-cover rounded border border-slate-200">
-                             <span class="text-[11px] font-bold text-emerald-800 pr-1"><i class="fa-solid fa-magnifying-glass-plus mr-0.5"></i>첨부 영수증 크게보기</span>
+                             <span class="text-[11px] font-bold text-sky-800 pr-1"><i class="fa-solid fa-magnifying-glass-plus mr-0.5"></i>첨부 영수증 크게보기</span>
                            </div>`
                         : '';
 
                     html += `
                     <div class="relative pl-5">
-                        <span class="absolute -left-[7px] top-3 w-3 h-3 rounded-full bg-emerald-600 ring-2 ring-white"></span>
-                        <div class="bg-emerald-50/40 hover:bg-emerald-50 p-3.5 rounded-xl border border-emerald-200/80 space-y-2">
+                        <span class="absolute -left-[7px] top-3 w-3 h-3 rounded-full bg-sky-500 ring-2 ring-white"></span>
+                        <div class="bg-sky-50/90 hover:bg-sky-100/60 p-3.5 rounded-xl border border-sky-300 space-y-2 shadow-sm">
                             <div class="flex flex-wrap justify-between items-center gap-1">
                                 <div class="flex items-center gap-1.5">
-                                    <span class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded"><i class="fa-regular fa-clock mr-1"></i>${esc(item.time || '')} · ${esc(item.traveler || '공통')}</span>
+                                    <span class="text-xs font-bold text-sky-900 bg-white border border-sky-200 px-2 py-0.5 rounded"><i class="fa-regular fa-clock mr-1"></i>${esc(item.time || '')} · ${esc(item.traveler || '공통')}</span>
                                     ${item.receipt ? `<span class="text-[10px] font-extrabold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">🧾영수증</span>` : ''}
                                 </div>
-                                <span class="text-xs font-extrabold text-emerald-700">${Number(item.expense || 0).toLocaleString()}원</span>
+                                <span class="text-xs font-extrabold text-sky-800">${Number(item.expense || 0).toLocaleString()}원</span>
                             </div>
 
                             <div onclick="focusVisitByActId('${item.id}')" class="cursor-pointer w-full space-y-1">
-                                <h4 class="font-bold text-slate-800 text-sm sm:text-base leading-snug break-words w-full">${item.category ? `<span class="text-emerald-700">[${esc(item.category)}]</span> ` : ''}${esc(item.place)}</h4>
+                                <h4 class="font-bold text-slate-800 text-sm sm:text-base leading-snug break-words w-full">${item.category ? `<span class="text-sky-700">[${esc(item.category)}]</span> ` : ''}${esc(item.place)}</h4>
                                 ${item.address ? `<p class="text-xs text-slate-500 break-words leading-relaxed"><i class="fa-solid fa-location-dot mr-1"></i>${esc(item.address)}</p>` : ''}
                                 ${item.phone ? `<p class="text-xs text-blue-700 font-semibold"><i class="fa-solid fa-phone mr-1"></i>${esc(item.phone)}</p>` : ''}
                                 <p class="text-xs text-slate-600 leading-relaxed break-words">${esc(item.action || '')}</p>
                                 ${receiptThumbHtml}
                             </div>
 
-                            <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-emerald-200/60">
-                                <button type="button" onclick="focusVisitByActId('${item.id}')" class="bg-emerald-600 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer flex items-center gap-1">
-                                    <i class="fa-solid fa-route"></i> 방문지도확인
+                            <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-sky-200/80">
+                                <button type="button" onclick="focusVisitByActId('${item.id}')" class="bg-sky-600 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer flex items-center gap-1">
+                                    <i class="fa-solid fa-route"></i> 타임라인 지도확인
                                 </button>
                                 ${receiptBtnHtml}
                                 ${phoneBtnHtml}
@@ -2272,14 +2440,13 @@
                 return String(item.day || 1) === selectedDayFilter;
             });
 
+            const unvisitedCount = filteredExp.filter(x => !x.visited).length;
             const completedCount = filteredExp.filter(x => x.visited).length;
-            document.getElementById('exp-count-badge').innerText = `총 ${filteredExp.length}곳 (완료 ${completedCount})`;
-            document.getElementById('act-count-badge').innerText = `방문·지출 ${filteredAct.length}건`;
+            document.getElementById('exp-count-badge').innerText = `계획전 ${unvisitedCount}곳`;
+            document.getElementById('act-count-badge').innerText = `방문완료 ${completedCount}곳 · 지출 ${filteredAct.length}건`;
 
-            document.getElementById('expected-timeline-list').innerHTML = buildExpListHtml(filteredExp) || '<p class="text-xs text-slate-400 py-4 text-center">등록된 예상 일정이 없습니다.</p>';
-            document.getElementById('expected-manage-list').innerHTML = buildExpListHtml(sortedExpAll) || '<p class="text-xs text-slate-400 py-4 text-center">등록된 일정이 없습니다.</p>';
-
-            document.getElementById('actual-timeline-list').innerHTML = buildActListHtml(filteredAct) || '<p class="text-xs text-slate-400 py-4 text-center">타임라인(계획)에서 [방문전]을 누르면 [방문완료]로 바뀌며 이곳에 기록됩니다!</p>';
+            document.getElementById('expected-timeline-list').innerHTML = buildExpListHtml(filteredExp, true) || '<p class="text-xs text-slate-400 py-4 text-center">등록된 여행 일정이 없습니다.</p>';
+            document.getElementById('expected-manage-list').innerHTML = buildExpListHtml(sortedExpAll, false) || '<p class="text-xs text-slate-400 py-4 text-center">등록된 일정이 없습니다.</p>';
             document.getElementById('actual-manage-list').innerHTML = buildActListHtml(sortedActAll) || '<p class="text-xs text-slate-400 py-4 text-center">기록된 지출 내역이 없습니다.</p>';
 
             let presetHtml = '<option value="">-- 예상 방문지 목록에서 선택하세요 --</option>';
@@ -2291,7 +2458,7 @@
 
         // <!-- 3부 코드를 바로 아래에 이어서 붙여넣으세요 -->
         // ==========================================
-        // 3부: 사진·영수증 폼 저장/수정, 체크리스트, 대분류 폴더, 엑셀 백업·복원
+        // 3부: 사진·영수증·수동거리 폼 저장/수정, 체크리스트, 폴더 렌더링, 엑셀 백업·복원
         // ==========================================
         function syncParticipantDropdowns() {
             const namesSet = new Set();
@@ -2505,7 +2672,7 @@
                 checked: true,
                 sentToActual: true
             });
-            alert(`'${item.title}' (${Number(item.price || 0).toLocaleString()}원) 내역이 [${targetDay}일차 ${targetTime}] 가계부에 반영되었습니다!`);
+            alert(`'${item.title}' (${Number(item.price || 0).toLocaleString()}원) 내역이 [${targetDay}일차 ${targetTime}] 가계부 및 통합 타임라인(블루 박스)에 반영되었습니다!`);
         };
 
         window.editChkItem = function(chkId) {
@@ -2617,7 +2784,7 @@
             if (item.lat && item.lng) placePickerMarker('act', item.lat, item.lng);
         };
 
-        // [Ver 1.2] 예상 일정 수정 시 기존 첨부 사진(최대 3장) 불러오기
+        // [Ver 1.25] 예상 일정 수정 시 기존 첨부 사진(최대 3장) 및 수동 이동거리·시간 불러오기
         window.editExp = function(id) {
             if (!checkEditable()) return;
             const item = expectedData.find(x => x.id === id);
@@ -2635,6 +2802,8 @@
             document.getElementById('exp-address').value = item.address || '';
             document.getElementById('exp-budget').value = item.budget || 0;
             document.getElementById('exp-memo').value = item.memo || '';
+            if (document.getElementById('exp-manual-km')) document.getElementById('exp-manual-km').value = item.manualKm || '';
+            if (document.getElementById('exp-manual-mins')) document.getElementById('exp-manual-mins').value = item.manualMins || '';
             document.getElementById('exp-lat').value = item.lat ?? '';
             document.getElementById('exp-lng').value = item.lng ?? '';
 
@@ -2656,6 +2825,8 @@
         window.resetExpForm = function(keepOpen = false) {
             document.getElementById('expected-form').reset();
             document.getElementById('exp-edit-id').value = '';
+            if (document.getElementById('exp-manual-km')) document.getElementById('exp-manual-km').value = '';
+            if (document.getElementById('exp-manual-mins')) document.getElementById('exp-manual-mins').value = '';
             document.getElementById('exp-alternatives-container').innerHTML = '';
             currentExpPhotos = [];
             renderExpPhotoPreviews();
@@ -2664,8 +2835,7 @@
             if (!keepOpen) toggleExpFormAccordion(false);
         };
 
-        // [Ver 1.2] 가계부 지출 수정 시 기존 첨부 영수증 불러오기
-        // [Ver 1.2 수정] 가계부 지출 수정 시 선택한 장소 이름이 아코디언 제목에 정확히 반영되도록 수정
+        // 가계부 지출 수정 시 기존 첨부 영수증 불러오기
         window.editAct = function(id) {
             if (!checkEditable()) return;
             const item = actualData.find(x => x.id === id);
@@ -2690,7 +2860,6 @@
             currentActReceipt = item.receipt || '';
             renderActReceiptPreview();
 
-            // ✨ [해결] 선택한 지출 내역의 장소명(item.place)이 아코디언 제목에 정확히 들어가도록 추가함
             document.getElementById('act-form-title').innerHTML = `<i class="fa-solid fa-pen text-emerald-600"></i> [${esc(item.place)}] 방문·지출 수정하기`;
             document.getElementById('act-submit-btn').innerText = "수정 완료";
             if (item.lat && item.lng) setTimeout(() => placePickerMarker('act', item.lat, item.lng), 250);
@@ -2731,7 +2900,7 @@
         };
 
         // ==========================================
-        // 여행 일정 목록 2대 대분류(연도별 / 국내·해외 지역별) 렌더링
+        // 여행 일정 목록 폴더(연도별 / 국내·해외 지역별) 렌더링
         // ==========================================
         function buildSingleTripCardHtml(trip) {
             const subReg = inferTripSubRegion(trip);
@@ -2757,7 +2926,7 @@
             </div>`;
         }
 
-  function renderTripCards() {
+        function renderTripCards() {
             const container = document.getElementById('trip-cards-container');
             if (!container) return;
 
@@ -2841,7 +3010,7 @@
             const totalGlobalCount = Object.values(globalGroups).reduce((acc, arr) => acc + arr.length, 0);
 
             container.innerHTML = `
-                <!-- 연도별 여행 일정 ('대분류 1' 배지 제거) -->
+                <!-- 연도별 여행 일정 -->
                 <div class="border-2 border-blue-200 rounded-2xl overflow-hidden shadow-sm">
                     <button type="button" onclick="toggleAccordion('major-year-body', 'major-year-chev')" class="w-full p-4 bg-blue-600 text-white flex justify-between items-center cursor-pointer text-left">
                         <div>
@@ -2857,7 +3026,7 @@
                     </div>
                 </div>
 
-                <!-- 국내 여행 / 해외 여행 지역별 일정 ('대분류 2' 배지 제거) -->
+                <!-- 국내 여행 / 해외 여행 지역별 일정 -->
                 <div class="border-2 border-emerald-200 rounded-2xl overflow-hidden shadow-sm">
                     <button type="button" onclick="toggleAccordion('major-region-body', 'major-region-chev')" class="w-full p-4 bg-emerald-600 text-white flex justify-between items-center cursor-pointer text-left">
                         <div>
@@ -3005,7 +3174,7 @@
         };
 
         // ==========================================
-        // 디바운스 엑셀 백업 캐시 및 Batch 고속 복원
+        // 디바운스 엑셀 백업 캐시 및 Batch 고속 복원 (Ver 1.25: 수동거리·시간 포함)
         // ==========================================
         function scheduleBackupCache() {
             if (backupDebounceTimer) clearTimeout(backupDebounceTimer);
@@ -3050,6 +3219,8 @@
                             주소: x.address || '',
                             예상예산: Number(x.budget || 0),
                             메모: x.memo || '',
+                            수동거리km: x.manualKm || '',
+                            수동시간분: x.manualMins || '',
                             위도: x.lat ?? '',
                             경도: x.lng ?? '',
                             방문완료여부: x.visited ? 'Y' : 'N',
@@ -3192,10 +3363,11 @@
                         return;
                     }
 
-                    const overwriteExisting = confirm(`[${file.name}] 파일을 복원합니다.\n\n• [확인] 클릭 시: 동일한 제목·날짜의 여행이 있으면 기존 데이터를 덮어씁니다 (기존 첨부 사진·영수증은 자동 보존됩니다)\n• [취소] 클릭 시: 기존 여행을 두고 별도의 새 여행으로 추가합니다.`);
+                    const overwriteExisting = confirm(`[${file.name}] 파일을 복원합니다.\n\n• [확인] 클릭 시: 동일한 제목·날짜의 여행이 있으면 기존 데이터를 덮어씁니다 (기존 첨부 사진·영수증·수동거리는 자동 보존됩니다)\n• [취소] 클릭 시: 기존 여행을 두고 별도의 새 여행으로 추가합니다.`);
 
                     const idMap = {};
                     const preservedPhotosMap = {};
+                    const preservedManualMap = {};
                     const preservedReceiptMap = {};
 
                     for (const tRow of tripsSheet) {
@@ -3211,12 +3383,16 @@
                         };
 
                         if (overwriteExisting && existingTrip) {
-                            // 덮어쓰기 전 기존 일정 사진과 영수증 데이터를 메모리에 보존
+                            // 덮어쓰기 전 기존 일정 사진·수동거리 및 영수증 데이터를 메모리에 보존
                             const oldExpSnap = await db.collection("trips").doc(existingTrip.id).collection("expected_places").get();
                             oldExpSnap.forEach(doc => {
                                 const d = doc.data();
+                                const key = `${existingTrip.id}_${d.day}_${d.place_name}`;
                                 if (Array.isArray(d.photos) && d.photos.length) {
-                                    preservedPhotosMap[`${existingTrip.id}_${d.day}_${d.place_name}`] = d.photos;
+                                    preservedPhotosMap[key] = d.photos;
+                                }
+                                if (d.manualKm || d.manualMins) {
+                                    preservedManualMap[key] = { manualKm: d.manualKm || '', manualMins: d.manualMins || '' };
                                 }
                             });
                             const oldActSnap = await db.collection("trips").doc(existingTrip.id).collection("actual_visits").get();
@@ -3254,6 +3430,10 @@
                             try { parsedAlts = JSON.parse(eRow.대안장소JSON); } catch (_) {}
                         }
                         const pKey = `${targetTripId}_${Number(eRow.일차 || 1)}_${String(eRow.장소명)}`;
+                        const savedManual = preservedManualMap[pKey] || {};
+                        const excelManualKm = (eRow.수동거리km !== undefined && eRow.수동거리km !== '') ? String(eRow.수동거리km).trim().replace(/[^0-9.]/g, '') : (savedManual.manualKm || '');
+                        const excelManualMins = (eRow.수동시간분 !== undefined && eRow.수동시간분 !== '') ? String(eRow.수동시간분).trim().replace(/[^0-9]/g, '') : (savedManual.manualMins || '');
+
                         const ref = db.collection("trips").doc(targetTripId).collection("expected_places").doc();
                         batch.set(ref, {
                             day: Number(eRow.일차 || 1),
@@ -3264,6 +3444,8 @@
                             address: String(eRow.주소 || ''),
                             budget: Number(eRow.예상예산 || 0),
                             memo: String(eRow.메모 || ''),
+                            manualKm: excelManualKm,
+                            manualMins: excelManualMins,
                             lat: (eRow.위도 !== undefined && eRow.위도 !== '') ? Number(eRow.위도) : null,
                             lng: (eRow.경도 !== undefined && eRow.경도 !== '') ? Number(eRow.경도) : null,
                             visited: String(eRow.방문완료여부).toUpperCase() === 'Y',
@@ -3359,26 +3541,26 @@
             ];
 
             const initialPlaces = [
-                { day: 1, time: "08:30", category: "교통비", place_name: "용인 죽전 출발", phone: "", address: "경기도 용인시 수지구 죽전동", budget: 150000, lat: 37.3248, lng: 127.1077, memo: "차량 2대 교통비 정액 (팰리세이드 10만 + 전기차 5만)", visited: false, photos: [], alternatives: [] },
-                { day: 1, time: "09:55", category: "휴게소", place_name: "천등산휴게소 (제천방향)", phone: "", address: "충북 충주시 산척면 평택제천고속도로 106", budget: 0, lat: 37.0785, lng: 127.9123, memo: "커피·간식 및 전기차 충전 가능", visited: false, photos: [], alternatives: [] },
-                { day: 1, time: "10:55", category: "관광", place_name: "도담삼봉", phone: "", address: "충북 단양군 매포읍 삼봉로 644", budget: 4500, lat: 36.9997, lng: 128.3435, memo: "단양 대표 인증샷 / 주차비(소형 3,000 + 전기차 1,500)", visited: false, photos: [], alternatives: [] },
-                { day: 1, time: "11:45", category: "식당", place_name: "단양구경시장·돌집식당", phone: "043-422-2842", address: "충북 단양군 단양읍 중앙2로 11", budget: 160000, lat: 36.9822, lng: 128.3688, memo: "곤드레마늘정식 8인 점심(16만) / 시장 간식은 체크리스트 구입품목에서 별도 관리", visited: false, photos: [], alternatives: [
+                { day: 1, time: "08:30", category: "교통비", place_name: "용인 죽전 출발", phone: "", address: "경기도 용인시 수지구 죽전동", budget: 150000, lat: 37.3248, lng: 127.1077, memo: "차량 2대 교통비 정액 (팰리세이드 10만 + 전기차 5만)", manualKm: "", manualMins: "", visited: false, photos: [], alternatives: [] },
+                { day: 1, time: "09:55", category: "휴게소", place_name: "천등산휴게소 (제천방향)", phone: "", address: "충북 충주시 산척면 평택제천고속도로 106", budget: 0, lat: 37.0785, lng: 127.9123, memo: "커피·간식 및 전기차 충전 가능", manualKm: "", manualMins: "", visited: false, photos: [], alternatives: [] },
+                { day: 1, time: "10:55", category: "관광", place_name: "도담삼봉", phone: "", address: "충북 단양군 매포읍 삼봉로 644", budget: 4500, lat: 36.9997, lng: 128.3435, memo: "단양 대표 인증샷 / 주차비(소형 3,000 + 전기차 1,500)", manualKm: "", manualMins: "", visited: false, photos: [], alternatives: [] },
+                { day: 1, time: "11:45", category: "식당", place_name: "단양구경시장·돌집식당", phone: "043-422-2842", address: "충북 단양군 단양읍 중앙2로 11", budget: 160000, lat: 36.9822, lng: 128.3688, memo: "곤드레마늘정식 8인 점심(16만) / 시장 간식은 체크리스트 구입품목에서 별도 관리", manualKm: "", manualMins: "", visited: false, photos: [], alternatives: [
                     { name: "서울식당 (대안)", phone: "0507-1459-2808", address: "충북 단양군 단양읍 고수동굴길 4-10", budget: 136000, memo: "마늘수제떡갈비+산채한정식 17,000원", lat: 36.9865, lng: 128.3792 }
                 ] },
-                { day: 1, time: "13:05", category: "관광", place_name: "만천하스카이워크", phone: "", address: "충북 단양군 적성면 옷바위길 10", budget: 24000, lat: 36.9708, lng: 128.3389, memo: "전망대 입장료 3,000원×8명 (무료 셔틀 이동)", visited: false, photos: [], alternatives: [] },
-                { day: 1, time: "15:25", category: "카페", place_name: "카페 산", phone: "", address: "충북 단양군 가곡면 두산길 196-86", budget: 56000, lat: 37.0094, lng: 128.3995, memo: "해발 600m 전망 카페 (음료 8잔)", visited: false, photos: [], alternatives: [
+                { day: 1, time: "13:05", category: "관광", place_name: "만천하스카이워크", phone: "", address: "충북 단양군 적성면 옷바위길 10", budget: 24000, lat: 36.9708, lng: 128.3389, memo: "전망대 입장료 3,000원×8명 (무료 셔틀 이동)", manualKm: "", manualMins: "", visited: false, photos: [], alternatives: [] },
+                { day: 1, time: "15:25", category: "카페", place_name: "카페 산", phone: "", address: "충북 단양군 가곡면 두산길 196-86", budget: 56000, lat: 37.0094, lng: 128.3995, memo: "해발 600m 전망 카페 (음료 8잔)", manualKm: "", manualMins: "", visited: false, photos: [], alternatives: [
                     { name: "만천하 스카이라운지 (대안)", phone: "", address: "충북 단양군 적성면 옷바위길 60-186", budget: 56000, memo: "만천하 단지 내 카페", lat: 36.9712, lng: 128.3395 }
                 ] },
-                { day: 1, time: "16:40", category: "장보기", place_name: "하나로마트 가곡점", phone: "043-422-8030", address: "충북 단양군 가곡면 남한강로 504", budget: 0, lat: 37.0315, lng: 128.3965, memo: "바비큐 장보기 품목은 [체크·차량] 탭의 구입품목에서 가계부로 반영", visited: false, photos: [], alternatives: [
+                { day: 1, time: "16:40", category: "장보기", place_name: "하나로마트 가곡점", phone: "043-422-8030", address: "충북 단양군 가곡면 남한강로 504", budget: 0, lat: 37.0315, lng: 128.3965, memo: "바비큐 장보기 품목은 [체크·차량] 탭의 구입품목에서 가계부로 반영", manualKm: "", manualMins: "", visited: false, photos: [], alternatives: [
                     { name: "단양농협 하나로마트 본점 (대안)", phone: "043-421-5959", address: "충북 단양군 단양읍 삼봉로 287", budget: 0, memo: "21:00까지 영업", lat: 36.9845, lng: 128.3680 }
                 ] },
-                { day: 1, time: "17:55", category: "숙박", place_name: "더릴지즈 in 캠블리", phone: "", address: "강원 영월군 영월읍", budget: 256468, lat: 37.1835, lng: 128.4618, memo: "201호 결제완료 / 18:30~ 바비큐 및 자쿠지", visited: false, photos: [], alternatives: [] },
-                { day: 2, time: "11:10", category: "관광", place_name: "옥순봉 출렁다리", phone: "", address: "충북 제천시 수산면 옥순봉로 342", budget: 24000, lat: 36.9427, lng: 128.2036, memo: "입장료 3,000원×8명 (지역화폐 환급)", visited: false, photos: [], alternatives: [] },
-                { day: 2, time: "12:40", category: "식당", place_name: "느티나무횟집", phone: "043-647-0089", address: "충북 제천시 청풍면 배시론로 4", budget: 200000, lat: 37.0016, lng: 128.1742, memo: "송어비빔회 8명 사전 전화예약 필수", visited: false, photos: [], alternatives: [
+                { day: 1, time: "17:55", category: "숙박", place_name: "더릴지즈 in 캠블리", phone: "", address: "강원 영월군 영월읍", budget: 256468, lat: 37.1835, lng: 128.4618, memo: "201호 결제완료 / 18:30~ 바비큐 및 자쿠지", manualKm: "", manualMins: "", visited: false, photos: [], alternatives: [] },
+                { day: 2, time: "11:10", category: "관광", place_name: "옥순봉 출렁다리", phone: "", address: "충북 제천시 수산면 옥순봉로 342", budget: 24000, lat: 36.9427, lng: 128.2036, memo: "입장료 3,000원×8명 (지역화폐 환급)", manualKm: "", manualMins: "", visited: false, photos: [], alternatives: [] },
+                { day: 2, time: "12:40", category: "식당", place_name: "느티나무횟집", phone: "043-647-0089", address: "충북 제천시 청풍면 배시론로 4", budget: 200000, lat: 37.0016, lng: 128.1742, memo: "송어비빔회 8명 사전 전화예약 필수", manualKm: "", manualMins: "", visited: false, photos: [], alternatives: [
                     { name: "청풍 황금떡갈비 (대안)", phone: "0507-1347-6303", address: "충북 제천시 청풍면 청풍호로 1682", budget: 192000, memo: "울금떡갈비정식", lat: 37.0025, lng: 128.1760 }
                 ] },
-                { day: 2, time: "13:50", category: "관광", place_name: "청풍호반케이블카", phone: "", address: "충북 제천시 청풍면 문화재길 166", budget: 144000, lat: 37.0039, lng: 128.1755, memo: "왕복 대인 18,000원×8명 (온라인 예매 권장)", visited: false, photos: [], alternatives: [] },
-                { day: 2, time: "15:50", category: "카페", place_name: "콘크리트월", phone: "", address: "충북 제천시 금성면 청풍호로 1566", budget: 56000, lat: 37.0583, lng: 128.1585, memo: "서리태크림라떼 등 음료 8잔", visited: false, photos: [], alternatives: [
+                { day: 2, time: "13:50", category: "관광", place_name: "청풍호반케이블카", phone: "", address: "충북 제천시 청풍면 문화재길 166", budget: 144000, lat: 37.0039, lng: 128.1755, memo: "왕복 대인 18,000원×8명 (온라인 예매 권장)", manualKm: "", manualMins: "", visited: false, photos: [], alternatives: [] },
+                { day: 2, time: "15:50", category: "카페", place_name: "콘크리트월", phone: "", address: "충북 제천시 금성면 청풍호로 1566", budget: 56000, lat: 37.0583, lng: 128.1585, memo: "서리태크림라떼 등 음료 8잔", manualKm: "", manualMins: "", visited: false, photos: [], alternatives: [
                     { name: "커피라끄 (대안)", phone: "0507-1344-9741", address: "충북 제천시 금성면 청풍호로 1226", budget: 56000, memo: "대형 호수뷰 카페", lat: 36.0380, lng: 128.1650 }
                 ] }
             ];
@@ -3405,14 +3587,15 @@
             return tripId;
         }
 
-// [Ver 1.23] 앱 재접속 시 개인 휴대폰에 저장된 마지막 여행 및 탭 화면 자동 복원
+        // [Ver 1.25] 앱 재접속 시 개인 휴대폰에 저장된 마지막 여행 및 탭 화면 자동 복원
         let hasRestoredInitialSession = false;
         function restoreLastSessionOnce() {
             if (hasRestoredInitialSession) return;
             hasRestoredInitialSession = true;
             try {
                 const lastTripId = localStorage.getItem('last_trip_id');
-                const lastTabId = localStorage.getItem('last_tab_id') || 'plan';
+                let lastTabId = localStorage.getItem('last_tab_id') || 'plan';
+                if (lastTabId === 'visit') lastTabId = 'plan';
                 if (lastTripId && tripsData.some(t => t.id === lastTripId)) {
                     selectTrip(lastTripId, lastTabId);
                 }
@@ -3442,7 +3625,7 @@
                 setSyncBadge("초기화오류", "bg-red-600");
                 showError("Firebase 초기화 오류: " + err.message);
             }
-        
+
             document.getElementById('trip-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!checkEditable() || !db) return;
@@ -3467,7 +3650,7 @@
                 selectTrip(tripId);
             };
 
-            // [Ver 1.2] 예상 일정 저장 시 사진 배열(최대 3장) 함께 저장
+            // [Ver 1.25] 예상 일정 저장 시 사진 배열(최대 3장) 및 수동 이동거리·시간 함께 저장
             document.getElementById('expected-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!checkEditable() || !currentTripId || !db) return;
@@ -3484,6 +3667,8 @@
                     address: document.getElementById('exp-address').value.trim(),
                     budget: Number(document.getElementById('exp-budget').value || 0),
                     memo: document.getElementById('exp-memo').value.trim(),
+                    manualKm: document.getElementById('exp-manual-km') ? document.getElementById('exp-manual-km').value.trim().replace(/[^0-9.]/g, '') : '',
+                    manualMins: document.getElementById('exp-manual-mins') ? document.getElementById('exp-manual-mins').value.trim().replace(/[^0-9]/g, '') : '',
                     lat: latVal ? Number(latVal) : null,
                     lng: lngVal ? Number(lngVal) : null,
                     visited: existing ? Boolean(existing.visited) : false,
@@ -3495,7 +3680,7 @@
                 resetExpForm(false);
             });
 
-            // [Ver 1.2] 가계부 저장 시 영수증 사진 데이터 함께 저장
+            // 가계부 저장 시 영수증 사진 데이터 함께 저장
             document.getElementById('actual-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!checkEditable() || !currentTripId || !db) return;
