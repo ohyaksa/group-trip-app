@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>스마트 단체 여행 매니저 - 종합 이용 가이드 & 도움말 (Ver 1.25)</title>
+    <title>스마트 단체 여행 매니저 - 종합 이용 가이드 & 도움말 (Ver 1.3)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script>
@@ -28,7 +28,7 @@
         <!-- 상단 헤더 -->
         <div class="flex justify-between items-center border-b pb-3">
             <div>
-                <span class="bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold">Official Guide (Ver 1.25)</span>
+                <span class="bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold">Official Guide (Ver 1.3)</span>
                 <h1 class="font-extrabold text-base sm:text-lg text-slate-900 mt-1 flex items-center gap-2">
                     <i class="fa-solid fa-book-open text-blue-600"></i> 스마트 단체 여행 매니저 도움말
                 </h1>
@@ -51,28 +51,29 @@
                 <i class="fa-solid fa-code-branch text-blue-600"></i> 버전 업그레이드 소식
             </h2>
 
-            <!-- [최신] Ver 1.25 (기본 열림) -->
+            <!-- [최신] Ver 1.3 (기본 열림) -->
             <div class="border-2 border-blue-200 rounded-xl bg-white overflow-hidden shadow-sm">
-                <button type="button" onclick="toggleSection('ver-125-content', 'ver-125-chev')" class="w-full p-3.5 bg-blue-50/70 hover:bg-blue-50 flex justify-between items-center text-xs font-extrabold text-blue-900 cursor-pointer text-left">
+                <button type="button" onclick="toggleSection('ver-13-content', 'ver-13-chev')" class="w-full p-3.5 bg-blue-50/70 hover:bg-blue-50 flex justify-between items-center text-xs font-extrabold text-blue-900 cursor-pointer text-left">
                     <div class="flex flex-wrap items-center gap-1.5">
-                        <span>🚀 Ver 1.25 업데이트</span>
+                        <span>🚀 Ver 1.3 업데이트</span>
                         <span class="text-[11px] text-blue-600 font-semibold">(2026.10.24)</span>
                         <span class="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-full font-normal">최신 New</span>
                     </div>
-                    <i id="ver-125-chev" class="fa-solid fa-chevron-down text-blue-600 transition-transform" style="transform: rotate(180deg);"></i>
+                    <i id="ver-13-chev" class="fa-solid fa-chevron-down text-blue-600 transition-transform" style="transform: rotate(180deg);"></i>
                 </button>
-                <div id="ver-125-content" class="p-3.5 border-t border-blue-100 text-xs text-slate-700 space-y-2 leading-relaxed bg-blue-50/20">
-                    <p>• <b>계획전(연한 노랑) & 방문완료(연한 블루) 타임라인 한 페이지 통합:</b> 기존 두 개로 나뉘어 있던 타임라인 탭을 하나로 통합했습니다. 방문 전 일정은 <b>연한 노랑 박스</b>로, 방문 완료 및 현장 지출 내역은 <b>연한 블루 박스</b>로 한 화면에서 직관적으로 구분되며 영수증 확인과 지출 수정도 바로 가능합니다.</p>
-                    <p>• <b>구간별 이동거리·소요시간 [자동계산 ⇄ 수동입력] 기능 탑재:</b> 타임라인 구간 박스의 <b>[✏️ 거리·시간 입력]</b> 버튼이나 [일정관리] 입력폼에서 네이버(국내)·구글맵(해외) 길찾기의 실제 도로 거리(km)와 시간(분)을 직접 입력할 수 있습니다. (빈칸 저장 시 좌표 기반 자동계산으로 복귀)</p>
-                    <p>• <b>국내·해외 지도 팝업 및 엑셀 백업 완벽 연동:</b> 수동 입력한 이동거리와 소요시간이 국내(카카오맵)·해외(구글맵) 동선 클릭 팝업에 동일하게 표시되며, 엑셀 백업 파일에도 함께 저장·복원됩니다.</p>
+                <div id="ver-13-content" class="p-3.5 border-t border-blue-100 text-xs text-slate-700 space-y-2 leading-relaxed bg-blue-50/20">
+                    <p>• <b>첫 화면 [최근 여행 실시간 브리핑 위젯] 탑재:</b> 진행 중인 최근 여행이 있을 때 첫 화면 최상단에 현재 시각 기준 <b>[⏮ 직전 일정]</b>과 <b>[🔥 다음 일정]</b>을 요약해 보여주고, <b>[⚡ 현재 시간의 일정 목록으로 입장하기]</b> 버튼으로 즉시 해당 일정 위치로 이동합니다. (이미 완료된 여행인 경우 기존 연도별·지역별 폴더 목록이 기본 표시됩니다.)</p>
+                    <p>• <b>스마트 아코디언 타임라인 (자동 펼침/접힘):</b> 현장에서 지금 당장 필요한 <b>'직전 일정'과 '다음 일정'만 상세 내용과 구간 이동 거리·시간 박스를 자동으로 활짝 펼쳐서</b> 보여줍니다. 이미 지나간 일정이나 나머지 일정은 시간·장소명·사진만 깔끔하게 요약되며, 카드를 터치하면 상세 정보와 이동거리 박스가 펼쳐집니다.</p>
+                    <p>• <b>하단 고정 내비게이션 바 적용:</b> 기존 상단에 있던 4개 메뉴(<b>타임라인 · 일정관리 · 가계부·회비 · 체크·차량</b>)를 스마트폰 화면 최하단에 고정하여 스크롤 위치와 상관없이 엄지손가락 하나로 즉시 탭을 전환할 수 있습니다.</p>
+                    <p>• <b>구간 이동거리·시간 박스 슬림 레이아웃 개선:</b> 모바일 화면에서 버튼에 밀려 왼쪽 거리·시간 글자가 세로로 길게 줄바꿈되던 현상을 해결하여 한 줄로 깔끔하게 정돈했습니다.</p>
                 </div>
             </div>
 
-            <!-- [과거 버전 통합 1차 아코디언] 클릭 시 과거 버전 목록(Ver 1.0 ~ Ver 1.23)이 펼쳐짐 -->
+            <!-- [과거 버전 통합 1차 아코디언] 클릭 시 과거 버전 목록(Ver 1.0 ~ Ver 1.25)이 펼쳐짐 -->
             <div class="border border-slate-200 rounded-xl bg-slate-50/70 overflow-hidden shadow-sm">
                 <button type="button" onclick="toggleSection('past-versions-list', 'past-versions-chev')" class="w-full p-3.5 bg-slate-100 hover:bg-slate-200/70 flex justify-between items-center text-xs font-extrabold text-slate-700 cursor-pointer text-left transition">
                     <span class="flex items-center gap-1.5">
-                        <i class="fa-solid fa-clock-rotate-left text-slate-500"></i> 과거 버전 내용 보기 (Ver 1.0 ~ Ver 1.23)
+                        <i class="fa-solid fa-clock-rotate-left text-slate-500"></i> 과거 버전 내용 보기 (Ver 1.0 ~ Ver 1.25)
                     </span>
                     <div class="flex items-center gap-2">
                         <span class="text-[10px] text-slate-500 font-semibold">터치하여 목록 열기</span>
@@ -83,6 +84,21 @@
                 <!-- 1차 클릭 시 열리는 과거 버전 목록 컨테이너 -->
                 <div id="past-versions-list" class="hidden p-3 space-y-2 border-t border-slate-200 bg-slate-50">
                     
+                    <!-- Ver 1.25 -->
+                    <div class="border border-slate-200 rounded-xl bg-white overflow-hidden">
+                        <button type="button" onclick="toggleSection('ver-125-content', 'ver-125-chev')" class="w-full p-3 hover:bg-slate-50 flex justify-between items-center text-xs font-bold text-slate-800 cursor-pointer text-left">
+                            <span>📦 Ver 1.25 업데이트 <span class="text-[11px] text-slate-400 font-normal ml-1">(2026.10.24)</span></span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] text-slate-400 font-normal">상세보기</span>
+                                <i id="ver-125-chev" class="fa-solid fa-chevron-down text-slate-400 text-[10px] transition-transform"></i>
+                            </div>
+                        </button>
+                        <div id="ver-125-content" class="hidden p-3 border-t border-slate-100 text-xs text-slate-600 space-y-1.5 leading-relaxed bg-slate-50/50">
+                            <p>• <b>계획전(연한 노랑) & 방문완료(연한 블루) 타임라인 한 페이지 통합:</b> 방문 전 일정은 연한 노랑 박스로, 방문 완료 및 현장 지출 내역은 연한 블루 박스로 한 화면에서 통합 표시되도록 개편했습니다.</p>
+                            <p>• <b>구간별 이동거리·소요시간 [자동계산 ⇄ 수동입력] 기능 탑재:</b> 네이버(국내)·구글맵(해외) 길찾기의 실제 도로 거리(km)와 시간(분)을 직접 입력하거나 자동 계산으로 전환할 수 있습니다.</p>
+                        </div>
+                    </div>
+
                     <!-- Ver 1.23 -->
                     <div class="border border-slate-200 rounded-xl bg-white overflow-hidden">
                         <button type="button" onclick="toggleSection('ver-123-content', 'ver-123-chev')" class="w-full p-3 hover:bg-slate-50 flex justify-between items-center text-xs font-bold text-slate-800 cursor-pointer text-left">
@@ -93,8 +109,8 @@
                             </div>
                         </button>
                         <div id="ver-123-content" class="hidden p-3 border-t border-slate-100 text-xs text-slate-600 space-y-1.5 leading-relaxed bg-slate-50/50">
-                            <p>• <b>개인별 마지막 화면·탭 자동 복원:</b> 앱을 닫았다가 다시 들어올 때, 각자의 스마트폰에 마지막으로 보고 있던 여행 일정과 탭 화면이 기억되어 즉시 해당 화면으로 열립니다.</p>
-                            <p>• <b>첫 화면 레이아웃 최적화 및 폴더 타이틀 간소화:</b> 여행 일정 목록을 최상단에 배치하고 엑셀 백업 카드를 하단으로 이동했으며, '대분류 1·2' 문구를 제거해 직관성을 높였습니다.</p>
+                            <p>• <b>개인별 마지막 화면·탭 자동 복원:</b> 앱을 닫았다가 다시 들어올 때 각자의 스마트폰에 마지막으로 보고 있던 여행 일정과 탭 화면이 기억되어 즉시 열립니다.</p>
+                            <p>• <b>첫 화면 레이아웃 최적화:</b> 여행 일정 목록을 상단에 배치하고 엑셀 백업 카드를 하단으로 이동했습니다.</p>
                         </div>
                     </div>
 
@@ -108,8 +124,7 @@
                             </div>
                         </button>
                         <div id="ver-122-content" class="hidden p-3 border-t border-slate-100 text-xs text-slate-600 space-y-1.5 leading-relaxed bg-slate-50/50">
-                            <p>• <b>구글 지도 전환 렌더링 오류 완벽 패치:</b> 카카오맵(국내)에서 구글 지도(해외)로 전환 시 회색 빈 화면으로 멈추던 문제를 콜백 및 강제 리사이즈 트리거로 해결했습니다.</p>
-                            <p>• <b>정식 구글 API 키 연동 복원:</b> 해외 여행 일정에서도 지도 타일과 장소 검색이 끊김 없이 작동하도록 복원했습니다.</p>
+                            <p>• <b>구글 지도 전환 렌더링 오류 완벽 패치:</b> 카카오맵(국내)에서 구글 지도(해외)로 전환 시 회색 빈 화면으로 멈추던 문제를 해결했습니다.</p>
                         </div>
                     </div>
 
@@ -123,8 +138,7 @@
                             </div>
                         </button>
                         <div id="ver-121-content" class="hidden p-3 border-t border-slate-100 text-xs text-slate-600 space-y-1.5 leading-relaxed bg-slate-50/50">
-                            <p>• <b>가계부 지출 수정 제목 버그 패치:</b> 지출 내역 수정 시 아코디언 타이틀이 특정 장소명으로 고정되던 오류를 수정하여 선택한 장소명이 정확히 표시됩니다.</p>
-                            <p>• <b>단양 샘플 버튼 디자인 최적화:</b> 첫 화면 최하단에 단양 샘플 여행 생성 버튼을 은은한 디자인으로 재배치했습니다.</p>
+                            <p>• <b>가계부 지출 수정 제목 버그 패치 및 샘플 버튼 하단 배치:</b> 지출 내역 수정 시 선택한 장소명이 정확히 표시되도록 수정했습니다.</p>
                         </div>
                     </div>
 
@@ -138,9 +152,7 @@
                             </div>
                         </button>
                         <div id="ver-12-content" class="hidden p-3 border-t border-slate-100 text-xs text-slate-600 space-y-1.5 leading-relaxed bg-slate-50/50">
-                            <p>• <b>가계부 영수증 첨부 및 라이트박스 뷰어:</b> 지출 입력 시 영수증 사진을 촬영·첨부하고 터치하여 원본을 크게 확대해 확인합니다.</p>
-                            <p>• <b>일정관리 사진 최대 3장 첨부:</b> 예상 일정마다 메뉴판이나 풍경 사진을 3장까지 등록하고 미니 갤러리로 공유합니다.</p>
-                            <p>• <b>스마트 압축 엔진 탑재:</b> 고용량 사진을 화질 저하 없이 자동 최적화하여 클라우드 데이터베이스에 안전하게 보관합니다.</p>
+                            <p>• <b>가계부 영수증 첨부 & 일정관리 사진 최대 3장 첨부:</b> 스마트 이미지 압축 엔진과 라이트박스 확대 뷰어를 탑재했습니다.</p>
                         </div>
                     </div>
 
@@ -154,8 +166,7 @@
                             </div>
                         </button>
                         <div id="ver-11-content" class="hidden p-3 border-t border-slate-100 text-xs text-slate-600 space-y-1.5 leading-relaxed bg-slate-50/50">
-                            <p>• <b>일차별 날짜·요일 자동 계산:</b> 여행 출발일을 기준으로 각 일차 옆에 실제 날짜와 요일이 자동 표시됩니다.</p>
-                            <p>• <b>긴 제목·주소 줄바꿈 개선:</b> 모바일 화면에서도 긴 여행 제목과 주소가 잘리지 않고 모두 보이도록 개선했습니다.</p>
+                            <p>• <b>일차별 날짜·요일 자동 계산 및 긴 제목 줄바꿈 개선:</b> 출발일 기준 요일 자동 표시 및 모바일 가독성을 개선했습니다.</p>
                         </div>
                     </div>
 
@@ -169,7 +180,7 @@
                             </div>
                         </button>
                         <div id="ver-10-content" class="hidden p-3 border-t border-slate-100 text-xs text-slate-600 space-y-1.5 leading-relaxed bg-slate-50/50">
-                            <p>• <b>듀얼 지도 시스템 및 폴더 분류:</b> 국내(카카오맵)·해외(구글맵) 듀얼 지도 연동, 연도별/지역별 폴더 정리, 네이버 길찾기 및 실시간 파이어베이스 동기화 탑재.</p>
+                            <p>• <b>듀얼 지도 시스템 및 폴더 분류:</b> 국내(카카오맵)·해외(구글맵) 듀얼 지도 연동, 연도별/지역별 폴더 정리, 실시간 클라우드 동기화 탑재.</p>
                         </div>
                     </div>
 
@@ -194,33 +205,33 @@
                 <i class="fa-solid fa-list-check text-indigo-600"></i> 화면 페이지별 상세 이용 가이드
             </h2>
 
-            <!-- 페이지 1: 첫 화면 (여행 목록 & 백업) -->
+            <!-- 페이지 1: 첫 화면 (실시간 브리핑 위젯 + 여행 폴더 목록 + 엑셀 백업) -->
             <div class="border border-slate-200 rounded-xl bg-white overflow-hidden shadow-sm">
                 <button type="button" onclick="toggleSection('page-1-content', 'page-1-chev')" class="w-full p-3.5 hover:bg-slate-50 flex justify-between items-center text-xs font-bold text-slate-800 cursor-pointer text-left">
                     <div class="space-y-0.5">
-                        <span class="text-blue-600 font-extrabold">[첫 화면]</span> 여행 일정 목록, 연도·지역별 폴더 및 하단 엑셀 백업 관리
+                        <span class="text-blue-600 font-extrabold">[첫 화면]</span> 최근 여행 직전·다음 일정 브리핑 위젯 & 연도·지역별 폴더 목록
                     </div>
                     <i id="page-1-chev" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
                 </button>
                 <div id="page-1-content" class="hidden p-3.5 border-t border-slate-100 text-xs text-slate-600 space-y-2 leading-relaxed bg-slate-50/50">
-                    <p>• <b>연도별 & 국내·해외 지역별 폴더 보기:</b> 출발일 연도별 폴더와 국내 6대 권역 · 해외 8대 권역 폴더로 여행 일정을 깔끔하게 모아 볼 수 있습니다.</p>
-                    <p>• <b>개인별 마지막 화면 자동 복원:</b> 일정을 보다가 앱을 닫아도, 다시 접속하면 내 스마트폰에서 마지막으로 보던 여행과 탭 화면으로 자동 이동합니다. (상단 [← 목록]을 누르면 첫 화면으로 돌아옵니다.)</p>
-                    <p>• <b>엑셀 백업·복원 (하단 배치):</b> 첫 화면 아래쪽에서 [폰 저장/공유]나 [PC 다운로드]로 전체 데이터를 백업·복원할 수 있으며, 수동 입력한 구간 거리·시간과 클라우드 사진·영수증도 안전하게 보존됩니다.</p>
+                    <p>• <b>최근 여행 실시간 브리핑 위젯:</b> 현재 진행 중이거나 예정된 최근 여행이 있으면 첫 화면 최상단에 <b>현재 시각 기준 [⏮ 직전 일정]과 [🔥 다음 일정]</b>만 깔끔하게 뽑아서 보여줍니다. <b>[⚡ 현재 시간의 일정 목록으로 입장하기]</b> 버튼을 누르면 해당 일정 위치로 즉시 이동합니다.</p>
+                    <p>• <b>완료 시 연도별·지역별 폴더 기본 표시:</b> 여행 기간이 종료되었거나 모든 일정이 방문 완료된 경우에는 상단 브리핑 위젯이 자동으로 숨겨지고 기존처럼 연도별 목록과 국내·해외 지역별 목록이 최상단에 표시됩니다.</p>
+                    <p>• <b>엑셀 통합 백업·복원:</b> 첫 화면 하단에서 전체 여행 데이터(사진·영수증·수동거리 포함)를 엑셀 파일 하나로 백업하거나 복원할 수 있습니다.</p>
                 </div>
             </div>
 
-            <!-- 페이지 2: 통합 타임라인 탭 (계획전 노랑 + 방문완료 블루) -->
+            <!-- 페이지 2: 스마트 통합 타임라인 탭 -->
             <div class="border border-slate-200 rounded-xl bg-white overflow-hidden shadow-sm">
                 <button type="button" onclick="toggleSection('page-2-content', 'page-2-chev')" class="w-full p-3.5 hover:bg-slate-50 flex justify-between items-center text-xs font-bold text-slate-800 cursor-pointer text-left">
                     <div class="space-y-0.5">
-                        <span class="text-blue-600 font-extrabold">[타임라인 탭]</span> 계획전(연한 노랑)·방문완료(연한 블루) 통합 뷰 및 구간 거리·시간 수동입력
+                        <span class="text-blue-600 font-extrabold">[타임라인 탭]</span> 스마트 아코디언(직전·다음 자동펼침), 노랑·블루 구분 및 거리 수동입력
                     </div>
                     <i id="page-2-chev" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
                 </button>
                 <div id="page-2-content" class="hidden p-3.5 border-t border-slate-100 text-xs text-slate-600 space-y-2 leading-relaxed bg-slate-50/50">
-                    <p>• <b>계획전(연한 노랑) vs 방문완료(연한 블루) 한눈에 보기:</b> 아직 방문하지 않은 계획 일정은 <b>연한 노랑 박스</b>로 표시되며, [방문전 (완료체크)] 버튼을 누르면 즉시 <b>연한 블루 박스</b>로 바뀌면서 실제 지출액·결제자·영수증 보기·지출 수정 버튼이 카드 안에 함께 통합 표시됩니다.</p>
-                    <p>• <b>구간 이동거리·시간 [자동계산 ⇄ 수동입력]:</b> 장소와 장소 사이 파란색 구간 박스에서 <b>[네이버 길찾기 ▶]</b>(해외는 <b>[구글맵 길찾기 ▶]</b>)로 실제 주행 거리와 시간을 확인한 뒤, 바로 옆의 <b>[✏️ 거리·시간 입력]</b> 버튼을 눌러 실제 거리(km)와 시간(분)을 직접 입력할 수 있습니다. (글자를 모두 지우고 확인을 누르면 언제든 좌표 기반 '자동계산'으로 돌아갑니다.)</p>
-                    <p>• <b>지도 즉시 확대 및 사진 갤러리:</b> 타임라인 카드를 터치하거나 [📍 지도확대]를 누르면 상단 통합 지도가 해당 장소로 즉시 확대되며, 첨부된 사진(최대 3장)을 터치해 전체 화면으로 볼 수 있습니다.</p>
+                    <p>• <b>스마트 아코디언 자동 펼침/접힘:</b> 현장에서 가장 중요한 <b>[직전 일정]</b>과 <b>[다음 일정]</b>은 상세 내용(주소, 전화, 메모, 예산, 지출·영수증)과 구간 이동 거리·시간 박스가 <b>자동으로 활짝 펼쳐진 상태</b>로 나타납니다. 이미 지나간 과거 일정은 시간·장소명·사진만 간결하게 요약되며, <b>카드를 터치하면 숨겨진 상세 내용과 이동 거리·시간 박스가 즉시 펼쳐집니다.</b> (상단 필터 바의 <b>[전체펼침 / 스마트접기]</b> 버튼으로 한 번에 모두 펼칠 수도 있습니다.)</p>
+                    <p>• <b>계획전(연한 노랑) vs 방문완료(연한 블루):</b> 방문 전 일정은 <b>연한 노랑 박스</b>로, 방문 완료 및 현장 지출 일정은 <b>연한 블루 박스</b>로 한 페이지에서 선명하게 구분됩니다.</p>
+                    <p>• <b>구간 이동거리·시간 [자동계산 ⇄ 수동입력]:</b> 슬림하게 정돈된 파란색 구간 박스에서 <b>[네이버 길찾기 ▶]</b>(해외는 <b>[구글맵 길찾기 ▶]</b>)로 실제 주행 정보를 확인한 뒤, <b>[✏️ 거리·시간 입력]</b> 버튼을 눌러 실제 거리(km)와 시간(분)을 직접 입력할 수 있습니다.</p>
                 </div>
             </div>
 
@@ -233,9 +244,8 @@
                     <i id="page-3-chev" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
                 </button>
                 <div id="page-3-content" class="hidden p-3.5 border-t border-slate-100 text-xs text-slate-600 space-y-2 leading-relaxed bg-slate-50/50">
-                    <p>• <b>장소명 검색:</b> 상호나 키워드를 검색하면 주소, 전화번호, 위도·경도가 자동으로 채워집니다.</p>
-                    <p>• <b>다음 장소까지 이동거리·시간 설정:</b> 일정 추가·수정 폼에서도 다음 장소까지의 실제 이동거리(km)와 소요시간(분)을 미리 입력해 둘 수 있습니다.</p>
-                    <p>• <b>사진 최대 3장 첨부 및 대안 후보:</b> 메뉴판·풍경 사진(최대 3장)과 비상용 대안 장소를 미리 등록해 두고 1초 만에 교체(Swap)할 수 있습니다.</p>
+                    <p>• <b>장소명 자동 검색 & 다음 구간 수동 설정:</b> 키워드 검색으로 주소·전화·좌표를 자동 입력하고, 다음 장소까지의 이동거리(km)와 소요시간(분)도 미리 설정할 수 있습니다.</p>
+                    <p>• <b>사진 최대 3장 첨부 및 대안 후보:</b> 메뉴판·풍경 사진(최대 3장)과 대안 후보 장소를 등록해 두고 현장에서 1초 만에 교체(Swap)할 수 있습니다. (일정관리 탭 목록에서는 모든 일정이 항상 전체 펼쳐진 상태로 표시됩니다.)</p>
                 </div>
             </div>
 
@@ -243,14 +253,13 @@
             <div class="border border-slate-200 rounded-xl bg-white overflow-hidden shadow-sm">
                 <button type="button" onclick="toggleSection('page-4-content', 'page-4-chev')" class="w-full p-3.5 hover:bg-slate-50 flex justify-between items-center text-xs font-bold text-slate-800 cursor-pointer text-left">
                     <div class="space-y-0.5">
-                        <span class="text-blue-600 font-extrabold">[가계부·회비 탭]</span> 영수증 첨부 기능, 예산 비교 및 1/N 회비 정산
+                        <span class="text-blue-600 font-extrabold">[가계부·회비 탭]</span> 영수증 사진 첨부, 예산 비교 및 1/N 회비 정산
                     </div>
                     <i id="page-4-chev" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
                 </button>
                 <div id="page-4-content" class="hidden p-3.5 border-t border-slate-100 text-xs text-slate-600 space-y-2 leading-relaxed bg-slate-50/50">
-                    <p>• <b>영수증 첨부 기능:</b> 지출 입력 시 영수증 사진을 촬영·첨부하고, 썸네일이나 [영수증 보기]를 눌러 크게 확대해 확인할 수 있습니다.</p>
-                    <p>• <b>통합 타임라인 자동 반영:</b> 예상 일정에 없던 현장 추가 지출을 등록해도 해당 일차·시간에 맞춰 통합 타임라인에 연한 블루 박스로 함께 표시됩니다.</p>
-                    <p>• <b>카테고리 세분화 및 1/N 정산:</b> 식당, 카페, 관광, 숙박, 장보기, 쇼핑, 교통비, 통신·보험 항목으로 지출을 관리하고 단톡방에 정산 내역을 복사해 공유할 수 있습니다.</p>
+                    <p>• <b>영수증 촬영·첨부 및 확대 보기:</b> 실제 지출 내역 입력 시 영수증 사진을 첨부하고 터치하여 원본 크기로 확대해 볼 수 있습니다.</p>
+                    <p>• <b>1/N 회비 자동 계산 및 카톡 공유:</b> 총 예상 예산 대비 실제 지출 차액과 1인당 회비(100원 단위 올림 포함)를 실시간 계산하여 카카오톡 단톡방용 텍스트로 복사합니다.</p>
                 </div>
             </div>
 
@@ -258,27 +267,27 @@
             <div class="border border-slate-200 rounded-xl bg-white overflow-hidden shadow-sm">
                 <button type="button" onclick="toggleSection('page-5-content', 'page-5-chev')" class="w-full p-3.5 hover:bg-slate-50 flex justify-between items-center text-xs font-bold text-slate-800 cursor-pointer text-left">
                     <div class="space-y-0.5">
-                        <span class="text-blue-600 font-extrabold">[체크·차량 탭]</span> 차량 배치 명단, 5대 분류 준비물 및 현장 구입품목 가계부 연동
+                        <span class="text-blue-600 font-extrabold">[체크·차량 탭]</span> 차량 배치 명단, 준비물 체크리스트 및 현장 구입품목 가계부 연동
                     </div>
                     <i id="page-5-chev" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
                 </button>
                 <div id="page-5-content" class="hidden p-3.5 border-t border-slate-100 text-xs text-slate-600 space-y-2 leading-relaxed bg-slate-50/50">
-                    <p>• <b>차량 배치 연동:</b> 등록된 운전자와 동승자 이름이 체크리스트 담당자 및 가계부 결제자 목록에 자동으로 연동됩니다.</p>
-                    <p>• <b>현장 구입품목 가계부 연동:</b> '4. 여행중 현장 구입품목'에서 금액을 입력하고 [가계부반영]을 누르면 가계부 지출 및 통합 타임라인(연한 블루 박스)으로 즉시 등록됩니다.</p>
-                    <p>• <b>미완료 복사:</b> 체크되지 않은 준비물만 골라 단톡방에 복사하여 공유할 수 있습니다.</p>
+                    <p>• <b>차량 탑승자 자동 연동:</b> 등록된 운전자·동승자 이름이 체크리스트 담당자 및 가계부 결제자 선택창에 자동 연동됩니다.</p>
+                    <p>• <b>현장 구입품목 가계부 원터치 반영:</b> '4. 여행중 현장 구입품목'에서 [가계부반영]을 누르면 해당 구입장소의 일차·시간에 맞춰 가계부와 통합 타임라인(연한 블루 박스)에 자동 등록됩니다.</p>
                 </div>
             </div>
 
-            <!-- 보안 및 잠금 기능 -->
+            <!-- 페이지 6: 하단 고정 내비게이션 바 & 상단 잠금 버튼 -->
             <div class="border border-slate-200 rounded-xl bg-white overflow-hidden shadow-sm">
                 <button type="button" onclick="toggleSection('page-6-content', 'page-6-chev')" class="w-full p-3.5 hover:bg-slate-50 flex justify-between items-center text-xs font-bold text-slate-800 cursor-pointer text-left">
                     <div class="space-y-0.5">
-                        <span class="text-rose-600 font-extrabold">[상단 제어 버튼]</span> 편집중 ⇄ 잠금됨 (실수 수정 방지 모드)
+                        <span class="text-rose-600 font-extrabold">[하단 고정 메뉴 & 상단 잠금]</span> 한 손 탭 전환 및 실수 삭제 방지 모드
                     </div>
                     <i id="page-6-chev" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
                 </button>
                 <div id="page-6-content" class="hidden p-3.5 border-t border-slate-100 text-xs text-slate-600 space-y-2 leading-relaxed bg-slate-50/50">
-                    <p>• <b>읽기 전용 잠금:</b> 상단 [🔓 편집중] 버튼을 눌러 [🔒 잠금됨]으로 전환하면, 일행들이 스마트폰으로 일정을 볼 때 실수로 내용을 지우거나 수정하는 사고를 원천 차단할 수 있습니다.</p>
+                    <p>• <b>하단 고정 내비게이션 바:</b> 화면을 맨 아래까지 스크롤하더라도 하단에 고정된 4개 탭(타임라인 · 일정관리 · 가계부·회비 · 체크·차량)을 눌러 즉시 화면을 전환할 수 있습니다.</p>
+                    <p>• <b>편집중 ⇄ 잠금됨:</b> 우측 상단 [🔓 편집중] 버튼을 눌러 [🔒 잠금됨]으로 바꾸면 일행들이 화면을 스크롤하며 볼 때 실수로 일정이나 데이터를 삭제·수정하는 것을 안전하게 막아줍니다.</p>
                 </div>
             </div>
 
