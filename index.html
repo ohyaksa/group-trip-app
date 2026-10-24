@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>스마트 단체 여행 매니저 Ver 1.25</title>
+    <title>스마트 단체 여행 매니저 Ver 1.3</title>
 
     <!-- 스마트폰 바탕화면 아이콘 및 웹사이트 링크 공유(오픈그래프) 설정 -->
     <link rel="icon" type="image/png" href="apple-touch-icon.png">
@@ -12,7 +12,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="여행매니저">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="스마트 단체 여행 매니저 Ver 1.25">
+    <meta property="og:title" content="스마트 단체 여행 매니저 Ver 1.3">
     <meta property="og:description" content="찬욱과 함께 하는 스마트 여행 타임라인 지도, 네비게이션 길찾기, 영수증 가계부 1/N 정산, 준비물 체크리스트 통합 관리">
     <meta property="og:image" content="image-link2.png">
 
@@ -37,9 +37,9 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="text-slate-800 pb-20">
+<body class="text-slate-800 pb-28">
 
-    <!-- 상단 고정 헤더 (Ver 1.25: 도움말(help.html) 연결 버튼 및 전체 제목 표시) -->
+    <!-- 상단 고정 헤더 (Ver 1.3: 도움말 연결 버튼 및 전체 제목 표시) -->
     <header class="bg-blue-600 text-white sticky top-0 z-40 shadow-md">
         <div class="max-w-3xl mx-auto px-3 py-2.5 space-y-1.5">
             <!-- 상단 1열: 목록 버튼 & 기능 제어 버튼 모음 -->
@@ -48,7 +48,7 @@
                     <button id="btn-back" onclick="goTripSelector()" class="hidden bg-blue-700 hover:bg-blue-800 px-2.5 py-1 rounded-full text-xs font-bold shrink-0 cursor-pointer flex items-center gap-1 shadow-sm">
                         <i class="fa-solid fa-arrow-left"></i> 목록
                     </button>
-                    <span class="text-[10px] bg-blue-800/90 text-blue-100 px-2 py-0.5 rounded-full font-extrabold">Ver 1.25</span>
+                    <span class="text-[10px] bg-blue-800/90 text-blue-100 px-2 py-0.5 rounded-full font-extrabold">Ver 1.3</span>
                 </div>
                 <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
                     <button id="btn-map-provider" onclick="toggleMapProvider()" class="hidden bg-amber-400 text-slate-900 px-2 py-1 rounded-full text-[11px] font-extrabold cursor-pointer shadow-sm">
@@ -97,12 +97,17 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- 화면 1: 여행 일정 목록 (여행목록 상단 배치 & 엑셀백업/배너/샘플버튼 하단 배치) -->
+    <!-- 화면 1: 여행 일정 목록 (Ver 1.3: 최근 여행 실시간 브리핑 위젯 + 폴더 목록 + 하단 백업) -->
     <!-- ========================================== -->
     <main id="trip-selector-screen" class="max-w-3xl mx-auto p-3 space-y-4">
 
-        <!-- 1. 내 여행 일정 목록 -->
-        <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+        <!-- 0. [Ver 1.3 신규] 최근 열었던(진행중) 여행의 현재 시간 기준 [직전 일정] & [다음 일정] 브리핑 카드 -->
+        <section id="recent-trip-widget" class="hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white p-4 rounded-2xl shadow-md space-y-3">
+            <!-- JS(renderRecentTripWidget)에서 실시간으로 직전·다음 일정과 [현재 시간의 일정 목록으로 입장하기] 버튼을 렌더링합니다 -->
+        </section>
+
+        <!-- 1. 내 여행 일정 목록 (연도별 / 국내·해외 지역별 폴더) -->
+        <section id="all-trips-folder-section" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
             <div class="flex justify-between items-center">
                 <div>
                     <h2 class="text-base font-extrabold text-slate-800"><i class="fa-solid fa-suitcase-rolling text-blue-600 mr-1.5"></i>내 여행 일정 목록</h2>
@@ -216,19 +221,11 @@
     </main>
 
     <!-- ========================================== -->
-    <!-- 화면 2: 개별 여행 메인 화면 (Ver 1.25: 4개 탭 구성 - 통합 타임라인) -->
+    <!-- 화면 2: 개별 여행 메인 화면 (Ver 1.3: 스마트 아코디언 타임라인 & 하단 고정 탭바) -->
     <!-- ========================================== -->
     <main id="main-app-screen" class="hidden max-w-3xl mx-auto p-3 space-y-4">
 
-        <!-- 4개 탭 네비게이션 (계획·방문 타임라인 통합) -->
-        <nav class="bg-white rounded-2xl shadow-sm border border-slate-200 flex overflow-x-auto no-scrollbar text-xs sm:text-sm">
-            <button id="btn-tab-plan" onclick="switchTab('plan')" class="flex-1 py-3 px-1 text-center font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 whitespace-nowrap cursor-pointer">타임라인</button>
-            <button id="btn-tab-expected" onclick="switchTab('expected')" class="flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer">일정관리</button>
-            <button id="btn-tab-actual" onclick="switchTab('actual')" class="flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer">가계부·회비</button>
-            <button id="btn-tab-checklist" onclick="switchTab('checklist')" class="flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer">체크·차량</button>
-        </nav>
-
-        <!-- 타임라인 공통 일차 필터 바 -->
+        <!-- 타임라인 공통 일차 필터 바 + 전체 펼치기/접기 제어 -->
         <div id="common-day-filter-bar" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-2">
             <div class="inline-flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
                 <button id="filter-day-all" onclick="setDayFilter('all')" class="px-2.5 py-1.5 rounded-md bg-white text-blue-600 shadow-sm cursor-pointer">전체</button>
@@ -237,20 +234,23 @@
                 <button id="filter-day-3" onclick="setDayFilter('3')" class="px-2.5 py-1.5 rounded-md text-slate-600 cursor-pointer">3일차+</button>
             </div>
             <div class="flex items-center gap-1.5">
-                <button type="button" onclick="locateMyGPS()" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer flex items-center gap-1">
+                <button type="button" id="btn-toggle-all-cards" onclick="toggleExpandAllTimeline()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 px-2.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer flex items-center gap-1">
+                    <i class="fa-solid fa-up-down-left-right text-[10px]"></i> 전체펼침
+                </button>
+                <button type="button" onclick="locateMyGPS()" class="bg-slate-800 hover:bg-slate-900 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer flex items-center gap-1">
                     <i class="fa-solid fa-location-crosshairs"></i> 내위치
                 </button>
-                <button type="button" onclick="openExpectedEditorNew()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer">
+                <button type="button" onclick="openExpectedEditorNew()" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer">
                     + 일정추가
                 </button>
             </div>
         </div>
 
-        <!-- [탭 1] 통합 타임라인 (계획전 = 연한 노랑 / 방문완료·지출 = 연한 블루 한 페이지 표시) -->
+        <!-- [탭 1] 통합 타임라인 (스마트 아코디언 뷰 + 계획전 연한 노랑 / 방문완료 연한 블루) -->
         <section id="tab-plan" class="space-y-4">
             <div id="plan-map-card" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-2">
                 <h3 class="text-xs sm:text-sm font-extrabold text-blue-800"><i class="fa-solid fa-map-location-dot mr-1"></i>통합 여행 타임라인 지도 (방문전=실선 / 방문완료=굵은강조선)</h3>
-                <p class="text-[11px] text-slate-500">* 마커나 선을 클릭하면 장소 정보와 구간 이동거리·소요시간(자동/수동)이 표시됩니다. 아래 목록을 터치하면 지도가 해당 위치로 확대됩니다.</p>
+                <p class="text-[11px] text-slate-500">* 마커나 선을 클릭하면 장소 정보와 구간 이동거리·소요시간(자동/수동)이 표시됩니다.</p>
                 <div class="flex flex-wrap gap-3 text-[11px] font-bold pt-0.5 pb-1">
                     <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span>1일차 오전</span>
                     <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-purple-600 inline-block"></span>1일차 오후</span>
@@ -263,21 +263,24 @@
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
                 <div class="flex flex-wrap justify-between items-center gap-2">
                     <div>
-                        <h3 class="text-sm font-extrabold text-slate-800"><i class="fa-regular fa-calendar-check text-blue-600 mr-1"></i>통합 여행 타임라인 (계획전 & 방문완료)</h3>
-                        <p class="text-[11px] text-slate-500 mt-0.5">[방문전]↔[방문완료] 전환, 구간별 거리·시간 수동입력 및 [길찾기]를 한 화면에서 실행합니다.</p>
+                        <h3 class="text-sm font-extrabold text-slate-800"><i class="fa-regular fa-calendar-check text-blue-600 mr-1"></i>스마트 통합 타임라인 (직전·다음 일정 자동 펼침)</h3>
+                        <p class="text-[11px] text-slate-500 mt-0.5">현재 시각 기준 <b>[직전 일정]</b>과 <b>[다음 일정]</b>은 상세 정보와 구간 이동 박스가 자동으로 펼쳐지며, 지나간 일정은 카드를 터치하면 펼쳐집니다.</p>
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0">
-                        <span id="exp-count-badge" class="text-[11px] bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-full font-bold">계획 0곳</span>
+                        <span id="exp-count-badge" class="text-[11px] bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-full font-bold">계획전 0곳</span>
                         <span id="act-count-badge" class="text-[11px] bg-sky-50 text-sky-800 border border-sky-200 px-2.5 py-1 rounded-full font-bold">방문·지출 0건</span>
                     </div>
                 </div>
                 <!-- 색상 구분 범례 바 -->
                 <div class="flex flex-wrap items-center gap-2 pt-1 text-[11px] font-bold">
                     <span class="inline-flex items-center gap-1.5 bg-yellow-50 border border-amber-300 text-amber-900 px-2.5 py-1 rounded-lg shadow-sm">
-                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span> 연한 노랑 박스 = 계획전 (방문전 일정)
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span> 연한 노랑 = 계획전 일정
                     </span>
                     <span class="inline-flex items-center gap-1.5 bg-sky-50 border border-sky-300 text-sky-900 px-2.5 py-1 rounded-lg shadow-sm">
-                        <span class="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block"></span> 연한 블루 박스 = 방문완료 및 실제 지출
+                        <span class="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block"></span> 연한 블루 = 방문완료·지출
+                    </span>
+                    <span class="inline-flex items-center gap-1 bg-indigo-50 border border-indigo-200 text-indigo-800 px-2 py-1 rounded-lg">
+                        <i class="fa-solid fa-hand-pointer text-[10px]"></i> 요약 카드 터치 시 상세·이동거리 열림
                     </span>
                 </div>
                 <div id="expected-timeline-list" class="space-y-4"></div>
@@ -372,7 +375,7 @@
                             <input type="text" id="exp-memo" placeholder="예: 곤드레마늘정식 8인 예약 필수" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs">
                         </div>
 
-                        <!-- [Ver 1.25] 다음 장소까지 이동 거리·소요시간 수동 입력 (비워두면 자동 계산) -->
+                        <!-- 다음 장소까지 이동 거리·소요시간 수동 입력 (비워두면 자동 계산) -->
                         <div class="bg-blue-50/60 p-3 rounded-xl border border-blue-200 space-y-2">
                             <div class="flex justify-between items-center">
                                 <label class="block text-xs font-extrabold text-blue-900">
@@ -773,17 +776,47 @@
             </div>
         </section>
 
+        <!-- ========================================== -->
+        <!-- [Ver 1.3] 하단 고정 내비게이션 바 (어디서든 탭 즉시 전환) -->
+        <!-- ========================================== -->
+        <nav id="bottom-nav-bar" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur border-t border-slate-200 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
+            <div class="max-w-3xl mx-auto flex text-xs">
+                <button id="btn-tab-plan" onclick="switchTab('plan')" class="flex-1 py-2.5 px-1 flex flex-col items-center justify-center gap-0.5 font-extrabold text-blue-600 border-t-2 border-blue-600 bg-blue-50/40 cursor-pointer">
+                    <i class="fa-solid fa-route text-sm"></i>
+                    <span>타임라인</span>
+                </button>
+                <button id="btn-tab-expected" onclick="switchTab('expected')" class="flex-1 py-2.5 px-1 flex flex-col items-center justify-center gap-0.5 font-semibold text-slate-500 cursor-pointer">
+                    <i class="fa-regular fa-calendar-check text-sm"></i>
+                    <span>일정관리</span>
+                </button>
+                <button id="btn-tab-actual" onclick="switchTab('actual')" class="flex-1 py-2.5 px-1 flex flex-col items-center justify-center gap-0.5 font-semibold text-slate-500 cursor-pointer">
+                    <i class="fa-solid fa-receipt text-sm"></i>
+                    <span>가계부·회비</span>
+                </button>
+                <button id="btn-tab-checklist" onclick="switchTab('checklist')" class="flex-1 py-2.5 px-1 flex flex-col items-center justify-center gap-0.5 font-semibold text-slate-500 cursor-pointer">
+                    <i class="fa-solid fa-clipboard-check text-sm"></i>
+                    <span>체크·차량</span>
+                </button>
+            </div>
+        </nav>
+
     </main>
 
     <!-- 2부 코드를 여기에 이어서 붙여넣으세요 -->
     <!-- ========================================== -->
-    <!-- 2부: 사진·영수증 압축 엔진, 지도 제어, 수동/자동 거리계산 및 통합 타임라인 렌더링 -->
+    <!-- 2부: 전역 상태, 사진·영수증 압축 엔진, 하단 고정 탭 제어 및 국내·해외 지도 엔진 -->
     <!-- ========================================== -->
     <script>
         let currentTripId = null;
         let currentMemberCount = 8;
         let currentRegion = 'kr'; // 'kr' (국내: 카카오맵) 또는 'global' (해외: 구글맵)
         let isEditLocked = false; // 실수 삭제/수정 방지용 잠금 상태
+
+        // [Ver 1.3] 스마트 타임라인 아코디언 펼침/접힘 상태 관리
+        let expandedTimelineIds = new Set(); // 사용자가 수동으로 터치해 펼친 일정 ID 모음
+        let manuallyCollapsedIds = new Set(); // 자동 펼침 대상이지만 사용자가 수동으로 접은 일정 ID 모음
+        let isExpandAllTimeline = false; // [전체펼침 / 스마트접기] 토글 상태
+        let recentWidgetUnsub = null; // 첫 화면 최근 여행 브리핑 위젯용 실시간 구독 핸들
 
         // 일정관리 사진(최대 3장) 및 가계부 영수증(1장) 임시 보관 상태
         let currentExpPhotos = [];
@@ -844,6 +877,20 @@
             if (isNaN(dt.getTime())) return dateStr;
             const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
             return `${dateStr}(${weekDays[dt.getDay()]})`;
+        }
+
+        // 특정 여행의 N일차 실제 날짜(YYYY-MM-DD) 반환
+        function getTripDayDateStr(trip, dayNum) {
+            if (!trip || !trip.startDate) return '';
+            const parts = String(trip.startDate).split('-');
+            if (parts.length !== 3) return '';
+            const dt = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+            if (isNaN(dt.getTime())) return '';
+            dt.setDate(dt.getDate() + (Number(dayNum || 1) - 1));
+            const yyyy = dt.getFullYear();
+            const mm = String(dt.getMonth() + 1).padStart(2, '0');
+            const dd = String(dt.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
         }
 
         // 일차 타이틀 옆에 표시할 실제 날짜와 요일 자동 계산 함수
@@ -1144,7 +1191,7 @@
             }
         }
 
-        // 목록 화면으로 돌아가기 (기억된 마지막 화면 초기화)
+        // [Ver 1.3] 목록 화면으로 돌아가기 (자동 진입용 세션은 비우되, 첫 화면 상단 브리핑용 'recent_opened_trip_id'는 유지)
         window.goTripSelector = function() {
             try {
                 localStorage.removeItem('last_trip_id');
@@ -1163,22 +1210,36 @@
             document.getElementById('btn-map-provider').classList.add('hidden');
             document.getElementById('header-trip-title').innerText = "여행 일정 목록";
             document.getElementById('header-trip-dates').classList.add('hidden');
+
+            if (typeof renderTripCards === 'function') renderTripCards();
+            if (typeof renderRecentTripWidget === 'function') renderRecentTripWidget();
             scheduleBackupCache();
         };
 
-        // 여행 선택 시 개인 휴대폰에 마지막 여행 ID 저장 및 지정 탭 진입
+        // [Ver 1.3] 여행 선택 시 개인 휴대폰에 마지막 여행 ID 및 최근 열람 여행 ID 저장
         window.selectTrip = function(tripId, initialTab = 'plan') {
             const trip = tripsData.find(t => t.id === tripId);
             if (!trip) return;
 
             try {
                 localStorage.setItem('last_trip_id', tripId);
+                localStorage.setItem('recent_opened_trip_id', tripId);
             } catch (_) {}
 
             currentTripId = tripId;
             currentMemberCount = Number(trip.memberCount || 8);
             currentRegion = trip.region || 'kr';
             document.getElementById('calc-member-count').value = currentMemberCount;
+
+            // 여행 전환 시 스마트 아코디언 상태 초기화
+            expandedTimelineIds.clear();
+            manuallyCollapsedIds.clear();
+            isExpandAllTimeline = false;
+            const toggleAllBtn = document.getElementById('btn-toggle-all-cards');
+            if (toggleAllBtn) {
+                toggleAllBtn.innerHTML = `<i class="fa-solid fa-up-down-left-right text-[10px]"></i> 전체펼침`;
+                toggleAllBtn.className = "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 px-2.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer flex items-center gap-1";
+            }
 
             expectedData = [];
             actualData = [];
@@ -1256,7 +1317,7 @@
             toggleAccordion('trip-form-body', 'trip-form-chevron', false);
         };
 
-        // [Ver 1.25] 4개 탭 전환 시 개인 휴대폰에 마지막으로 보던 탭 위치 저장 ('visit'은 'plan'으로 자동 통합)
+        // [Ver 1.3] 하단 고정 내비게이션 바 4개 탭 전환 및 위치 기억
         window.switchTab = function(tabId) {
             const validTabs = ['plan', 'expected', 'actual', 'checklist'];
             const targetTab = validTabs.includes(tabId) ? tabId : 'plan';
@@ -1271,12 +1332,16 @@
                 const secEl = document.getElementById(`tab-${id}`);
                 const btnEl = document.getElementById(`btn-tab-${id}`);
                 if (secEl) secEl.classList.add('hidden');
-                if (btnEl) btnEl.className = "flex-1 py-3 px-1 text-center font-semibold text-slate-500 whitespace-nowrap cursor-pointer";
+                if (btnEl) {
+                    btnEl.className = "flex-1 py-2.5 px-1 flex flex-col items-center justify-center gap-0.5 font-semibold text-slate-500 cursor-pointer transition";
+                }
             });
             const activeSec = document.getElementById(`tab-${targetTab}`);
             const activeBtn = document.getElementById(`btn-tab-${targetTab}`);
             if (activeSec) activeSec.classList.remove('hidden');
-            if (activeBtn) activeBtn.className = "flex-1 py-3 px-1 text-center font-bold text-blue-600 border-b-2 border-blue-600 bg-blue-50/50 whitespace-nowrap cursor-pointer";
+            if (activeBtn) {
+                activeBtn.className = "flex-1 py-2.5 px-1 flex flex-col items-center justify-center gap-0.5 font-extrabold text-blue-600 border-t-2 border-blue-600 bg-blue-50/40 cursor-pointer transition";
+            }
 
             const filterBar = document.getElementById('common-day-filter-bar');
             if (filterBar) {
@@ -1618,6 +1683,11 @@
             }).open();
         };
 
+        // <!-- 3부 코드를 바로 아래에 이어서 붙여넣으세요 -->
+        // ==========================================
+        // 3부: 구간 거리·시간 계산, 스마트 아코디언 판별 및 타임라인·지도 렌더링
+        // ==========================================
+
         // 거리 계산 (하버사인 km)
         function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
             const R = 6371;
@@ -1629,7 +1699,7 @@
             return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
         }
 
-        // [Ver 1.25] 구간 이동 거리·시간 계산 (수동 입력값 우선 적용 + 미입력 시 좌표 기반 자동 계산)
+        // 구간 이동 거리·시간 계산 (수동 입력값 우선 적용 + 미입력 시 좌표 기반 자동 계산)
         function getSegmentMoveInfo(startItem, endItem) {
             let autoKm = '0.0';
             let autoMin = 5;
@@ -1661,7 +1731,7 @@
             };
         }
 
-        // [Ver 1.25] 타임라인 구간 박스에서 즉시 거리·시간을 수동 입력하거나 자동계산으로 되돌리는 함수
+        // 타임라인 구간 박스에서 즉시 거리·시간을 수동 입력하거나 자동계산으로 되돌리는 함수
         window.promptManualMoveInfo = async function(startId, endId) {
             if (!checkEditable() || !currentTripId || !db) return;
             const startItem = expectedData.find(x => x.id === startId);
@@ -1706,6 +1776,109 @@
             }
         };
 
+        // ==========================================
+        // [Ver 1.3] 현재 시간 기준 [직전 일정] & [다음 일정] 자동 판별 엔진
+        // ==========================================
+        function getSmartFocusInfo(trip, rawExpList) {
+            const sorted = sortByDayAndTime(rawExpList || []);
+            if (!trip || sorted.length === 0) {
+                return { prevItem: null, nextItem: null, focusIds: new Set(), isCompleted: true };
+            }
+
+            const nowDate = getLocalDateStr();
+            const nowTime = getLocalTimeStr();
+            const nowFull = `${nowDate} ${nowTime}`;
+
+            // 종료일이 오늘보다 과거이거나 모든 일정이 방문완료된 경우 완료된 여행으로 판별
+            const isPastEndDate = Boolean(trip.endDate && trip.endDate < nowDate);
+            const allVisited = sorted.length > 0 && sorted.every(x => Boolean(x.visited));
+            const isCompleted = isPastEndDate || allVisited;
+
+            let prevItem = null;
+            let nextItem = null;
+
+            // 1순위: 여행 기간 중일 때 실제 날짜+시간(YYYY-MM-DD HH:MM) 기준으로 직전/다음 일정 탐색
+            if (trip.startDate && nowDate >= trip.startDate && (!trip.endDate || nowDate <= trip.endDate)) {
+                for (let i = 0; i < sorted.length; i++) {
+                    const item = sorted[i];
+                    const itemDate = getTripDayDateStr(trip, item.day || 1);
+                    const itemTime = normalizeTime(item.time) !== '99:99' ? normalizeTime(item.time) : '00:00';
+                    const itemFull = `${itemDate} ${itemTime}`;
+                    if (itemFull <= nowFull) {
+                        prevItem = item;
+                    } else if (!nextItem) {
+                        nextItem = item;
+                    }
+                }
+            } else if (!isPastEndDate) {
+                // 2순위: 출발 전 여행인 경우 방문 체크 상태 기준 또는 첫 1·2번째 일정을 직전/다음으로 지정
+                const firstUnvisitedIdx = sorted.findIndex(x => !x.visited);
+                if (firstUnvisitedIdx > 0) {
+                    prevItem = sorted[firstUnvisitedIdx - 1];
+                    nextItem = sorted[firstUnvisitedIdx];
+                } else if (firstUnvisitedIdx === 0) {
+                    prevItem = sorted[0];
+                    nextItem = sorted[1] || null;
+                }
+            } else {
+                // 3순위: 이미 종료된 여행인 경우 마지막 일정을 직전 일정으로 참조
+                prevItem = sorted[sorted.length - 1] || null;
+            }
+
+            const focusIds = new Set();
+            if (prevItem && prevItem.id) focusIds.add(prevItem.id);
+            if (nextItem && nextItem.id) focusIds.add(nextItem.id);
+
+            return { prevItem, nextItem, focusIds, isCompleted };
+        }
+
+        // [Ver 1.3] 타임라인 개별 카드 접기/펼치기 토글 (터치 시 상세 정보 + 구간 이동거리 박스 표시)
+        window.toggleTimelineCardExpand = function(itemId, isAutoFocusItem = false) {
+            if (!itemId) return;
+            if (expandedTimelineIds.has(itemId)) {
+                expandedTimelineIds.delete(itemId);
+                if (isAutoFocusItem) manuallyCollapsedIds.add(itemId);
+            } else if (isAutoFocusItem && !manuallyCollapsedIds.has(itemId)) {
+                manuallyCollapsedIds.add(itemId);
+            } else {
+                manuallyCollapsedIds.delete(itemId);
+                expandedTimelineIds.add(itemId);
+            }
+            renderAllViews();
+        };
+
+        // [Ver 1.3] 타임라인 전체 펼치기 / 스마트 자동 접기 전환 버튼
+        window.toggleExpandAllTimeline = function() {
+            isExpandAllTimeline = !isExpandAllTimeline;
+            if (!isExpandAllTimeline) {
+                expandedTimelineIds.clear();
+                manuallyCollapsedIds.clear();
+            }
+            const btn = document.getElementById('btn-toggle-all-cards');
+            if (btn) {
+                if (isExpandAllTimeline) {
+                    btn.innerHTML = `<i class="fa-solid fa-compress text-[10px]"></i> 스마트접기`;
+                    btn.className = "bg-blue-600 text-white border border-blue-600 px-2.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer flex items-center gap-1 shadow-sm";
+                } else {
+                    btn.innerHTML = `<i class="fa-solid fa-up-down-left-right text-[10px]"></i> 전체펼침`;
+                    btn.className = "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 px-2.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer flex items-center gap-1";
+                }
+            }
+            renderAllViews();
+        };
+
+        // [Ver 1.3] 첫 화면 브리핑 위젯에서 [현재 시간의 일정 목록으로 입장하기] 클릭 시 해당 일정으로 스크롤 이동
+        window.enterTripAtCurrentSchedule = function(tripId, targetExpId) {
+            selectTrip(tripId, 'plan');
+            if (targetExpId) {
+                expandedTimelineIds.add(targetExpId);
+                setTimeout(() => {
+                    const el = document.getElementById(`timeline-card-${targetExpId}`);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 450);
+            }
+        };
+
         function getSegmentColor(day, timeStr) {
             const norm = normalizeTime(timeStr);
             const hour = norm !== '99:99' ? parseInt(norm.split(':')[0], 10) : 12;
@@ -1714,7 +1887,7 @@
             return isPM ? '#d97706' : '#059669';
         }
 
-        // [Ver 1.25] 단일 통합 지도(mapPlan) 동선 렌더링 (국내 카카오맵 & 해외 구글맵 공통)
+        // 단일 통합 지도(mapPlan) 동선 렌더링 (국내 카카오맵 & 해외 구글맵 공통)
         function renderTimelineMaps() {
             const sortedExp = sortByDayAndTime(expectedData).filter(item => {
                 if (selectedDayFilter === 'all') return true;
@@ -1889,7 +2062,7 @@
             focusMapCoordinates(item.lat, item.lng);
         };
 
-        // [Ver 1.25] 통합 타임라인 지도(mapPlan)로 즉시 포커스 및 줌인
+        // 통합 타임라인 지도(mapPlan)로 즉시 포커스 및 줌인
         function focusMapCoordinates(lat, lng) {
             switchTab('plan');
             const mapCard = document.getElementById('plan-map-card');
@@ -2067,12 +2240,19 @@
             }
         };
 
-        // [Ver 1.25] 계획전(연한 노랑) & 방문완료·현장지출(연한 블루) 통합 타임라인 렌더링
-        function buildExpListHtml(list, includeStandaloneActuals = false) {
+        // ==========================================
+        // [Ver 1.3] 스마트 아코디언 통합 타임라인 렌더링
+        // - 현재 시각 기준 [직전 일정] & [다음 일정]은 상세 내용 + 구간 이동거리 박스 자동 펼침
+        // - 이미 지나간 일정 및 일반 일정은 [시간, 장소명, 사진]만 요약 표시 (터치 시 상세 + 이동거리 펼침)
+        // - 구간 이동거리 박스 세로 줄바꿈 깨짐 방지 슬림 레이아웃 적용
+        // ==========================================
+        function buildExpListHtml(list, includeStandaloneActuals = false, isManageView = false) {
+            const currentTrip = tripsData.find(t => t.id === currentTripId);
+            const smartFocus = getSmartFocusInfo(currentTrip, expectedData);
+
             const daySet = new Set();
             list.forEach(item => daySet.add(Number(item.day || 1)));
 
-            // 통합 타임라인 모드일 때는 예상 일정과 연결되지 않은 단독 지출(장보기 반영·현장 추가 지출)도 해당 일차에 함께 표시
             const expIdsSet = new Set(expectedData.map(e => e.id));
             const standaloneActs = includeStandaloneActuals
                 ? actualData.filter(a => {
@@ -2091,7 +2271,6 @@
                 const dayStandaloneActs = sortByDayAndTime(standaloneActs.filter(a => Number(a.day || 1) === day));
                 const dayDateLabel = getDayDateLabel(day);
 
-                // 시간순 통합 정렬용 배열 생성 (계획/방문완료 일정 + 단독 현장지출)
                 const mergedDayEntries = [
                     ...dayExpItems.map((expItem, expIdx) => ({
                         entryType: 'exp',
@@ -2118,7 +2297,7 @@
                             <span class="bg-sky-100 text-sky-900 px-2 py-0.5 rounded-full text-[10px] font-extrabold">방문 ${visitedCnt}</span>
                         </div>
                     </div>
-                    <div class="relative border-l-2 border-blue-200 ml-3 space-y-3 py-1">`;
+                    <div class="relative border-l-2 border-blue-200 ml-3 space-y-2.5 py-1">`;
 
                 mergedDayEntries.forEach(entry => {
                     if (entry.entryType === 'exp') {
@@ -2127,39 +2306,38 @@
                         const isVisited = Boolean(item.visited);
                         const linkedAct = actualData.find(a => a.linkedExpId === item.id);
 
-                        // [Ver 1.25] 계획전 = 연한 노랑 박스 / 방문완료 = 연한 블루 박스
+                        // 현재 시각 기준 [직전 일정] 또는 [다음 일정] 여부 판별
+                        const isPrevFocus = Boolean(smartFocus.prevItem && smartFocus.prevItem.id === item.id);
+                        const isNextFocus = Boolean(smartFocus.nextItem && smartFocus.nextItem.id === item.id);
+                        const isAutoFocus = isPrevFocus || isNextFocus;
+
+                        // 펼침 상태 결정: 일정관리 탭이거나, 전체펼침 상태이거나, 직전·다음 일정(수동접기 안함)이거나, 사용자가 터치한 경우
+                        const isExpanded = isManageView || isExpandAllTimeline || expandedTimelineIds.has(item.id) || (isAutoFocus && !manuallyCollapsedIds.has(item.id));
+
+                        // 계획전 = 연한 노랑 박스 / 방문완료 = 연한 블루 박스
                         const cardBgClass = isVisited
                             ? 'bg-sky-50/90 border-sky-300 hover:bg-sky-100/60'
                             : 'bg-yellow-50/90 border-amber-200 hover:bg-yellow-100/50';
+                        const focusRingClass = isNextFocus
+                            ? 'ring-2 ring-blue-500 shadow-md'
+                            : (isPrevFocus ? 'ring-2 ring-indigo-300 shadow-sm' : 'shadow-sm');
                         const dotColor = isVisited ? 'bg-sky-500' : 'bg-amber-400';
 
                         const statusTagHtml = isVisited
                             ? `<span class="text-[10px] font-extrabold text-sky-800 bg-sky-200/80 px-2 py-0.5 rounded-full">✓ 방문완료</span>`
                             : `<span class="text-[10px] font-extrabold text-amber-900 bg-amber-200/80 px-2 py-0.5 rounded-full">계획전</span>`;
 
-                        const visitBtnHtml = isVisited
-                            ? `<button type="button" onclick="toggleVisitStatus('${item.id}')" class="bg-sky-600 hover:bg-sky-700 text-white border border-sky-600 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer shadow-sm flex items-center gap-1">
-                                 <i class="fa-solid fa-check"></i> 방문완료 (취소클릭)
-                               </button>`
-                            : `<button type="button" onclick="toggleVisitStatus('${item.id}')" class="bg-amber-400 hover:bg-amber-500 text-slate-900 border border-amber-500 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer shadow-sm flex items-center gap-1">
-                                 <i class="fa-regular fa-circle"></i> 방문전 (완료체크)
-                               </button>`;
+                        const focusBadgeHtml = isNextFocus
+                            ? `<span class="text-[10px] font-extrabold text-white bg-rose-600 px-2 py-0.5 rounded-full animate-pulse">🔥 다음 일정</span>`
+                            : (isPrevFocus ? `<span class="text-[10px] font-extrabold text-indigo-800 bg-indigo-100 border border-indigo-300 px-2 py-0.5 rounded-full">⏮ 직전 일정</span>` : '');
 
-                        const navMapUrl = `https://map.naver.com/p/search/${encodeURIComponent(item.address || item.place_name)}`;
-                        const navReviewUrl = `https://search.naver.com/search.naver?where=view&query=${encodeURIComponent(item.place_name + ' 후기 리뷰')}`;
-                        const phoneBtnHtml = item.phone
-                            ? `<a href="tel:${esc(item.phone)}" class="bg-white hover:bg-slate-100 border border-blue-300 text-blue-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
-                                 <i class="fa-solid fa-phone"></i> 전화
-                               </a>`
-                            : '';
-
-                        // 첨부된 장소 사진 (최대 3장) 썸네일 갤러리
+                        // 첨부된 장소 사진 (최대 3장) 썸네일 갤러리 (요약 상태에서도 항상 표시)
                         let photosGalleryHtml = '';
                         if (Array.isArray(item.photos) && item.photos.length > 0) {
                             photosGalleryHtml = `<div class="grid grid-cols-3 gap-1.5 pt-1.5">`;
                             item.photos.forEach((pSrc, pIdx) => {
                                 photosGalleryHtml += `
-                                <div onclick="event.stopPropagation(); viewExpPhoto('${item.id}', ${pIdx})" class="relative h-20 rounded-lg overflow-hidden border border-slate-200 bg-white cursor-pointer group shadow-sm">
+                                <div onclick="event.stopPropagation(); viewExpPhoto('${item.id}', ${pIdx})" class="relative h-16 sm:h-20 rounded-lg overflow-hidden border border-slate-200 bg-white cursor-pointer group shadow-sm">
                                     <img src="${pSrc}" alt="장소사진" class="w-full h-full object-cover group-hover:scale-105 transition">
                                     <span class="absolute bottom-1 right-1 bg-black/60 text-white text-[9px] px-1.5 py-0.2 rounded font-bold"><i class="fa-solid fa-magnifying-glass-plus"></i> ${pIdx + 1}</span>
                                 </div>`;
@@ -2167,70 +2345,121 @@
                             photosGalleryHtml += `</div>`;
                         }
 
-                        // 방문완료 시 연동된 가계부 지출 & 영수증 정보 통합 표시
-                        let linkedActInfoHtml = '';
-                        if (isVisited && linkedAct) {
-                            const receiptThumb = linkedAct.receipt
-                                ? `<button type="button" onclick="event.stopPropagation(); viewActReceipt('${linkedAct.id}')" class="bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 px-2 py-0.5 rounded-md text-[11px] font-extrabold cursor-pointer inline-flex items-center gap-1">
-                                     <i class="fa-solid fa-receipt text-amber-600"></i> 영수증 보기
+                        // 상세 정보 영역 (펼쳐졌을 때만 표시)
+                        let expandedDetailsHtml = '';
+                        if (isExpanded) {
+                            const visitBtnHtml = isVisited
+                                ? `<button type="button" onclick="event.stopPropagation(); toggleVisitStatus('${item.id}')" class="bg-sky-600 hover:bg-sky-700 text-white border border-sky-600 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer shadow-sm flex items-center gap-1">
+                                     <i class="fa-solid fa-check"></i> 방문완료 (취소클릭)
                                    </button>`
+                                : `<button type="button" onclick="event.stopPropagation(); toggleVisitStatus('${item.id}')" class="bg-amber-400 hover:bg-amber-500 text-slate-900 border border-amber-500 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer shadow-sm flex items-center gap-1">
+                                     <i class="fa-regular fa-circle"></i> 방문전 (완료체크)
+                                   </button>`;
+
+                            const navMapUrl = `https://map.naver.com/p/search/${encodeURIComponent(item.address || item.place_name)}`;
+                            const navReviewUrl = `https://search.naver.com/search.naver?where=view&query=${encodeURIComponent(item.place_name + ' 후기 리뷰')}`;
+                            const phoneBtnHtml = item.phone
+                                ? `<a href="tel:${esc(item.phone)}" onclick="event.stopPropagation();" class="bg-white hover:bg-slate-100 border border-blue-300 text-blue-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
+                                     <i class="fa-solid fa-phone"></i> 전화
+                                   </a>`
                                 : '';
-                            linkedActInfoHtml = `
-                            <div class="mt-1.5 p-2.5 bg-white/90 rounded-lg border border-sky-200 flex flex-wrap justify-between items-center gap-2 text-xs">
-                                <div class="flex flex-wrap items-center gap-1.5">
-                                    <span class="font-extrabold text-sky-900"><i class="fa-solid fa-coins text-sky-600 mr-1"></i>실제지출: ${Number(linkedAct.expense || 0).toLocaleString()}원</span>
-                                    <span class="text-[11px] text-slate-600">(결제: ${esc(linkedAct.traveler || '공통')})</span>
-                                    ${linkedAct.action ? `<span class="text-[11px] text-slate-500">· ${esc(linkedAct.action)}</span>` : ''}
+
+                            let linkedActInfoHtml = '';
+                            if (isVisited && linkedAct) {
+                                const receiptThumb = linkedAct.receipt
+                                    ? `<button type="button" onclick="event.stopPropagation(); viewActReceipt('${linkedAct.id}')" class="bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 px-2 py-0.5 rounded-md text-[11px] font-extrabold cursor-pointer inline-flex items-center gap-1">
+                                         <i class="fa-solid fa-receipt text-amber-600"></i> 영수증 보기
+                                       </button>`
+                                    : '';
+                                linkedActInfoHtml = `
+                                <div class="mt-1.5 p-2.5 bg-white/90 rounded-lg border border-sky-200 flex flex-wrap justify-between items-center gap-2 text-xs">
+                                    <div class="flex flex-wrap items-center gap-1.5">
+                                        <span class="font-extrabold text-sky-900"><i class="fa-solid fa-coins text-sky-600 mr-1"></i>실제지출: ${Number(linkedAct.expense || 0).toLocaleString()}원</span>
+                                        <span class="text-[11px] text-slate-600">(결제: ${esc(linkedAct.traveler || '공통')})</span>
+                                        ${linkedAct.action ? `<span class="text-[11px] text-slate-500">· ${esc(linkedAct.action)}</span>` : ''}
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        ${receiptThumb}
+                                        <button type="button" onclick="event.stopPropagation(); editAct('${linkedAct.id}')" class="bg-sky-100 hover:bg-sky-200 text-sky-900 px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer">
+                                            ✏️ 지출·영수증 수정
+                                        </button>
+                                    </div>
+                                </div>`;
+                            }
+
+                            let altButtonsHtml = '';
+                            if (Array.isArray(item.alternatives) && item.alternatives.length > 0) {
+                                altButtonsHtml = `<div class="flex flex-wrap items-center gap-1.5 pt-1">
+                                    <span class="text-[11px] font-bold text-indigo-700"><i class="fa-solid fa-repeat mr-0.5"></i>대안 교체:</span>`;
+                                item.alternatives.forEach((alt, altIdx) => {
+                                    altButtonsHtml += `
+                                    <button type="button" onclick="event.stopPropagation(); swapWithAlternative('${item.id}', ${altIdx})" class="bg-white hover:bg-indigo-50 border border-indigo-200 text-indigo-800 px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer">
+                                        🔄 ${esc(alt.name)} (${Number(alt.budget || 0).toLocaleString()}원)
+                                    </button>`;
+                                });
+                                altButtonsHtml += `</div>`;
+                            }
+
+                            expandedDetailsHtml = `
+                            <div class="pt-1.5 space-y-1.5 border-t border-slate-200/70">
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-slate-600 font-semibold">예상 예산: <b>${Number(item.budget || 0).toLocaleString()}원</b></span>
+                                    <button type="button" onclick="event.stopPropagation(); focusVisitByExpId('${item.id}')" class="text-[11px] font-bold text-blue-700 bg-white border border-blue-200 px-2 py-0.5 rounded-md cursor-pointer">📍 지도에서 위치확대</button>
                                 </div>
-                                <div class="flex items-center gap-1.5">
-                                    ${receiptThumb}
-                                    <button type="button" onclick="event.stopPropagation(); editAct('${linkedAct.id}')" class="bg-sky-100 hover:bg-sky-200 text-sky-900 px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer">
-                                        ✏️ 지출·영수증 수정
-                                    </button>
+                                ${item.address ? `
+                                <div class="flex items-start gap-1.5 text-xs text-slate-600">
+                                    <i class="fa-solid fa-location-dot text-slate-400 mt-0.5 shrink-0"></i>
+                                    <span class="break-words flex-1 leading-relaxed">${esc(item.address)}</span>
+                                    <button type="button" onclick="event.stopPropagation(); copyExpAddressById('${item.id}')" class="text-[10px] bg-white border border-slate-300 px-1.5 py-0.5 rounded text-slate-700 font-semibold shrink-0 cursor-pointer">복사</button>
+                                </div>` : ''}
+                                ${item.phone ? `<p class="text-xs text-blue-700 font-semibold"><i class="fa-solid fa-phone mr-1"></i>${esc(item.phone)}</p>` : ''}
+                                ${item.memo ? `<p class="text-xs text-slate-700 leading-relaxed break-words bg-white/60 p-2 rounded-lg">${esc(item.memo)}</p>` : ''}
+                                ${linkedActInfoHtml}
+                                ${altButtonsHtml}
+                                <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-300/60">
+                                    ${visitBtnHtml}
+                                    ${phoneBtnHtml}
+                                    <a href="${navMapUrl}" target="_blank" onclick="event.stopPropagation();" class="bg-white hover:bg-slate-100 border border-slate-300 text-emerald-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
+                                        <i class="fa-solid fa-location-dot"></i> 지도
+                                    </a>
+                                    <a href="${navReviewUrl}" target="_blank" onclick="event.stopPropagation();" class="bg-white hover:bg-slate-100 border border-amber-300 text-amber-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
+                                        <i class="fa-solid fa-star text-amber-500"></i> 리뷰
+                                    </a>
+                                    <button type="button" onclick="event.stopPropagation(); editExp('${item.id}')" class="ml-auto bg-white hover:bg-slate-100 border border-slate-300 text-blue-600 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">수정</button>
+                                    <button type="button" onclick="event.stopPropagation(); deleteSubItem('expected_places', '${item.id}')" class="bg-white hover:bg-slate-100 border border-slate-300 text-red-500 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">삭제</button>
                                 </div>
                             </div>`;
                         }
 
-                        let altButtonsHtml = '';
-                        if (Array.isArray(item.alternatives) && item.alternatives.length > 0) {
-                            altButtonsHtml = `<div class="flex flex-wrap items-center gap-1.5 pt-1">
-                                <span class="text-[11px] font-bold text-indigo-700"><i class="fa-solid fa-repeat mr-0.5"></i>대안 교체:</span>`;
-                            item.alternatives.forEach((alt, altIdx) => {
-                                altButtonsHtml += `
-                                <button type="button" onclick="swapWithAlternative('${item.id}', ${altIdx})" class="bg-white hover:bg-indigo-50 border border-indigo-200 text-indigo-800 px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer">
-                                    🔄 ${esc(alt.name)} (${Number(alt.budget || 0).toLocaleString()}원)
-                                </button>`;
-                            });
-                            altButtonsHtml += `</div>`;
-                        }
-
-                        // [Ver 1.25] 다음 장소까지 구간 이동 박스 (자동계산/수동입력 배지 + [거리·시간 입력] 버튼 + [길찾기] 버튼)
+                        // [Ver 1.3] 구간 이동 거리·소요시간 박스
+                        // - 카드가 펼쳐진 상태(직전·다음 일정 또는 사용자가 터치해 펼친 일정)일 때만 표시!
+                        // - 왼쪽 텍스트가 세로로 6줄씩 깨지지 않도록 가로 한 줄 정렬(whitespace-nowrap) 및 슬림 배치를 적용!
                         let routeBoxHtml = '';
-                        if (nextItem) {
+                        if (nextItem && isExpanded) {
                             const move = getSegmentMoveInfo(item, nextItem);
                             const modeBadge = move.isManual
                                 ? `<span class="bg-emerald-600 text-white px-1.5 py-0.5 rounded text-[10px] font-extrabold shrink-0">수동입력</span>`
                                 : `<span class="bg-blue-200/80 text-blue-800 px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0">자동계산</span>`;
                             const distTimeText = (move.hasCoords || move.isManual)
-                                ? `이동거리 <b>약 ${move.km}km</b> · 소요시간 <b>${move.timeFormatted}</b>`
-                                : '길찾기 경로 확인하기';
+                                ? `이동 <b>약 ${move.km}km</b> · <b>${move.timeFormatted}</b>`
+                                : '길찾기 경로 확인';
                             const routeBtnLabel = (currentRegion === 'kr') ? '네이버 길찾기 ▶' : '구글맵 길찾기 ▶';
                             routeBoxHtml = `
-                            <div class="pt-2.5 pb-0.5 relative">
+                            <div class="pt-2 pb-0.5 relative">
                                 <span class="absolute -left-[25px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-blue-100 border border-blue-400 text-blue-700 flex items-center justify-center text-[9px] shadow-sm">
                                     <i class="fa-solid fa-arrow-down"></i>
                                 </span>
-                                <div class="w-full bg-blue-50/90 border border-blue-200 rounded-xl px-3 py-2 flex flex-wrap justify-between items-center gap-2 shadow-sm">
-                                    <div onclick="openRouteByExpId('${item.id}', '${nextItem.id}')" class="text-xs text-blue-900 flex flex-wrap items-center gap-1.5 cursor-pointer flex-1">
-                                        <i class="fa-solid fa-car-side text-blue-600"></i>
+                                <div class="w-full bg-blue-50/90 border border-blue-200 rounded-xl px-3 py-2 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 shadow-sm">
+                                    <div onclick="openRouteByExpId('${item.id}', '${nextItem.id}')" class="text-xs text-blue-900 flex items-center gap-1.5 cursor-pointer min-w-[175px] flex-1 overflow-hidden">
+                                        <i class="fa-solid fa-car-side text-blue-600 shrink-0"></i>
                                         ${modeBadge}
-                                        <span>${distTimeText}</span>
+                                        <span class="whitespace-nowrap truncate">${distTimeText}</span>
                                     </div>
-                                    <div class="flex items-center gap-1.5 shrink-0">
-                                        <button type="button" onclick="promptManualMoveInfo('${item.id}', '${nextItem.id}')" class="text-[11px] font-bold text-slate-700 bg-white hover:bg-slate-100 border border-blue-300 px-2 py-0.5 rounded-lg cursor-pointer flex items-center gap-1">
+                                    <div class="flex items-center gap-1.5 shrink-0 ml-auto">
+                                        <button type="button" onclick="event.stopPropagation(); promptManualMoveInfo('${item.id}', '${nextItem.id}')" class="text-[11px] font-bold text-slate-700 bg-white hover:bg-slate-100 border border-blue-300 px-2 py-1 rounded-lg cursor-pointer flex items-center gap-1 whitespace-nowrap">
                                             <i class="fa-solid fa-pen text-[10px] text-blue-600"></i> 거리·시간 입력
                                         </button>
-                                        <button type="button" onclick="openRouteByExpId('${item.id}', '${nextItem.id}')" class="text-[11px] font-extrabold text-emerald-700 bg-white hover:bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg cursor-pointer flex items-center gap-1">
+                                        <button type="button" onclick="event.stopPropagation(); openRouteByExpId('${item.id}', '${nextItem.id}')" class="text-[11px] font-extrabold text-emerald-700 bg-white hover:bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg cursor-pointer flex items-center gap-1 whitespace-nowrap">
                                             <i class="fa-solid fa-diamond-turn-right"></i> ${routeBtnLabel}
                                         </button>
                                     </div>
@@ -2239,85 +2468,68 @@
                         }
 
                         html += `
-                        <div class="relative pl-5">
-                            <span class="absolute -left-[7px] top-3 w-3 h-3 rounded-full ${dotColor} ring-2 ring-white"></span>
-                            <div class="${cardBgClass} p-3.5 rounded-xl border space-y-2 shadow-sm transition">
-                                <div class="flex flex-wrap justify-between items-center gap-1">
-                                    <div class="flex flex-wrap items-center gap-1.5">
-                                        <span class="text-xs font-extrabold text-slate-800 bg-white/90 border border-slate-200 px-2 py-0.5 rounded"><i class="fa-regular fa-clock mr-1 text-blue-600"></i>${esc(item.time || '시간미정')}</span>
+                        <div id="timeline-card-${item.id}" class="relative pl-5">
+                            <span class="absolute -left-[7px] top-3.5 w-3 h-3 rounded-full ${dotColor} ring-2 ring-white"></span>
+                            <div onclick="toggleTimelineCardExpand('${item.id}', ${isAutoFocus})" class="${cardBgClass} ${focusRingClass} p-3 rounded-xl border space-y-1.5 cursor-pointer transition">
+                                <!-- 상단 요약 헤더 (언제나 표시: 시간, 장소명, 상태배지, 펼침 아이콘) -->
+                                <div class="flex justify-between items-center gap-2">
+                                    <div class="flex flex-wrap items-center gap-1.5 min-w-0">
+                                        <span class="text-xs font-extrabold text-slate-800 bg-white/90 border border-slate-200 px-2 py-0.5 rounded shrink-0"><i class="fa-regular fa-clock mr-1 text-blue-600"></i>${esc(item.time || '시간미정')}</span>
                                         ${statusTagHtml}
-                                        <button type="button" onclick="focusVisitByExpId('${item.id}')" class="text-[10px] font-bold text-blue-700 bg-white/90 border border-blue-200 px-1.5 py-0.5 rounded cursor-pointer">📍 지도확대</button>
-                                        ${Array.isArray(item.photos) && item.photos.length > 0 ? `<span class="text-[10px] font-bold text-blue-700 bg-white/90 border border-blue-200 px-1.5 py-0.5 rounded"><i class="fa-solid fa-camera mr-0.5"></i>사진 ${item.photos.length}</span>` : ''}
+                                        ${focusBadgeHtml}
+                                        <h4 class="font-extrabold text-slate-900 text-sm sm:text-base leading-snug break-words">${item.category ? `<span class="text-blue-700">[${esc(item.category)}]</span> ` : ''}${esc(item.place_name)}</h4>
                                     </div>
-                                    <span class="text-xs font-bold text-slate-700">예상 ${Number(item.budget || 0).toLocaleString()}원</span>
+                                    <div class="flex items-center gap-1.5 shrink-0">
+                                        <span class="text-[11px] font-bold text-slate-500 flex items-center gap-0.5 bg-white/80 px-2 py-0.5 rounded-full border border-slate-200/80">
+                                            ${isExpanded ? '접기 <i class="fa-solid fa-chevron-up text-[9px] ml-0.5"></i>' : '상세 <i class="fa-solid fa-chevron-down text-[9px] ml-0.5"></i>'}
+                                        </span>
+                                    </div>
                                 </div>
-
-                                <div onclick="focusVisitByExpId('${item.id}')" class="w-full space-y-1 cursor-pointer">
-                                    <h4 class="font-bold text-slate-900 text-sm sm:text-base leading-snug break-words w-full">${item.category ? `<span class="text-blue-700">[${esc(item.category)}]</span> ` : ''}${esc(item.place_name)}</h4>
-                                    ${item.address ? `
-                                    <div class="flex items-start gap-1.5 text-xs text-slate-600">
-                                        <i class="fa-solid fa-location-dot text-slate-400 mt-0.5 shrink-0"></i>
-                                        <span class="break-words flex-1 leading-relaxed">${esc(item.address)}</span>
-                                        <button type="button" onclick="event.stopPropagation(); copyExpAddressById('${item.id}')" class="text-[10px] bg-white border border-slate-300 px-1.5 py-0.5 rounded text-slate-700 font-semibold shrink-0 cursor-pointer">복사</button>
-                                    </div>` : ''}
-                                    ${item.phone ? `<p class="text-xs text-blue-700 font-semibold"><i class="fa-solid fa-phone mr-1"></i>${esc(item.phone)}</p>` : ''}
-                                    ${item.memo ? `<p class="text-xs text-slate-700 leading-relaxed break-words">${esc(item.memo)}</p>` : ''}
-                                    ${photosGalleryHtml}
-                                    ${linkedActInfoHtml}
-                                    ${altButtonsHtml}
-                                </div>
-
-                                <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-300/60">
-                                    ${visitBtnHtml}
-                                    ${phoneBtnHtml}
-                                    <a href="${navMapUrl}" target="_blank" class="bg-white hover:bg-slate-100 border border-slate-300 text-emerald-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
-                                        <i class="fa-solid fa-location-dot"></i> 지도
-                                    </a>
-                                    <a href="${navReviewUrl}" target="_blank" class="bg-white hover:bg-slate-100 border border-amber-300 text-amber-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
-                                        <i class="fa-solid fa-star text-amber-500"></i> 리뷰
-                                    </a>
-                                    <button type="button" onclick="editExp('${item.id}')" class="ml-auto bg-white hover:bg-slate-100 border border-slate-300 text-blue-600 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">수정</button>
-                                    <button type="button" onclick="deleteSubItem('expected_places', '${item.id}')" class="bg-white hover:bg-slate-100 border border-slate-300 text-red-500 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">삭제</button>
-                                </div>
+                                ${photosGalleryHtml}
+                                ${expandedDetailsHtml}
                             </div>
                             ${routeBoxHtml}
                         </div>`;
                     } else {
-                        // 단독 현장 방문·지출 항목 (연한 블루 박스로 통합 타임라인에 함께 표시)
+                        // 단독 현장 방문·지출 항목 (연한 블루 박스)
                         const act = entry.data;
+                        const actCardKey = `act_${act.id}`;
+                        const isActExpanded = isManageView || isExpandAllTimeline || expandedTimelineIds.has(actCardKey);
+
                         const receiptBtnHtml = act.receipt
-                            ? `<button type="button" onclick="viewActReceipt('${act.id}')" class="bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer flex items-center gap-1">
+                            ? `<button type="button" onclick="event.stopPropagation(); viewActReceipt('${act.id}')" class="bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer flex items-center gap-1">
                                  <i class="fa-solid fa-receipt text-amber-600"></i> 영수증 보기
                                </button>`
                             : '';
 
                         html += `
                         <div class="relative pl-5">
-                            <span class="absolute -left-[7px] top-3 w-3 h-3 rounded-full bg-sky-500 ring-2 ring-white"></span>
-                            <div class="bg-sky-50/90 hover:bg-sky-100/60 p-3.5 rounded-xl border border-sky-300 space-y-2 shadow-sm transition">
+                            <span class="absolute -left-[7px] top-3.5 w-3 h-3 rounded-full bg-sky-500 ring-2 ring-white"></span>
+                            <div onclick="toggleTimelineCardExpand('${actCardKey}', false)" class="bg-sky-50/90 hover:bg-sky-100/60 p-3 rounded-xl border border-sky-300 space-y-1.5 shadow-sm cursor-pointer transition">
                                 <div class="flex flex-wrap justify-between items-center gap-1">
-                                    <div class="flex items-center gap-1.5">
+                                    <div class="flex flex-wrap items-center gap-1.5">
                                         <span class="text-xs font-extrabold text-slate-800 bg-white/90 border border-slate-200 px-2 py-0.5 rounded"><i class="fa-regular fa-clock mr-1 text-sky-600"></i>${esc(act.time || '')}</span>
-                                        <span class="text-[10px] font-extrabold text-sky-800 bg-sky-200/80 px-2 py-0.5 rounded-full">✓ 현장방문·지출 (${esc(act.traveler || '공통')})</span>
-                                        ${act.receipt ? `<span class="text-[10px] font-extrabold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">🧾영수증</span>` : ''}
+                                        <span class="text-[10px] font-extrabold text-sky-800 bg-sky-200/80 px-2 py-0.5 rounded-full">✓ 현장지출</span>
+                                        <h4 class="font-bold text-slate-900 text-sm leading-snug break-words">${act.category ? `<span class="text-sky-700">[${esc(act.category)}]</span> ` : ''}${esc(act.place)}</h4>
                                     </div>
-                                    <span class="text-xs font-extrabold text-sky-800">지출 ${Number(act.expense || 0).toLocaleString()}원</span>
+                                    <div class="flex items-center gap-1.5 shrink-0">
+                                        <span class="text-xs font-extrabold text-sky-800">${Number(act.expense || 0).toLocaleString()}원</span>
+                                        <i class="fa-solid ${isActExpanded ? 'fa-chevron-up' : 'fa-chevron-down'} text-[10px] text-slate-400"></i>
+                                    </div>
                                 </div>
-
-                                <div onclick="focusVisitByActId('${act.id}')" class="cursor-pointer w-full space-y-1">
-                                    <h4 class="font-bold text-slate-900 text-sm sm:text-base leading-snug break-words w-full">${act.category ? `<span class="text-sky-700">[${esc(act.category)}]</span> ` : ''}${esc(act.place)}</h4>
+                                ${isActExpanded ? `
+                                <div class="pt-1.5 space-y-1.5 border-t border-sky-200/80">
                                     ${act.address ? `<p class="text-xs text-slate-600 break-words leading-relaxed"><i class="fa-solid fa-location-dot mr-1"></i>${esc(act.address)}</p>` : ''}
-                                    <p class="text-xs text-slate-700 leading-relaxed break-words">${esc(act.action || '')}</p>
-                                </div>
-
-                                <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-sky-200">
-                                    <button type="button" onclick="focusVisitByActId('${act.id}')" class="bg-sky-600 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer flex items-center gap-1">
-                                        <i class="fa-solid fa-location-dot"></i> 지도확대
-                                    </button>
-                                    ${receiptBtnHtml}
-                                    <button type="button" onclick="editAct('${act.id}')" class="ml-auto bg-white border border-slate-300 text-blue-600 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">수정</button>
-                                    <button type="button" onclick="deleteSubItem('actual_visits', '${act.id}')" class="bg-white border border-slate-300 text-red-500 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">삭제</button>
-                                </div>
+                                    <p class="text-xs text-slate-700 leading-relaxed break-words">${esc(act.action || '')} (결제: ${esc(act.traveler || '공통')})</p>
+                                    <div class="flex flex-wrap items-center gap-1.5 pt-1.5">
+                                        <button type="button" onclick="event.stopPropagation(); focusVisitByActId('${act.id}')" class="bg-sky-600 text-white px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer flex items-center gap-1">
+                                            <i class="fa-solid fa-location-dot"></i> 지도확대
+                                        </button>
+                                        ${receiptBtnHtml}
+                                        <button type="button" onclick="event.stopPropagation(); editAct('${act.id}')" class="ml-auto bg-white border border-slate-300 text-blue-600 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">수정</button>
+                                        <button type="button" onclick="event.stopPropagation(); deleteSubItem('actual_visits', '${act.id}')" class="bg-white border border-slate-300 text-red-500 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">삭제</button>
+                                    </div>
+                                </div>` : ''}
                             </div>
                         </div>`;
                     }
@@ -2445,8 +2657,8 @@
             document.getElementById('exp-count-badge').innerText = `계획전 ${unvisitedCount}곳`;
             document.getElementById('act-count-badge').innerText = `방문완료 ${completedCount}곳 · 지출 ${filteredAct.length}건`;
 
-            document.getElementById('expected-timeline-list').innerHTML = buildExpListHtml(filteredExp, true) || '<p class="text-xs text-slate-400 py-4 text-center">등록된 여행 일정이 없습니다.</p>';
-            document.getElementById('expected-manage-list').innerHTML = buildExpListHtml(sortedExpAll, false) || '<p class="text-xs text-slate-400 py-4 text-center">등록된 일정이 없습니다.</p>';
+            document.getElementById('expected-timeline-list').innerHTML = buildExpListHtml(filteredExp, true, false) || '<p class="text-xs text-slate-400 py-4 text-center">등록된 여행 일정이 없습니다.</p>';
+            document.getElementById('expected-manage-list').innerHTML = buildExpListHtml(sortedExpAll, false, true) || '<p class="text-xs text-slate-400 py-4 text-center">등록된 일정이 없습니다.</p>';
             document.getElementById('actual-manage-list').innerHTML = buildActListHtml(sortedActAll) || '<p class="text-xs text-slate-400 py-4 text-center">기록된 지출 내역이 없습니다.</p>';
 
             let presetHtml = '<option value="">-- 예상 방문지 목록에서 선택하세요 --</option>';
@@ -2456,9 +2668,9 @@
             document.getElementById('act-preset-select').innerHTML = presetHtml;
         }
 
-        // <!-- 3부 코드를 바로 아래에 이어서 붙여넣으세요 -->
+        // <!-- 4부 코드를 바로 아래에 이어서 붙여넣으세요 -->
         // ==========================================
-        // 3부: 사진·영수증·수동거리 폼 저장/수정, 체크리스트, 폴더 렌더링, 엑셀 백업·복원
+        // 4부: 첫 화면 브리핑 위젯, 체크리스트, 폼 저장/수정, 엑셀 백업·복원 및 초기화
         // ==========================================
         function syncParticipantDropdowns() {
             const namesSet = new Set();
@@ -2784,7 +2996,7 @@
             if (item.lat && item.lng) placePickerMarker('act', item.lat, item.lng);
         };
 
-        // [Ver 1.25] 예상 일정 수정 시 기존 첨부 사진(최대 3장) 및 수동 이동거리·시간 불러오기
+        // 예상 일정 수정 시 기존 첨부 사진(최대 3장) 및 수동 이동거리·시간 불러오기
         window.editExp = function(id) {
             if (!checkEditable()) return;
             const item = expectedData.find(x => x.id === id);
@@ -2897,6 +3109,128 @@
             document.getElementById('car-form-title').innerText = "🚗 차량 배치 (운전자·탑승자 명단)";
             document.getElementById('car-submit-btn').innerText = "차량 배치 저장";
             if (!keepOpen) toggleAccordion('car-form-wrap', 'car-form-chevron', false);
+        };
+
+        // ==========================================
+        // [Ver 1.3] 첫 화면 상단: 최근 열었던(진행중) 여행의 현재 시간 기준 [직전 일정] & [다음 일정] 브리핑 위젯
+        // - 완료된 여행이거나 진행중인 일정이 없으면 위젯을 숨기고 기존 연도별·지역별 목록을 최상단에 표시
+        // ==========================================
+        window.renderRecentTripWidget = function() {
+            const widgetEl = document.getElementById('recent-trip-widget');
+            if (!widgetEl || !db || tripsData.length === 0) {
+                if (widgetEl) widgetEl.classList.add('hidden');
+                return;
+            }
+
+            const nowDate = getLocalDateStr();
+            let recentId = null;
+            try {
+                recentId = localStorage.getItem('recent_opened_trip_id') || localStorage.getItem('last_trip_id');
+            } catch (_) {}
+
+            let targetTrip = recentId ? tripsData.find(t => t.id === recentId) : null;
+
+            // 만약 최근 열었던 여행이 없거나 이미 종료일이 지난 여행이라면, 현재 진행 중이거나 다가오는 여행 중 가장 가까운 여행을 탐색
+            if (!targetTrip || (targetTrip.endDate && targetTrip.endDate < nowDate)) {
+                const activeOrUpcoming = [...tripsData]
+                    .filter(t => !t.endDate || t.endDate >= nowDate)
+                    .sort((a, b) => (a.startDate || '9999').localeCompare(b.startDate || '9999'));
+                targetTrip = activeOrUpcoming[0] || null;
+            }
+
+            // 진행 중이거나 예정된 여행이 하나도 없으면(모두 완료된 경우) 위젯을 숨기고 기존 폴더 목록만 표시
+            if (!targetTrip || (targetTrip.endDate && targetTrip.endDate < nowDate)) {
+                if (recentWidgetUnsub) { recentWidgetUnsub(); recentWidgetUnsub = null; }
+                widgetEl.classList.add('hidden');
+                return;
+            }
+
+            if (recentWidgetUnsub) { recentWidgetUnsub(); recentWidgetUnsub = null; }
+
+            recentWidgetUnsub = db.collection("trips").doc(targetTrip.id).collection("expected_places").onSnapshot((snap) => {
+                const expList = [];
+                snap.forEach(d => expList.push({ id: d.id, ...d.data() }));
+
+                const smartFocus = getSmartFocusInfo(targetTrip, expList);
+
+                // 모든 일정이 이미 방문 완료되었거나 일정이 비어 있으면 위젯을 숨기고 기존 폴더 목록 중심 유지
+                if (smartFocus.isCompleted || expList.length === 0) {
+                    widgetEl.classList.add('hidden');
+                    return;
+                }
+
+                const prev = smartFocus.prevItem;
+                const next = smartFocus.nextItem;
+                const targetFocusId = next ? next.id : (prev ? prev.id : '');
+                const subReg = inferTripSubRegion(targetTrip);
+
+                const buildMiniScheduleCard = (item, labelBadge, boxStyle) => {
+                    if (!item) {
+                        return `
+                        <div class="${boxStyle} p-3 rounded-xl border flex items-center justify-between text-xs opacity-75">
+                            <span>${labelBadge}</span>
+                            <span class="font-semibold">해당 일정 없음</span>
+                        </div>`;
+                    }
+                    const moveInfoHtml = (item === prev && next)
+                        ? (() => {
+                            const mv = getSegmentMoveInfo(prev, next);
+                            return `<span class="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold">다음 이동 약 ${mv.km}km · ${mv.timeFormatted}</span>`;
+                        })()
+                        : '';
+
+                    return `
+                    <div onclick="enterTripAtCurrentSchedule('${targetTrip.id}', '${item.id}')" class="${boxStyle} p-3 rounded-xl border space-y-1 cursor-pointer transition shadow-sm">
+                        <div class="flex flex-wrap justify-between items-center gap-1">
+                            <div class="flex items-center gap-1.5">
+                                ${labelBadge}
+                                <span class="text-xs font-extrabold text-slate-800"><i class="fa-regular fa-clock mr-0.5 text-blue-600"></i>${esc(item.day || 1)}일차 ${esc(item.time || '')}</span>
+                            </div>
+                            ${moveInfoHtml}
+                        </div>
+                        <p class="font-extrabold text-slate-900 text-sm break-words">${item.category ? `<span class="text-blue-700">[${esc(item.category)}]</span> ` : ''}${esc(item.place_name)}</p>
+                        ${item.address ? `<p class="text-[11px] text-slate-600 truncate"><i class="fa-solid fa-location-dot mr-1 text-slate-400"></i>${esc(item.address)}</p>` : ''}
+                    </div>`;
+                };
+
+                const prevCardHtml = buildMiniScheduleCard(
+                    prev,
+                    `<span class="bg-indigo-100 text-indigo-800 border border-indigo-200 px-2 py-0.5 rounded-full text-[10px] font-extrabold">⏮ 직전 일정</span>`,
+                    prev && prev.visited ? 'bg-sky-50 border-sky-200 hover:bg-sky-100' : 'bg-yellow-50 border-amber-200 hover:bg-yellow-100'
+                );
+
+                const nextCardHtml = buildMiniScheduleCard(
+                    next,
+                    `<span class="bg-rose-600 text-white px-2 py-0.5 rounded-full text-[10px] font-extrabold animate-pulse">🔥 다음 일정</span>`,
+                    next && next.visited ? 'bg-sky-50 border-sky-200 hover:bg-sky-100' : 'bg-yellow-50 border-amber-300 hover:bg-yellow-100'
+                );
+
+                widgetEl.innerHTML = `
+                    <div class="flex flex-wrap justify-between items-start gap-2">
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="bg-amber-400 text-slate-900 text-[10px] font-extrabold px-2 py-0.5 rounded-full">⚡ 진행중인 최근 여행</span>
+                                <span class="text-[11px] text-blue-100 font-bold">📍 ${esc(subReg)} · ${Number(targetTrip.memberCount || 8)}인</span>
+                            </div>
+                            <h2 class="text-base sm:text-lg font-extrabold text-white mt-1 break-words">${esc(targetTrip.name)}</h2>
+                            <p class="text-[11px] text-blue-100">${esc(formatWithDayOfWeek(targetTrip.startDate))} ~ ${esc(formatWithDayOfWeek(targetTrip.endDate))}</p>
+                        </div>
+                        <span class="text-[11px] bg-white/15 px-2.5 py-1 rounded-full font-bold text-amber-200">
+                            <i class="fa-regular fa-clock mr-1"></i>현재 ${getLocalTimeStr()} 기준
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 text-slate-800">
+                        ${prevCardHtml}
+                        ${nextCardHtml}
+                    </div>
+
+                    <button type="button" onclick="enterTripAtCurrentSchedule('${targetTrip.id}', '${targetFocusId}')" class="w-full bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-slate-900 py-3 px-4 rounded-xl text-xs sm:text-sm font-extrabold cursor-pointer flex items-center justify-center gap-2 shadow-md transition">
+                        <i class="fa-solid fa-bolt"></i> 현재 시간의 일정 목록으로 입장하기 ▶
+                    </button>
+                `;
+                widgetEl.classList.remove('hidden');
+            });
         };
 
         // ==========================================
@@ -3070,6 +3404,7 @@
                 tripsData = [];
                 snap.forEach(d => tripsData.push({ id: d.id, ...d.data() }));
                 renderTripCards();
+                renderRecentTripWidget();
                 if (currentTripId) subscribeTripData(currentTripId);
                 setSyncBadge("연결됨", "bg-emerald-500");
             } catch (e) {
@@ -3174,7 +3509,7 @@
         };
 
         // ==========================================
-        // 디바운스 엑셀 백업 캐시 및 Batch 고속 복원 (Ver 1.25: 수동거리·시간 포함)
+        // 디바운스 엑셀 백업 캐시 및 Batch 고속 복원 (수동거리·시간 포함)
         // ==========================================
         function scheduleBackupCache() {
             if (backupDebounceTimer) clearTimeout(backupDebounceTimer);
@@ -3383,7 +3718,6 @@
                         };
 
                         if (overwriteExisting && existingTrip) {
-                            // 덮어쓰기 전 기존 일정 사진·수동거리 및 영수증 데이터를 메모리에 보존
                             const oldExpSnap = await db.collection("trips").doc(existingTrip.id).collection("expected_places").get();
                             oldExpSnap.forEach(doc => {
                                 const d = doc.data();
@@ -3587,7 +3921,7 @@
             return tripId;
         }
 
-        // [Ver 1.25] 앱 재접속 시 개인 휴대폰에 저장된 마지막 여행 및 탭 화면 자동 복원
+        // 앱 재접속 시 개인 휴대폰에 저장된 마지막 여행 및 탭 화면 자동 복원
         let hasRestoredInitialSession = false;
         function restoreLastSessionOnce() {
             if (hasRestoredInitialSession) return;
@@ -3615,6 +3949,7 @@
                     tripsData = [];
                     snap.forEach(d => tripsData.push({ id: d.id, ...d.data() }));
                     renderTripCards();
+                    renderRecentTripWidget();
                     restoreLastSessionOnce();
                     scheduleBackupCache();
                 }, (err) => {
@@ -3650,7 +3985,7 @@
                 selectTrip(tripId);
             };
 
-            // [Ver 1.25] 예상 일정 저장 시 사진 배열(최대 3장) 및 수동 이동거리·시간 함께 저장
+            // 예상 일정 저장 시 사진 배열(최대 3장) 및 수동 이동거리·시간 함께 저장
             document.getElementById('expected-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!checkEditable() || !currentTripId || !db) return;
