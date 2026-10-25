@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>스마트 단체 여행 매니저 Ver 1.35</title>
+    <title>스마트 단체 여행 매니저 Ver 1.5</title>
 
     <!-- 스마트폰 바탕화면 아이콘 및 웹사이트 링크 공유(오픈그래프) 설정 -->
     <link rel="icon" type="image/png" href="apple-touch-icon.png">
@@ -12,7 +12,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="여행매니저">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="스마트 단체 여행 매니저 Ver 1.35">
+    <meta property="og:title" content="스마트 단체 여행 매니저 Ver 1.5">
     <meta property="og:description" content="찬욱과 함께 하는 스마트 여행 타임라인 지도, 네비게이션 길찾기, 영수증 가계부 1/N 정산, 준비물 체크리스트 통합 관리">
     <meta property="og:image" content="image-link2.png">
 
@@ -39,38 +39,37 @@
 </head>
 <body class="text-slate-800 pb-28">
 
-    <!-- 상단 고정 헤더 (Ver 1.35: 도움말 연결 버튼 및 전체 제목 표시) -->
+    <!-- 상단 고정 헤더 (Ver 1.5: 좌측 여행제목 정렬 + 우측 [편집중]·[도움말(1.5)] 정렬) -->
     <header class="bg-blue-600 text-white sticky top-0 z-40 shadow-md">
-        <div class="max-w-3xl mx-auto px-3 py-2.5 space-y-1.5">
-            <!-- 상단 1열: 목록 버튼 & 기능 제어 버튼 모음 -->
-            <div class="flex justify-between items-center gap-1.5">
-                <div class="flex items-center gap-1.5">
-                    <button id="btn-back" onclick="goTripSelector()" class="hidden bg-blue-700 hover:bg-blue-800 px-2.5 py-1 rounded-full text-xs font-bold shrink-0 cursor-pointer flex items-center gap-1 shadow-sm">
-                        <i class="fa-solid fa-arrow-left"></i> 목록
-                    </button>
-                    <span class="text-[10px] bg-blue-800/90 text-blue-100 px-2 py-0.5 rounded-full font-extrabold">Ver 1.35</span>
+        <div class="max-w-3xl mx-auto px-3 py-2.5 space-y-1">
+            <!-- 상단 메인 행: 왼쪽 여행 제목 & 오른쪽 [편집중] · [도움말(1.5)] -->
+            <div class="flex justify-between items-center gap-2">
+                <div class="flex items-center gap-1.5 flex-1 min-w-0 text-left">
+                    <h1 id="header-trip-title" class="font-extrabold text-sm sm:text-base leading-snug break-words text-left">여행 일정 목록</h1>
+                    <span id="header-completed-badge" class="hidden bg-amber-400 text-slate-900 text-[10px] font-extrabold px-2 py-0.5 rounded-full shrink-0">🏆완료됨</span>
                 </div>
-                <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
-                    <button id="btn-map-provider" onclick="toggleMapProvider()" class="hidden bg-amber-400 text-slate-900 px-2 py-1 rounded-full text-[11px] font-extrabold cursor-pointer shadow-sm">
-                        🇰🇷 국내(카카오)
-                    </button>
-                    <button id="btn-edit-lock" onclick="toggleEditLock()" class="bg-blue-700 hover:bg-blue-800 px-2 py-1 rounded-full text-[11px] font-semibold cursor-pointer text-white">
+                <div class="flex items-center gap-1.5 shrink-0 justify-end">
+                    <button id="btn-edit-lock" onclick="toggleEditLock()" class="bg-blue-700 hover:bg-blue-800 px-2.5 py-1 rounded-full text-[11px] font-semibold cursor-pointer text-white shadow-sm">
                         <i class="fa-solid fa-lock-open mr-0.5"></i>편집중
                     </button>
-                    <!-- help.html 도움말 새창 열기 버튼 -->
+                    <!-- help.html 도움말(1.5) 새창 열기 버튼 -->
                     <a href="help.html" target="_blank" title="도움말 보기" class="bg-amber-300 hover:bg-amber-400 text-slate-900 px-2.5 py-1 rounded-full text-[11px] font-extrabold flex items-center gap-1 cursor-pointer shadow-sm">
-                        <i class="fa-solid fa-circle-question text-blue-800"></i> 도움말
+                        <i class="fa-solid fa-circle-question text-blue-800"></i> 도움말(1.5)
                     </a>
-                    <button onclick="forceReloadDB()" title="데이터 새로고침" class="bg-blue-700 hover:bg-blue-800 w-7 h-7 rounded-full text-xs flex items-center justify-center cursor-pointer">
-                        <i class="fa-solid fa-rotate"></i>
-                    </button>
-                    <span id="sync-status" class="text-[11px] bg-amber-500 px-2 py-1 rounded-full text-white font-semibold shrink-0">연결중</span>
                 </div>
             </div>
-            <!-- 상단 2열: 여행 전체 제목 및 전체 기간 표시 (잘림 없이 전체 노출) -->
-            <div class="pt-0.5">
-                <h1 id="header-trip-title" class="font-extrabold text-sm sm:text-base leading-snug break-words">여행 일정 목록</h1>
-                <p id="header-trip-dates" class="hidden text-xs text-blue-100 font-medium leading-tight break-words mt-0.5"></p>
+            <!-- 상단 보조 행: 좌측 여행 기간·인원 & 우측 지도전환·새로고침·동기화상태 -->
+            <div class="flex justify-between items-center gap-2 pt-0.5">
+                <p id="header-trip-dates" class="text-[11px] text-blue-100 font-medium leading-tight break-words text-left flex-1 min-w-0">스마트 단체 여행 매니저 Ver 1.5</p>
+                <div class="flex items-center gap-1 shrink-0">
+                    <button id="btn-map-provider" onclick="toggleMapProvider()" class="hidden bg-amber-400 text-slate-900 px-2 py-0.5 rounded-full text-[10px] font-extrabold cursor-pointer shadow-sm">
+                        🇰🇷 국내(카카오)
+                    </button>
+                    <button onclick="forceReloadDB()" title="데이터 새로고침" class="bg-blue-700 hover:bg-blue-800 w-6 h-6 rounded-full text-[10px] flex items-center justify-center cursor-pointer">
+                        <i class="fa-solid fa-rotate"></i>
+                    </button>
+                    <span id="sync-status" class="text-[10px] bg-amber-500 px-2 py-0.5 rounded-full text-white font-semibold shrink-0">연결중</span>
+                </div>
             </div>
         </div>
     </header>
@@ -111,7 +110,7 @@
             <div class="flex justify-between items-center">
                 <div>
                     <h2 class="text-base font-extrabold text-slate-800"><i class="fa-solid fa-suitcase-rolling text-blue-600 mr-1.5"></i>내 여행 일정 목록</h2>
-                    <p class="text-[11px] text-slate-500 mt-0.5">연도별 또는 국내·해외 지역별 폴더를 눌러 일정을 확인하세요.</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">연도별 또는 국내·해외 지역별 폴더를 눌러 일정을 확인하세요. (완료된 여행도 [수정]을 누르면 재수정 가능)</p>
                 </div>
             </div>
             <div id="trip-cards-container" class="space-y-3">
@@ -221,11 +220,29 @@
     </main>
 
     <!-- ========================================== -->
-    <!-- 화면 2: 개별 여행 메인 화면 (Ver 1.35: 타임라인+일정관리 통합 & 3탭 하단 고정 바) -->
+    <!-- 화면 2: 개별 여행 메인 화면 (Ver 1.5: 타임라인·일정 통합 + 가계부 3단 통계 + 하단 [←목록] 포함 바) -->
     <!-- ========================================== -->
     <main id="main-app-screen" class="hidden max-w-3xl mx-auto p-3 space-y-4">
 
-        <!-- 타임라인 공통 일차 필터 바 + 전체 펼치기/접기 제어 -->
+        <!-- 여행완료 상태 알림 및 [최종 통계 바로보기 / 재수정] 상단 안내 배너 (여행완료 시 자동 노출) -->
+        <div id="trip-completed-banner" class="hidden bg-gradient-to-r from-indigo-700 via-blue-700 to-emerald-700 text-white p-3.5 rounded-2xl shadow-md flex flex-wrap justify-between items-center gap-2">
+            <div class="space-y-0.5">
+                <span class="text-xs font-extrabold flex items-center gap-1.5">
+                    <i class="fa-solid fa-trophy text-amber-300"></i> 이 여행은 [여행완료] 확정되어 일정이 보호(수정잠금)되고 있습니다.
+                </span>
+                <p class="text-[11px] text-blue-100">일정을 다시 수정하려면 우측 [재수정 열기] 또는 여행 목록의 [수정] 버튼을 누르세요.</p>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <button type="button" onclick="openFinalStatsView()" class="bg-amber-400 hover:bg-amber-300 text-slate-900 px-3 py-1.5 rounded-xl text-xs font-extrabold cursor-pointer shadow-sm">
+                    📊 최종 통계 보기
+                </button>
+                <button type="button" onclick="toggleTripCompletedStatus(false)" class="bg-white/20 hover:bg-white/30 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer">
+                    🔓 재수정 열기
+                </button>
+            </div>
+        </div>
+
+        <!-- 타임라인 공통 일차 필터 바 + 전체 펼치기/접기 + 여행완료 버튼 -->
         <div id="common-day-filter-bar" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-2">
             <div class="inline-flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
                 <button id="filter-day-all" onclick="setDayFilter('all')" class="px-2.5 py-1.5 rounded-md bg-white text-blue-600 shadow-sm cursor-pointer">전체</button>
@@ -240,11 +257,14 @@
                 <button type="button" onclick="locateMyGPS()" class="bg-slate-800 hover:bg-slate-900 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold cursor-pointer flex items-center gap-1">
                     <i class="fa-solid fa-location-crosshairs"></i> 내위치
                 </button>
+                <button type="button" id="btn-complete-trip-top" onclick="toggleTripCompletedStatus()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-xl text-xs font-extrabold cursor-pointer flex items-center gap-1 shadow-sm">
+                    <i class="fa-solid fa-flag-checkered"></i> 여행완료
+                </button>
             </div>
         </div>
 
         <!-- ========================================== -->
-        <!-- [탭 1] 통합 타임라인 · 일정관리 (지도 + 구간별 일정추가 + 1·2차 스마트 아코디언) -->
+        <!-- [탭 1] 통합 타임라인 · 일정 (지도 + 구간별 일정추가 + 1·2차 스마트 아코디언) -->
         <!-- ========================================== -->
         <section id="tab-plan" class="space-y-4">
 
@@ -261,7 +281,7 @@
                 <div id="map-plan" class="map-box"></div>
             </div>
 
-            <!-- 2. 일정 추가 / 수정 입력 아코디언 카드 (구간별 [+ N일차 오전/오후 일정 추가하기] 클릭 시 해당 시간대로 자동 열림) -->
+            <!-- 2. 일정 추가 / 수정 입력 아코디언 카드 (구간별 [+ N일차 오전/오후 일정 추가하기] 클릭 시 열림 / 여행완료 시 숨김) -->
             <div id="exp-accordion-card" class="bg-white rounded-2xl shadow-sm border-2 border-blue-200 overflow-hidden">
                 <button type="button" onclick="toggleExpFormAccordion()" class="w-full p-3.5 flex justify-between items-center bg-blue-50/70 hover:bg-blue-100/60 cursor-pointer text-left">
                     <span id="exp-form-title" class="text-xs sm:text-sm font-extrabold text-blue-900 flex items-center gap-1.5">
@@ -300,7 +320,7 @@
                                 <input type="time" id="exp-time" value="09:30" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs font-bold">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">카테고리</label>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">일정(장소) 카테고리</label>
                                 <select id="exp-category" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs bg-white font-semibold">
                                     <option value="관광">관광</option>
                                     <option value="식당">식당</option>
@@ -432,50 +452,84 @@
                         <span class="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block"></span> 연한 블루 = 방문완료·지출
                     </span>
                 </div>
-                <!-- JS에서 [1일차 오전 추가버튼 -> 1일차 오전 헤더 -> 장소 목록], [1일차 오후 추가버튼 -> 1일차 오후 헤더...] 순서로 렌더링 -->
                 <div id="expected-timeline-list" class="space-y-4"></div>
             </div>
         </section>
 
         <!-- ========================================== -->
-        <!-- [탭 2] 가계부·회비 (요약 ➔ 상세 아코디언 지출 목록 & 영수증 첨부) -->
+        <!-- [탭 2] 가계부·회비 (11대 전용 카테고리 + 3가지 통계 보드 + 1.여행전 목록 + 2.여행중·완료 목록) -->
         <!-- ========================================== -->
         <section id="tab-actual" class="hidden space-y-4">
-            <!-- 정산 요약 및 1/N 계산기 -->
+
+            <!-- 1. 상단 정산 요약 및 [🏁 여행완료하기] 확정 보드 -->
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-                <div class="flex justify-between items-center">
+                <div class="flex flex-wrap justify-between items-center gap-2">
                     <h3 class="text-sm font-extrabold text-slate-800"><i class="fa-solid fa-calculator text-emerald-600 mr-1.5"></i>실시간 예산 비교 및 1/N 회비 정산</h3>
-                    <div class="flex items-center gap-1.5 text-xs">
-                        <span class="text-slate-500 font-semibold">정산 인원:</span>
-                        <input type="number" id="calc-member-count" value="8" min="1" onchange="updateMemberCount(this.value)" class="w-14 border border-slate-300 rounded-lg px-2 py-1 text-center font-extrabold text-blue-700">
-                        <span class="font-bold">명</span>
+                    <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1 text-xs">
+                            <span class="text-slate-500 font-semibold">인원:</span>
+                            <input type="number" id="calc-member-count" value="8" min="1" onchange="updateMemberCount(this.value)" class="w-12 border border-slate-300 rounded-lg px-1.5 py-1 text-center font-extrabold text-blue-700">
+                            <span class="font-bold">명</span>
+                        </div>
+                        <button type="button" id="btn-complete-trip-act" onclick="toggleTripCompletedStatus()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl text-xs font-extrabold cursor-pointer flex items-center gap-1 shadow-sm">
+                            <i class="fa-solid fa-flag-checkered"></i> 여행완료하기
+                        </button>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    <div class="bg-blue-50/70 border border-blue-200 p-3 rounded-xl">
-                        <p class="text-[11px] font-bold text-blue-700">총 예상 예산</p>
+                    <div class="bg-amber-50/70 border border-amber-200 p-3 rounded-xl">
+                        <p class="text-[11px] font-bold text-amber-800">📋 여행전 총 예상 예산</p>
                         <p id="calc-exp-total" class="text-base font-extrabold text-slate-800 mt-0.5">0원</p>
                         <p id="calc-exp-per" class="text-[11px] text-slate-500 mt-0.5">1인 예상 약 0원</p>
                     </div>
-                    <div class="bg-emerald-50/70 border border-emerald-200 p-3 rounded-xl">
-                        <p class="text-[11px] font-bold text-emerald-700">총 실제 지출액</p>
-                        <p id="calc-act-total" class="text-base font-extrabold text-emerald-800 mt-0.5">0원</p>
+                    <div class="bg-sky-50/80 border border-sky-200 p-3 rounded-xl">
+                        <p class="text-[11px] font-bold text-sky-800">🧾 여행중·완료 실제 지출액</p>
+                        <p id="calc-act-total" class="text-base font-extrabold text-sky-900 mt-0.5">0원</p>
                         <p id="calc-diff-text" class="text-[11px] text-slate-600 mt-0.5">예산 여유 +0원</p>
                     </div>
-                    <div class="bg-amber-50/80 border border-amber-200 p-3 rounded-xl">
-                        <p class="text-[11px] font-bold text-amber-800">실제 지출 기준 1인당 회비</p>
-                        <p id="calc-per-person-exact" class="text-base font-extrabold text-amber-900 mt-0.5">0원</p>
-                        <p id="calc-per-person-round" class="text-[11px] text-amber-700 font-semibold mt-0.5">100원 올림: 0원</p>
+                    <div class="bg-emerald-50/80 border border-emerald-200 p-3 rounded-xl">
+                        <p class="text-[11px] font-bold text-emerald-800">💰 실제 지출 기준 1인당 회비</p>
+                        <p id="calc-per-person-exact" class="text-base font-extrabold text-emerald-900 mt-0.5">0원</p>
+                        <p id="calc-per-person-round" class="text-[11px] text-emerald-700 font-semibold mt-0.5">100원 올림: 0원</p>
                     </div>
                 </div>
 
                 <button type="button" onclick="copySettlementReport()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-extrabold cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
-                    <i class="fa-solid fa-share-nodes"></i> 카카오톡 공유용 가계부 정산 내역 복사하기
+                    <i class="fa-solid fa-share-nodes"></i> 카카오톡 공유용 가계부 정산 내역 (카테고리 요약 포함) 복사하기
                 </button>
             </div>
 
-            <!-- 가계부 직접 입력 / 수정 아코디언 (영수증 첨부 기능 포함) -->
+            <!-- 2. 카테고리별 이번 여행 통계 대시보드 (3가지 보기 모드 전환: ①여행전·후 비교 / ②여행전 통계 / ③여행중·완료 통계) -->
+            <div id="account-stats-card" class="bg-white rounded-2xl shadow-sm border-2 border-indigo-200 overflow-hidden">
+                <button type="button" onclick="toggleAccordion('account-stats-body', 'account-stats-chev')" class="w-full p-4 bg-gradient-to-r from-indigo-600 to-blue-600 text-white flex justify-between items-center cursor-pointer text-left">
+                    <div>
+                        <span id="account-stats-title" class="text-xs sm:text-sm font-extrabold flex items-center gap-1.5">
+                            <i class="fa-solid fa-chart-pie text-amber-300"></i> 📊 카테고리별 여행 통계 & 여행전·후 비교 (터치하여 열기/닫기)
+                        </span>
+                        <p class="text-[11px] text-indigo-100 mt-0.5">여행전(예상) vs 여행후(실제) 비교 및 각각 독립 통계를 확인하세요.</p>
+                    </div>
+                    <i id="account-stats-chev" class="fa-solid fa-chevron-down text-white transition-transform" style="transform: rotate(180deg);"></i>
+                </button>
+                <div id="account-stats-body" class="p-4 space-y-3 bg-slate-50/50">
+                    <!-- 3가지 통계 모드 전환 탭 버튼 -->
+                    <div class="grid grid-cols-3 gap-1.5 bg-slate-200/80 p-1 rounded-xl text-[11px] sm:text-xs font-extrabold">
+                        <button type="button" id="btn-stat-mode-compare" onclick="setAccountStatsMode('compare')" class="py-2 px-1.5 rounded-lg bg-white text-indigo-700 shadow-sm cursor-pointer">
+                            ⚖️ 여행전·후 비교
+                        </button>
+                        <button type="button" id="btn-stat-mode-pre" onclick="setAccountStatsMode('pre')" class="py-2 px-1.5 rounded-lg text-slate-600 cursor-pointer">
+                            📋 여행전 통계만
+                        </button>
+                        <button type="button" id="btn-stat-mode-post" onclick="setAccountStatsMode('post')" class="py-2 px-1.5 rounded-lg text-slate-600 cursor-pointer">
+                            🧾 여행중·완료 통계
+                        </button>
+                    </div>
+                    <!-- JS(renderAccountCategoryStats)에서 선택된 모드의 통계 표 및 그래프를 렌더링합니다 -->
+                    <div id="account-stats-content" class="space-y-2"></div>
+                </div>
+            </div>
+
+            <!-- 3. 가계부 직접 입력 / 수정 아코디언 (11대 가계부 전용 카테고리 적용 / 여행완료 시 숨김) -->
             <div id="act-accordion-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <button type="button" onclick="toggleActFormAccordion()" class="w-full p-4 flex justify-between items-center bg-emerald-50/60 hover:bg-emerald-50 cursor-pointer text-left">
                     <span id="act-form-title" class="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">
@@ -485,7 +539,7 @@
                 </button>
                 <div id="act-form-body" class="hidden p-4 border-t border-slate-200 space-y-3">
                     <div class="bg-blue-50/60 p-3 rounded-xl border border-blue-200 space-y-1.5">
-                        <label class="block text-xs font-bold text-blue-800">💡 예상 일정에서 불러오기 (선택 시 자동 채움)</label>
+                        <label class="block text-xs font-bold text-blue-800">💡 여행전 예상 일정에서 불러오기 (선택 시 가계부 카테고리로 자동 변환)</label>
                         <select id="act-preset-select" onchange="fillFromExpected()" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs bg-white">
                             <option value="">-- 예상 방문지 목록에서 선택하세요 --</option>
                         </select>
@@ -520,19 +574,19 @@
                                 <input type="time" id="act-time" value="12:00" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-600 mb-1">카테고리</label>
-                                <select id="act-category" class="w-full border border-slate-300 rounded-xl px-2.5 py-2 text-xs bg-white font-semibold">
-                                    <option value="식당">식당</option>
-                                    <option value="카페">카페</option>
-                                    <option value="관광">관광</option>
-                                    <option value="숙박">숙박</option>
-                                    <option value="장보기">장보기</option>
-                                    <option value="쇼핑">쇼핑</option>
-                                    <option value="교통비">교통비</option>
-                                    <option value="통신,보험">통신,보험</option>
-                                    <option value="휴게소">휴게소</option>
-                                    <option value="출발/귀가">출발/귀가</option>
-                                    <option value="기타">기타</option>
+                                <label class="block text-xs font-semibold text-emerald-700 mb-1">가계부 지출 카테고리</label>
+                                <select id="act-category" class="w-full border border-emerald-300 rounded-xl px-2.5 py-2 text-xs bg-white font-extrabold text-emerald-800">
+                                    <option value="식비">🍚 식비</option>
+                                    <option value="카페·간식">☕ 카페·간식</option>
+                                    <option value="마트·장보기">🛒 마트·장보기</option>
+                                    <option value="숙박비">🏡 숙박비</option>
+                                    <option value="교통·주유·주차">🚗 교통·주유·주차</option>
+                                    <option value="항공비">✈️ 항공비</option>
+                                    <option value="관광·입장·체험">🎟️ 관광·입장·체험</option>
+                                    <option value="회식·주류·야식">🍻 회식·주류·야식</option>
+                                    <option value="쇼핑·기념품">🛍️ 쇼핑·기념품</option>
+                                    <option value="통신·보험·비상">🛡️ 통신·보험·비상</option>
+                                    <option value="기타·예비비">📌 기타·예비비</option>
                                 </select>
                             </div>
                             <div>
@@ -610,12 +664,42 @@
                 </div>
             </div>
 
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
-                <div>
-                    <h3 class="text-sm font-extrabold text-slate-800"><i class="fa-solid fa-coins text-emerald-600 mr-1"></i>전체 가계부 지출 내역 (터치하여 상세·영수증 보기)</h3>
-                    <p class="text-[11px] text-slate-500 mt-0.5">일정 제목과 금액만 깔끔하게 표시되며, 항목을 터치하면 상세 내역과 영수증이 펼쳐집니다.</p>
+            <!-- 4-1. [목록 1] 여행전 예산 목록 (아코디언 대분류 ➔ 항목 터치 시 상세 펼침) -->
+            <div class="bg-white rounded-2xl shadow-sm border-2 border-amber-200 overflow-hidden">
+                <button type="button" onclick="toggleAccordion('pre-trip-budget-body', 'pre-trip-budget-chev')" class="w-full p-4 bg-amber-50 hover:bg-amber-100/70 flex justify-between items-center cursor-pointer text-left">
+                    <div>
+                        <h3 class="text-sm font-extrabold text-amber-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-clipboard-list text-amber-600"></i> 📋 1. 여행전 예산 목록 (터치하여 목록 열기/닫기)
+                        </h3>
+                        <p class="text-[11px] text-amber-700 mt-0.5">출발 전 계획한 예상 일정 예산입니다. 각 항목을 누르면 상세 내용이 펼쳐집니다.</p>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span id="pre-trip-list-badge" class="text-xs bg-amber-200/80 text-amber-900 px-2.5 py-0.5 rounded-full font-extrabold">0건</span>
+                        <i id="pre-trip-budget-chev" class="fa-solid fa-chevron-down text-amber-700 transition-transform"></i>
+                    </div>
+                </button>
+                <div id="pre-trip-budget-body" class="hidden p-4 border-t border-amber-100 space-y-3 bg-amber-50/20">
+                    <div id="pre-trip-budget-list" class="space-y-3"></div>
                 </div>
-                <div id="actual-manage-list" class="space-y-4"></div>
+            </div>
+
+            <!-- 4-2. [목록 2] 여행중(여행완료 포함) 실제 지출 목록 (아코디언 대분류 ➔ 항목 터치 시 상세·영수증 펼침) -->
+            <div class="bg-white rounded-2xl shadow-sm border-2 border-sky-200 overflow-hidden">
+                <button type="button" onclick="toggleAccordion('post-trip-actual-body', 'post-trip-actual-chev')" class="w-full p-4 bg-sky-50 hover:bg-sky-100/70 flex justify-between items-center cursor-pointer text-left">
+                    <div>
+                        <h3 class="text-sm font-extrabold text-sky-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-receipt text-sky-600"></i> 🧾 2. 여행중(여행완료 포함) 실제 지출 목록
+                        </h3>
+                        <p class="text-[11px] text-sky-700 mt-0.5">일정 제목과 금액만 깔끔하게 표시되며, 항목을 터치하면 상세 내역과 영수증이 펼쳐집니다.</p>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span id="post-trip-list-badge" class="text-xs bg-sky-200/80 text-sky-900 px-2.5 py-0.5 rounded-full font-extrabold">0건</span>
+                        <i id="post-trip-actual-chev" class="fa-solid fa-chevron-down text-sky-700 transition-transform" style="transform: rotate(180deg);"></i>
+                    </div>
+                </button>
+                <div id="post-trip-actual-body" class="p-4 border-t border-sky-100 space-y-3 bg-sky-50/10">
+                    <div id="actual-manage-list" class="space-y-3"></div>
+                </div>
             </div>
 
             <!-- 가계부·회비 페이지 배너 광고 (coffee-2.png -> Blue Bottle Dialer 이동) -->
@@ -760,7 +844,7 @@
                 <div class="flex justify-between items-center">
                     <div>
                         <h4 class="text-xs sm:text-sm font-extrabold text-emerald-800">🛒 4. 여행중 현장 구입품목 (구입장소별 & 가계부 연동)</h4>
-                        <p class="text-[11px] text-slate-500">[가계부반영] 버튼을 누르면 해당 구입장소의 일차·시간에 맞춰 가계부 지출로 자동 등록됩니다.</p>
+                        <p class="text-[11px] text-slate-500">[가계부반영] 버튼을 누르면 [마트·장보기] 카테고리로 가계부 지출에 자동 등록됩니다.</p>
                     </div>
                     <button type="button" onclick="quickOpenChkForm('buy', '하나로마트 가곡점')" class="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg font-bold shrink-0 cursor-pointer">+ 구입품목 추가</button>
                 </div>
@@ -777,10 +861,14 @@
         </section>
 
         <!-- ========================================== -->
-        <!-- [Ver 1.35] 하단 고정 내비게이션 바 (3개 탭 체제: 타임라인·일정 / 가계부·회비 / 체크·차량) -->
+        <!-- [Ver 1.5] 하단 고정 내비게이션 바 (맨 왼쪽 [⬅ 목록] + 3개 탭 체제) -->
         <!-- ========================================== -->
         <nav id="bottom-nav-bar" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur border-t border-slate-200 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
             <div class="max-w-3xl mx-auto flex text-xs">
+                <button id="btn-back" onclick="goTripSelector()" class="w-20 sm:w-24 py-2.5 px-1 flex flex-col items-center justify-center gap-0.5 font-extrabold text-slate-700 bg-slate-100/80 hover:bg-slate-200/80 border-r border-slate-200 cursor-pointer shrink-0">
+                    <i class="fa-solid fa-arrow-left text-sm text-blue-600"></i>
+                    <span>목록</span>
+                </button>
                 <button id="btn-tab-plan" onclick="switchTab('plan')" class="flex-1 py-2.5 px-1 flex flex-col items-center justify-center gap-0.5 font-extrabold text-blue-600 border-t-2 border-blue-600 bg-blue-50/40 cursor-pointer">
                     <i class="fa-solid fa-route text-sm"></i>
                     <span>타임라인·일정</span>
@@ -800,20 +888,23 @@
 
     <!-- 2부 코드를 여기에 이어서 붙여넣으세요 -->
     <!-- ========================================== -->
-    <!-- 2부: 전역 상태, 구간별 일정 추가 연동, 3탭 하단바 제어 및 국내·해외 지도 엔진 -->
+    <!-- 2부: 11대 가계부 카테고리 매핑, 여행완료 잠금/재수정 제어, 구간별 일정 추가 및 지도 엔진 -->
     <!-- ========================================== -->
     <script>
         let currentTripId = null;
         let currentMemberCount = 8;
         let currentRegion = 'kr'; // 'kr' (국내: 카카오맵) 또는 'global' (해외: 구글맵)
-        let isEditLocked = false; // 실수 삭제/수정 방지용 잠금 상태
+        let isEditLocked = false; // 수동 잠금 상태
+        let isCurrentTripCompleted = false; // [Ver 1.5] 여행완료 확정 상태 (완료 시 자동 수정잠금)
 
-        // [Ver 1.35] 2단계 스마트 아코디언(1단계: 오전/오후 대분류, 2단계: 장소 상세) & 가계부 아코디언 상태 관리
-        let expandedHalfDayKeys = new Set(); // 사용자가 터치해 펼친 '일차_AM/PM' 대분류 키 모음 (예: '1_AM', '1_PM')
+        // [Ver 1.5] 2단계 스마트 아코디언 & 가계부(여행전/여행중) 아코디언 & 3모드 통계 상태 관리
+        let expandedHalfDayKeys = new Set(); // 사용자가 터치해 펼친 '일차_AM/PM' 대분류 키 모음
         let manuallyCollapsedHalfDayKeys = new Set(); // 자동 펼침 대상이지만 사용자가 직접 접은 대분류 키 모음
-        let expandedTimelineIds = new Set(); // 사용자가 터치해 상세 정보를 펼친 개별 일정 ID 모음
+        let expandedTimelineIds = new Set(); // 타임라인에서 터치해 상세 정보를 펼친 개별 일정 ID 모음
         let manuallyCollapsedIds = new Set(); // 자동 펼침(직전·다음) 대상이지만 사용자가 직접 접은 일정 ID 모음
-        let expandedActualManageIds = new Set(); // 가계부 목록에서 터치해 상세 내용을 펼친 지출 ID 모음
+        let expandedPreBudgetIds = new Set(); // 가계부 [1. 여행전 예산 목록]에서 터치해 상세를 펼친 일정 ID 모음
+        let expandedActualManageIds = new Set(); // 가계부 [2. 여행중·완료 지출 목록]에서 터치해 상세를 펼친 지출 ID 모음
+        let currentAccountStatsMode = 'compare'; // 'compare'(여행전·후 비교) | 'pre'(여행전 통계만) | 'post'(여행중·완료 통계만)
         let isExpandAllTimeline = false; // [전체펼침 / 스마트접기] 토글 상태
         let recentWidgetUnsub = null; // 첫 화면 최근 여행 브리핑 위젯용 실시간 구독 핸들
 
@@ -837,6 +928,53 @@
         const KR_SUBREGIONS = ['강원도', '수도권', '충청권', '전라도', '경상도', '제주도'];
         const GLOBAL_SUBREGIONS = ['일본', '중국', '아시아', '유럽', '북아메리카', '남아메리카', '오세아니아', '아프리카'];
 
+        // [Ver 1.5] 가계부 전용 11대 표준 카테고리 정의 (항공비 포함)
+        const ACCOUNT_CATEGORIES = [
+            { key: '항공비', icon: '✈️', label: '항공비' },
+            { key: '교통·주유·주차', icon: '🚗', label: '교통·주유·주차' },
+            { key: '숙박비', icon: '🏡', label: '숙박비' },
+            { key: '식비', icon: '🍚', label: '식비' },
+            { key: '카페·간식', icon: '☕', label: '카페·간식' },
+            { key: '마트·장보기', icon: '🛒', label: '마트·장보기' },
+            { key: '회식·주류·야식', icon: '🍻', label: '회식·주류·야식' },
+            { key: '관광·입장·체험', icon: '🎟️', label: '관광·입장·체험' },
+            { key: '쇼핑·기념품', icon: '🛍️', label: '쇼핑·기념품' },
+            { key: '통신·보험·비상', icon: '🛡️', label: '통신·보험·비상' },
+            { key: '기타·예비비', icon: '📌', label: '기타·예비비' }
+        ];
+
+        // 일정(장소) 카테고리 또는 구버전 가계부 카테고리를 11대 가계부 전용 카테고리로 자동 변환하는 스마트 매핑 함수
+        function mapExpCategoryToAct(rawCat, placeOrTitle = '') {
+            const c = String(rawCat || '').trim();
+            const title = String(placeOrTitle || '').trim();
+
+            if (/항공|비행기|공항|티웨이|대한항공|아시아나|진에어|제주항공|에어부산|에어서울/.test(c) || /항공|비행기|공항/.test(title)) {
+                return '항공비';
+            }
+            if (ACCOUNT_CATEGORIES.some(ac => ac.key === c)) return c;
+
+            switch (c) {
+                case '식당': return '식비';
+                case '카페':
+                case '휴게소': return '카페·간식';
+                case '장보기': return '마트·장보기';
+                case '숙박':
+                case '숙소': return '숙박비';
+                case '교통비':
+                case '출발/귀가': return '교통·주유·주차';
+                case '관광': return '관광·입장·체험';
+                case '쇼핑': return '쇼핑·기념품';
+                case '통신,보험': return '통신·보험·비상';
+                case '기타': return '기타·예비비';
+                default: return '기타·예비비';
+            }
+        }
+
+        function getAccountCategoryIcon(catKey) {
+            const found = ACCOUNT_CATEGORIES.find(c => c.key === catKey);
+            return found ? found.icon : '📌';
+        }
+
         const firebaseConfig = {
             apiKey: "AIzaSyBVXAi7WTQJ0sm7FXOjWwAMzmnvw1wSt0M",
             authDomain: "group-trip-app-754ca.firebaseapp.com",
@@ -850,7 +988,7 @@
         let db = null;
         let unsubExp = null, unsubAct = null, unsubCars = null, unsubChk = null;
 
-        // HTML 이스케이프 헬퍼 (XSS 및 따옴표 화면 깨짐 완벽 방지)
+        // HTML 이스케이프 헬퍼
         const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
             '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
         }[c]));
@@ -1089,30 +1227,155 @@
             const badge = document.getElementById('sync-status');
             if (!badge) return;
             badge.innerText = text;
-            badge.className = `text-[11px] ${colorClass} px-2 py-1 rounded-full text-white font-semibold shrink-0`;
+            badge.className = `text-[10px] ${colorClass} px-2 py-0.5 rounded-full text-white font-semibold shrink-0`;
         }
 
-        // 편집 잠금 토글
-        window.toggleEditLock = function() {
-            isEditLocked = !isEditLocked;
+        // ==========================================
+        // [Ver 1.5] 편집 잠금 & [🏁 여행완료하기] 확정 / 재수정 해제 시스템
+        // ==========================================
+        function updateEditLockButtonUI() {
             const btn = document.getElementById('btn-edit-lock');
             if (!btn) return;
-            if (isEditLocked) {
+            if (isCurrentTripCompleted) {
+                btn.innerHTML = `<i class="fa-solid fa-trophy mr-0.5 text-amber-300"></i>완료잠금`;
+                btn.className = "bg-indigo-800 hover:bg-indigo-900 px-2.5 py-1 rounded-full text-[11px] font-extrabold cursor-pointer text-white shadow-sm";
+            } else if (isEditLocked) {
                 btn.innerHTML = `<i class="fa-solid fa-lock mr-0.5"></i>잠금됨`;
-                btn.className = "bg-rose-600 hover:bg-rose-700 px-2 py-1 rounded-full text-[11px] font-bold cursor-pointer text-white";
+                btn.className = "bg-rose-600 hover:bg-rose-700 px-2.5 py-1 rounded-full text-[11px] font-bold cursor-pointer text-white shadow-sm";
             } else {
                 btn.innerHTML = `<i class="fa-solid fa-lock-open mr-0.5"></i>편집중`;
-                btn.className = "bg-blue-700 hover:bg-blue-800 px-2 py-1 rounded-full text-[11px] font-semibold cursor-pointer text-white";
+                btn.className = "bg-blue-700 hover:bg-blue-800 px-2.5 py-1 rounded-full text-[11px] font-semibold cursor-pointer text-white shadow-sm";
             }
+        }
+
+        window.toggleEditLock = function() {
+            if (isCurrentTripCompleted) {
+                if (confirm('현재 이 여행은 [🏆 여행완료] 확정되어 일정이 보호되고 있습니다.\n여행완료 상태를 해제하고 다시 일정을 수정하시겠습니까?')) {
+                    toggleTripCompletedStatus(false);
+                }
+                return;
+            }
+            isEditLocked = !isEditLocked;
+            updateEditLockButtonUI();
         };
 
         function checkEditable() {
+            if (isCurrentTripCompleted) {
+                if (confirm('현재 이 여행은 [🏆 여행완료] 확정되어 중간 일정을 수정할 수 없습니다.\n\n지금 바로 [여행완료]를 해제하고 수정 모드로 전환하시겠습니까?')) {
+                    toggleTripCompletedStatus(false);
+                }
+                return false;
+            }
             if (isEditLocked) {
                 alert('현재 [🔒 잠금됨] 상태입니다. 수정이나 삭제를 하려면 우측 상단의 [🔒 잠금됨] 버튼을 눌러 잠금을 해제해 주세요.');
                 return false;
             }
             return true;
         }
+
+        // [Ver 1.5] 여행완료 상태 UI 일괄 반영 (완료 배너, 입력 아코디언 숨김, 버튼 텍스트 전환)
+        function updateTripCompletedUI() {
+            const trip = tripsData.find(t => t.id === currentTripId);
+            isCurrentTripCompleted = Boolean(trip && trip.isCompleted);
+
+            const headerBadge = document.getElementById('header-completed-badge');
+            const banner = document.getElementById('trip-completed-banner');
+            const expCard = document.getElementById('exp-accordion-card');
+            const actCard = document.getElementById('act-accordion-card');
+            const topBtn = document.getElementById('btn-complete-trip-top');
+            const actBtn = document.getElementById('btn-complete-trip-act');
+            const statsTitle = document.getElementById('account-stats-title');
+
+            if (isCurrentTripCompleted) {
+                if (headerBadge && currentTripId) headerBadge.classList.remove('hidden');
+                if (banner && currentTripId) banner.classList.remove('hidden');
+                if (expCard) expCard.classList.add('hidden');
+                if (actCard) actCard.classList.add('hidden');
+                if (topBtn) {
+                    topBtn.innerHTML = `<i class="fa-solid fa-unlock"></i> 재수정`;
+                    topBtn.className = "bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded-xl text-xs font-extrabold cursor-pointer flex items-center gap-1 shadow-sm";
+                }
+                if (actBtn) {
+                    actBtn.innerHTML = `<i class="fa-solid fa-unlock"></i> 완료해제·재수정`;
+                    actBtn.className = "bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-xl text-xs font-extrabold cursor-pointer flex items-center gap-1 shadow-sm";
+                }
+                if (statsTitle) {
+                    statsTitle.innerHTML = `<i class="fa-solid fa-trophy text-amber-300"></i> 🏆 최종 이번 여행 통계 리포트 (여행전·후 비교 및 독립 통계)`;
+                }
+            } else {
+                if (headerBadge) headerBadge.classList.add('hidden');
+                if (banner) banner.classList.add('hidden');
+                if (expCard) expCard.classList.remove('hidden');
+                if (actCard) actCard.classList.remove('hidden');
+                if (topBtn) {
+                    topBtn.innerHTML = `<i class="fa-solid fa-flag-checkered"></i> 여행완료`;
+                    topBtn.className = "bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-xl text-xs font-extrabold cursor-pointer flex items-center gap-1 shadow-sm";
+                }
+                if (actBtn) {
+                    actBtn.innerHTML = `<i class="fa-solid fa-flag-checkered"></i> 여행완료하기`;
+                    actBtn.className = "bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl text-xs font-extrabold cursor-pointer flex items-center gap-1 shadow-sm";
+                }
+                if (statsTitle) {
+                    statsTitle.innerHTML = `<i class="fa-solid fa-chart-pie text-amber-300"></i> 📊 카테고리별 여행 통계 & 여행전·후 비교 (터치하여 열기/닫기)`;
+                }
+            }
+            updateEditLockButtonUI();
+        }
+
+        // [Ver 1.5] [🏁 여행완료하기] 확정 또는 해제 실행
+        window.toggleTripCompletedStatus = async function(forceState) {
+            if (!currentTripId || !db) return;
+            const trip = tripsData.find(t => t.id === currentTripId);
+            if (!trip) return;
+
+            const nextState = (forceState !== undefined) ? Boolean(forceState) : !Boolean(trip.isCompleted);
+
+            if (nextState) {
+                if (!confirm(`🏁 [${trip.name}] 일정을 최종 '여행완료'로 확정하시겠습니까?\n\n• 여행완료 시 중간 일정과 가계부가 수정 잠금되어 안전하게 보존됩니다.\n• 완료 후 곧바로 [📊 최종 이번 여행 통계 (여행전·후 비교)] 화면이 열립니다.\n• (언제든 여행 목록의 [수정]이나 [재수정 열기]를 누르면 다시 수정할 수 있습니다.)`)) {
+                    return;
+                }
+            }
+
+            try {
+                await db.collection("trips").doc(currentTripId).update({
+                    isCompleted: nextState
+                });
+                trip.isCompleted = nextState;
+                isCurrentTripCompleted = nextState;
+                updateTripCompletedUI();
+                renderAllViews();
+
+                if (nextState) {
+                    openFinalStatsView();
+                } else {
+                    alert('🔓 여행완료 잠금이 해제되었습니다. 이제 일정과 가계부를 자유롭게 수정하실 수 있습니다!');
+                }
+            } catch (err) {
+                showError("여행완료 상태 변경 오류: " + err.message);
+            }
+        };
+
+        // 최종 이번 여행 통계 대시보드로 즉시 이동 및 펼침
+        window.openFinalStatsView = function() {
+            switchTab('actual');
+            toggleAccordion('account-stats-body', 'account-stats-chev', true);
+            setAccountStatsMode('compare');
+            setTimeout(() => {
+                const card = document.getElementById('account-stats-card');
+                if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 200);
+        };
+
+        // 여행 목록에서 완료된 여행의 [일정 재수정] 클릭 시 완료 해제 후 타임라인으로 진입
+        window.unlockAndEnterTrip = async function(tripId) {
+            if (!db) return;
+            const trip = tripsData.find(t => t.id === tripId);
+            if (trip && trip.isCompleted) {
+                await db.collection("trips").doc(tripId).update({ isCompleted: false });
+                trip.isCompleted = false;
+            }
+            selectTrip(tripId, 'plan');
+        };
 
         // 아코디언(접이식) 개폐 헬퍼
         window.toggleAccordion = function(bodyId, chevronId, forceOpen) {
@@ -1141,6 +1404,10 @@
         }
 
         window.toggleExpFormAccordion = function(forceOpen) {
+            if (isCurrentTripCompleted && forceOpen !== false) {
+                checkEditable();
+                return;
+            }
             toggleAccordion('exp-form-body', 'exp-form-chevron', forceOpen);
             if (!document.getElementById('exp-form-body').classList.contains('hidden')) {
                 if (!mapExp) initMaps();
@@ -1148,7 +1415,7 @@
             }
         };
 
-        // [Ver 1.35] 타임라인 중간중간의 [+ N일차 오전/오후 일정 추가하기] 버튼 클릭 시 해당 일차·오전/오후 시간대로 자동 세팅하여 입력폼 열기
+        // 타임라인 중간중간의 [+ N일차 오전/오후 일정 추가하기] 버튼 클릭 시 해당 일차·오전/오후 시간대로 자동 세팅하여 입력폼 열기
         window.openExpectedEditorForHalfDay = function(dayNum = 1, period = 'AM') {
             if (!checkEditable()) return;
             switchTab('plan');
@@ -1163,7 +1430,6 @@
             document.getElementById('exp-form-title').innerHTML = `<i class="fa-solid fa-calendar-plus text-blue-600"></i> [${targetDay}일차 ${periodLabel}] 새 여행 일정 추가하기`;
             document.getElementById('exp-submit-btn').innerText = `${targetDay}일차 ${periodLabel} 일정 저장하기`;
 
-            // 해당 반나절 대분류도 함께 펼쳐두어 저장 직후 바로 확인할 수 있게 처리
             const halfKey = `${targetDay}_${isPM ? 'PM' : 'AM'}`;
             manuallyCollapsedHalfDayKeys.delete(halfKey);
             expandedHalfDayKeys.add(halfKey);
@@ -1179,6 +1445,10 @@
         };
 
         window.toggleActFormAccordion = function(forceOpen) {
+            if (isCurrentTripCompleted && forceOpen !== false) {
+                checkEditable();
+                return;
+            }
             toggleAccordion('act-form-body', 'act-form-chevron', forceOpen);
             if (!document.getElementById('act-form-body').classList.contains('hidden')) {
                 if (!mapAct) initMaps();
@@ -1238,7 +1508,7 @@
             }
         }
 
-        // 목록 화면으로 돌아가기
+        // [Ver 1.5] 하단 고정 바의 [⬅ 목록] 클릭 시 첫 화면으로 복귀
         window.goTripSelector = function() {
             try {
                 localStorage.removeItem('last_trip_id');
@@ -1246,6 +1516,7 @@
             } catch (_) {}
 
             currentTripId = null;
+            isCurrentTripCompleted = false;
             if (unsubExp) { unsubExp(); unsubExp = null; }
             if (unsubAct) { unsubAct(); unsubAct = null; }
             if (unsubCars) { unsubCars(); unsubCars = null; }
@@ -1253,10 +1524,10 @@
 
             document.getElementById('trip-selector-screen').classList.remove('hidden');
             document.getElementById('main-app-screen').classList.add('hidden');
-            document.getElementById('btn-back').classList.add('hidden');
             document.getElementById('btn-map-provider').classList.add('hidden');
             document.getElementById('header-trip-title').innerText = "여행 일정 목록";
-            document.getElementById('header-trip-dates').classList.add('hidden');
+            document.getElementById('header-trip-dates').innerText = "스마트 단체 여행 매니저 Ver 1.5";
+            updateTripCompletedUI();
 
             if (typeof renderTripCards === 'function') renderTripCards();
             if (typeof renderRecentTripWidget === 'function') renderRecentTripWidget();
@@ -1276,13 +1547,15 @@
             currentTripId = tripId;
             currentMemberCount = Number(trip.memberCount || 8);
             currentRegion = trip.region || 'kr';
+            isCurrentTripCompleted = Boolean(trip.isCompleted);
             document.getElementById('calc-member-count').value = currentMemberCount;
 
-            // 여행 전환 시 2단계 스마트 아코디언 및 가계부 아코디언 상태 초기화
+            // 여행 전환 시 아코디언 상태 초기화
             expandedHalfDayKeys.clear();
             manuallyCollapsedHalfDayKeys.clear();
             expandedTimelineIds.clear();
             manuallyCollapsedIds.clear();
+            expandedPreBudgetIds.clear();
             expandedActualManageIds.clear();
             isExpandAllTimeline = false;
             const toggleAllBtn = document.getElementById('btn-toggle-all-cards');
@@ -1295,20 +1568,19 @@
             actualData = [];
             carsData = [];
             checklistData = [];
-            renderAllViews();
-            renderChecklistAll();
 
             document.getElementById('trip-selector-screen').classList.add('hidden');
             document.getElementById('main-app-screen').classList.remove('hidden');
-            document.getElementById('btn-back').classList.remove('hidden');
             document.getElementById('btn-map-provider').classList.remove('hidden');
             document.getElementById('header-trip-title').innerText = trip.name || '여행 일정';
             const subReg = inferTripSubRegion(trip);
             const dateEl = document.getElementById('header-trip-dates');
             dateEl.innerText = `📍 [${subReg}] ${formatWithDayOfWeek(trip.startDate)} ~ ${formatWithDayOfWeek(trip.endDate)} · 총 ${currentMemberCount}인`;
-            dateEl.classList.remove('hidden');
 
+            updateTripCompletedUI();
             updateMapProviderUI();
+            renderAllViews();
+            renderChecklistAll();
             initMaps();
             switchTab(initialTab);
             subscribeTripData(tripId);
@@ -1332,17 +1604,31 @@
             if (!btn) return;
             if (currentRegion === 'kr') {
                 btn.innerHTML = "🇰🇷 국내(카카오)";
-                btn.className = "bg-amber-400 text-slate-900 px-2 py-1 rounded-full text-[11px] font-extrabold cursor-pointer shadow-sm";
+                btn.className = "bg-amber-400 text-slate-900 px-2 py-0.5 rounded-full text-[10px] font-extrabold cursor-pointer shadow-sm";
             } else {
                 btn.innerHTML = "🌍 해외(구글)";
-                btn.className = "bg-emerald-400 text-slate-900 px-2 py-1 rounded-full text-[11px] font-extrabold cursor-pointer shadow-sm";
+                btn.className = "bg-emerald-400 text-slate-900 px-2 py-0.5 rounded-full text-[10px] font-extrabold cursor-pointer shadow-sm";
             }
         }
 
-        window.editTripInfo = function(tripId) {
-            if (!checkEditable()) return;
+        // [Ver 1.5] 여행 목록에서 [수정] 클릭 시: 완료된 여행이라도 자동으로 완료 잠금을 풀고 수정할 수 있도록 지원
+        window.editTripInfo = async function(tripId) {
+            if (isEditLocked) {
+                alert('현재 [🔒 잠금됨] 상태입니다. 우측 상단의 [🔒 잠금됨] 버튼을 눌러 잠금을 해제해 주세요.');
+                return;
+            }
             const trip = tripsData.find(t => t.id === tripId);
             if (!trip) return;
+
+            if (trip.isCompleted && db) {
+                if (confirm(`[${trip.name}] 일정은 현재 '여행완료' 상태입니다.\n여행완료 잠금을 해제하고 여행 정보 및 일정을 수정하시겠습니까?`)) {
+                    await db.collection("trips").doc(tripId).update({ isCompleted: false });
+                    trip.isCompleted = false;
+                } else {
+                    return;
+                }
+            }
+
             toggleAccordion('trip-form-body', 'trip-form-chevron', true);
             document.getElementById('trip-edit-id').value = trip.id;
             document.getElementById('trip-name').value = trip.name || '';
@@ -1367,7 +1653,7 @@
             toggleAccordion('trip-form-body', 'trip-form-chevron', false);
         };
 
-        // [Ver 1.35] 하단 고정 내비게이션 바 3개 탭('plan', 'actual', 'checklist') 전환
+        // 하단 고정 내비게이션 바 3개 탭('plan', 'actual', 'checklist') 전환
         window.switchTab = function(tabId) {
             const validTabs = ['plan', 'actual', 'checklist'];
             const targetTab = validTabs.includes(tabId) ? tabId : 'plan';
@@ -1740,7 +2026,7 @@
 
         // <!-- 3부 코드를 바로 아래에 이어서 붙여넣으세요 -->
         // ==========================================
-        // 3부: 구간 거리·시간 계산, 2단계 스마트 아코디언 타임라인 및 가계부 요약 렌더링
+        // 3부: 구간 거리·시간 계산, 2단계 타임라인, 3모드 카테고리 통계 및 여행전·후 가계부 렌더링
         // ==========================================
 
         // 거리 계산 (하버사인 km)
@@ -1832,7 +2118,7 @@
         };
 
         // ==========================================
-        // [Ver 1.35] 현재 시간 기준 [직전 일정] & [다음 일정] 및 해당 반나절 그룹 자동 판별 엔진
+        // 현재 시간 기준 [직전 일정] & [다음 일정] 및 해당 반나절 그룹 자동 판별 엔진
         // ==========================================
         function getSmartFocusInfo(trip, rawExpList) {
             const sorted = sortByDayAndTime(rawExpList || []);
@@ -1846,12 +2132,11 @@
 
             const isPastEndDate = Boolean(trip.endDate && trip.endDate < nowDate);
             const allVisited = sorted.length > 0 && sorted.every(x => Boolean(x.visited));
-            const isCompleted = isPastEndDate || allVisited;
+            const isCompleted = Boolean(trip.isCompleted) || isPastEndDate || allVisited;
 
             let prevItem = null;
             let nextItem = null;
 
-            // 1순위: 여행 기간 중일 때 실제 날짜+시간(YYYY-MM-DD HH:MM) 기준으로 직전/다음 일정 탐색
             if (trip.startDate && nowDate >= trip.startDate && (!trip.endDate || nowDate <= trip.endDate)) {
                 for (let i = 0; i < sorted.length; i++) {
                     const item = sorted[i];
@@ -1865,7 +2150,6 @@
                     }
                 }
             } else if (!isPastEndDate) {
-                // 2순위: 출발 전 여행인 경우 방문 체크 상태 기준 또는 첫 1·2번째 일정을 직전/다음으로 지정
                 const firstUnvisitedIdx = sorted.findIndex(x => !x.visited);
                 if (firstUnvisitedIdx > 0) {
                     prevItem = sorted[firstUnvisitedIdx - 1];
@@ -1875,7 +2159,6 @@
                     nextItem = sorted[1] || null;
                 }
             } else {
-                // 3순위: 이미 종료된 여행인 경우 마지막 일정을 참조
                 prevItem = sorted[sorted.length - 1] || null;
             }
 
@@ -1893,7 +2176,7 @@
             return { prevItem, nextItem, focusIds, focusHalfDayKeys, isCompleted };
         }
 
-        // [Ver 1.35] 1단계 아코디언: 반나절 대분류(1일차 오전, 1일차 오후 등) 접기/펼치기 토글
+        // 1단계 아코디언: 반나절 대분류(1일차 오전, 1일차 오후 등) 접기/펼치기 토글
         window.toggleHalfDayGroup = function(halfKey, isAutoFocusGroup = false) {
             if (!halfKey) return;
             if (expandedHalfDayKeys.has(halfKey)) {
@@ -1908,7 +2191,7 @@
             renderAllViews();
         };
 
-        // [Ver 1.35] 2단계 아코디언: 개별 장소 카드(시간·장소·사진 요약 ➔ 상세 정보 + 구간 이동거리) 접기/펼치기 토글
+        // 2단계 아코디언: 개별 장소 카드(시간·장소·사진 요약 ➔ 상세 정보 + 구간 이동거리) 접기/펼치기 토글
         window.toggleTimelineCardExpand = function(itemId, isAutoFocusItem = false) {
             if (!itemId) return;
             if (expandedTimelineIds.has(itemId)) {
@@ -1923,14 +2206,19 @@
             renderAllViews();
         };
 
-        // [Ver 1.35] 가계부·회비 목록 아이템 요약(제목·금액) ➔ 상세 보기 토글
+        // 가계부 [1. 여행전 예산 목록] 아이템 요약 ➔ 상세 보기 토글
+        window.togglePreBudgetExpand = function(expId) {
+            if (!expId) return;
+            if (expandedPreBudgetIds.has(expId)) expandedPreBudgetIds.delete(expId);
+            else expandedPreBudgetIds.add(expId);
+            renderAllViews();
+        };
+
+        // 가계부 [2. 여행중·완료 실제 지출 목록] 아이템 요약 ➔ 상세 보기 토글
         window.toggleActualManageExpand = function(actId) {
             if (!actId) return;
-            if (expandedActualManageIds.has(actId)) {
-                expandedActualManageIds.delete(actId);
-            } else {
-                expandedActualManageIds.add(actId);
-            }
+            if (expandedActualManageIds.has(actId)) expandedActualManageIds.delete(actId);
+            else expandedActualManageIds.add(actId);
             renderAllViews();
         };
 
@@ -2159,7 +2447,6 @@
             focusMapCoordinates(item.lat, item.lng);
         };
 
-        // 통합 타임라인 지도(mapPlan)로 즉시 포커스 및 줌인
         function focusMapCoordinates(lat, lng) {
             switchTab('plan');
             const mapCard = document.getElementById('plan-map-card');
@@ -2272,7 +2559,7 @@
             });
         };
 
-        // [방문전 <-> 방문완료] 양방향 연동
+        // [방문전 <-> 방문완료] 양방향 연동 (일정 카테고리를 11대 가계부 카테고리로 자동 매핑하여 등록)
         window.toggleVisitStatus = async function(expId) {
             if (!checkEditable() || !currentTripId || !db) return;
             const item = expectedData.find(x => x.id === expId);
@@ -2286,11 +2573,12 @@
             if (nextVisitedState) {
                 const alreadyInAct = actualData.some(a => a.linkedExpId === expId);
                 if (!alreadyInAct) {
+                    const mappedActCat = mapExpCategoryToAct(item.category, item.place_name);
                     await db.collection("trips").doc(currentTripId).collection("actual_visits").add({
                         linkedExpId: expId,
                         day: Number(item.day || 1),
                         time: item.time || "12:00",
-                        category: item.category || "관광",
+                        category: mappedActCat,
                         traveler: "총무(공통)",
                         place: item.place_name,
                         phone: item.phone || '',
@@ -2310,9 +2598,6 @@
             }
         };
 
-        // ==========================================
-        // 장소 간 거리·소요시간 박스 및 네이버/구글 길찾기 연동
-        // ==========================================
         window.openRouteByExpId = function(startId, endId) {
             const startItem = expectedData.find(x => x.id === startId);
             const endItem = expectedData.find(x => x.id === endId);
@@ -2338,11 +2623,7 @@
         };
 
         // ==========================================
-        // [Ver 1.35] 2단계 스마트 아코디언 통합 타임라인 렌더링
-        // - 반나절(1일차 오전, 1일차 오후, 2일차 오전, 2일차 오후...) 대분류 구조
-        // - 각 반나절 목록 바로 앞에 [+ N일차 오전/오후 일정 추가하기] 버튼 배치
-        // - 1단계 클릭: 시간·장소·사진 요약 목록 표시 / 2단계 클릭: 상세 정보 + 구간 이동거리 표시
-        // - 현재 시각 기준 [직전 일정] & [다음 일정]은 1단계·2단계 모두 자동으로 활짝 펼침
+        // [Ver 1.5] 2단계 스마트 아코디언 통합 타임라인 렌더링
         // ==========================================
         function buildExpListHtml(list, includeStandaloneActuals = false) {
             const currentTrip = tripsData.find(t => t.id === currentTripId);
@@ -2355,7 +2636,6 @@
                 else if (selectedDayFilter === '3' && d >= 3) dayNumbers.push(d);
                 else if (String(d) === selectedDayFilter) dayNumbers.push(d);
             }
-            // 데이터가 있는 일차가 누락되지 않도록 보강
             list.forEach(item => {
                 const d = Number(item.day || 1);
                 if (!dayNumbers.includes(d)) {
@@ -2383,7 +2663,6 @@
                 const dayStandaloneActs = sortByDayAndTime(standaloneActs.filter(a => Number(a.day || 1) === day));
                 const dayDateLabel = getDayDateLabel(day);
 
-                // 해당 일차의 전체 예상 일정에서 다음 장소(nextExp) 연결 (오전 마지막 장소 -> 오후 첫 장소 연결 유지)
                 const expWithNext = dayExpItems.map((expItem, expIdx) => ({
                     entryType: 'exp',
                     time: expItem.time,
@@ -2400,7 +2679,6 @@
                     nextExp: null
                 }));
 
-                // 오전('AM')과 오후('PM') 두 개의 반나절 섹션을 순차 렌더링
                 ['AM', 'PM'].forEach(period => {
                     const isPM = (period === 'PM');
                     const periodLabel = isPM ? '오후' : '오전';
@@ -2415,11 +2693,9 @@
                     const periodVisitedCount = periodEntries.filter(e => (e.entryType === 'exp' && e.data.visited) || e.entryType === 'standalone_act').length;
                     const periodUnvisitedCount = periodExpCount - periodEntries.filter(e => e.entryType === 'exp' && e.data.visited).length;
 
-                    // 이 반나절 구간에 현재 시간 기준 [직전 일정] 또는 [다음 일정]이 포함되어 있는지 확인
                     const isAutoFocusGroup = smartFocus.focusHalfDayKeys.has(halfKey);
                     const isGroupExpanded = isExpandAllTimeline || expandedHalfDayKeys.has(halfKey) || (isAutoFocusGroup && !manuallyCollapsedHalfDayKeys.has(halfKey));
 
-                    // 반나절 헤더 색상 스타일 (지도 마커 범례 색상과 통일: 1일차 오전=블루, 1일차 오후=퍼플, 2일차+ 오전=에메랄드, 2일차+ 오후=앰버)
                     const headerBgClass = (day === 1)
                         ? (isPM ? 'bg-purple-600 hover:bg-purple-700' : 'bg-blue-600 hover:bg-blue-700')
                         : (isPM ? 'bg-amber-600 hover:bg-amber-700' : 'bg-emerald-600 hover:bg-emerald-700');
@@ -2428,14 +2704,16 @@
                         ? (isPM ? 'border-purple-300 text-purple-700 bg-purple-50/70 hover:bg-purple-100' : 'border-blue-300 text-blue-700 bg-blue-50/70 hover:bg-blue-100')
                         : (isPM ? 'border-amber-300 text-amber-800 bg-amber-50/70 hover:bg-amber-100' : 'border-emerald-300 text-emerald-800 bg-emerald-50/70 hover:bg-emerald-100');
 
-                    // 1) 반나절 목록 바로 위: [+ N일차 오전/오후 일정 추가하기] 버튼
+                    // 여행완료 상태가 아닐 때만 반나절 바로 위에 [+ N일차 오전/오후 일정 추가하기] 버튼 노출
+                    const addHalfDayBtnHtml = !isCurrentTripCompleted
+                        ? `<button type="button" onclick="openExpectedEditorForHalfDay(${day}, '${period}')" class="w-full py-2 px-3 rounded-xl border border-dashed ${addBtnBorderClass} text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer transition shadow-sm">
+                               <i class="fa-solid fa-circle-plus"></i> + ${esc(day)}일차 ${periodLabel} 일정 추가하기
+                           </button>`
+                        : '';
+
                     html += `
                     <div class="space-y-1.5 pt-1">
-                        <button type="button" onclick="openExpectedEditorForHalfDay(${day}, '${period}')" class="w-full py-2 px-3 rounded-xl border border-dashed ${addBtnBorderClass} text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer transition shadow-sm">
-                            <i class="fa-solid fa-circle-plus"></i> + ${esc(day)}일차 ${periodLabel} 일정 추가하기
-                        </button>
-
-                        <!-- 2) 반나절 대분류 제목 바 (클릭 시 해당 반나절 일정 목록 열기/닫기) -->
+                        ${addHalfDayBtnHtml}
                         <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
                             <button type="button" onclick="toggleHalfDayGroup('${halfKey}', ${isAutoFocusGroup})" class="w-full ${headerBgClass} text-white px-3.5 py-2.5 flex flex-wrap justify-between items-center gap-2 cursor-pointer text-left transition">
                                 <div class="flex flex-wrap items-center gap-1.5">
@@ -2453,12 +2731,11 @@
                                 </div>
                             </button>`;
 
-                    // 3) 반나절 내부 장소 목록 (1단계가 펼쳐졌을 때만 표시)
                     if (isGroupExpanded) {
                         if (periodEntries.length === 0) {
                             html += `
                             <div class="p-4 text-center text-xs text-slate-400 bg-slate-50/50 border-t border-slate-100">
-                                등록된 ${esc(day)}일차 ${periodLabel} 일정이 없습니다. 위 <b>[+ ${esc(day)}일차 ${periodLabel} 일정 추가하기]</b> 버튼을 눌러 추가해 보세요.
+                                등록된 ${esc(day)}일차 ${periodLabel} 일정이 없습니다.
                             </div>`;
                         } else {
                             html += `<div class="p-3 bg-slate-50/40 border-t border-slate-100"><div class="relative border-l-2 border-blue-200 ml-2.5 space-y-2.5 py-1">`;
@@ -2470,15 +2747,12 @@
                                     const isVisited = Boolean(item.visited);
                                     const linkedAct = actualData.find(a => a.linkedExpId === item.id);
 
-                                    // 현재 시간 기준 [직전 일정] 또는 [다음 일정] 여부 판별
                                     const isPrevFocus = Boolean(smartFocus.prevItem && smartFocus.prevItem.id === item.id);
                                     const isNextFocus = Boolean(smartFocus.nextItem && smartFocus.nextItem.id === item.id);
                                     const isAutoFocus = isPrevFocus || isNextFocus;
 
-                                    // 2단계 펼침 상태 결정: 전체펼침이거나, 직전·다음 일정(수동접기 안함)이거나, 사용자가 카드를 한번 더 터치한 경우
                                     const isCardExpanded = isExpandAllTimeline || expandedTimelineIds.has(item.id) || (isAutoFocus && !manuallyCollapsedIds.has(item.id));
 
-                                    // 계획전 = 연한 노랑 박스 / 방문완료 = 연한 블루 박스
                                     const cardBgClass = isVisited
                                         ? 'bg-sky-50/95 border-sky-300 hover:bg-sky-100/70'
                                         : 'bg-yellow-50/95 border-amber-200 hover:bg-yellow-100/60';
@@ -2495,7 +2769,6 @@
                                         ? `<span class="text-[10px] font-extrabold text-white bg-rose-600 px-2 py-0.5 rounded-full animate-pulse">🔥 다음 일정</span>`
                                         : (isPrevFocus ? `<span class="text-[10px] font-extrabold text-indigo-800 bg-indigo-100 border border-indigo-300 px-2 py-0.5 rounded-full">⏮ 직전 일정</span>` : '');
 
-                                    // 요약 상태에서도 항상 보이는 사진 썸네일 갤러리
                                     let photosGalleryHtml = '';
                                     if (Array.isArray(item.photos) && item.photos.length > 0) {
                                         photosGalleryHtml = `<div class="grid grid-cols-3 gap-1.5 pt-1.5">`;
@@ -2509,16 +2782,17 @@
                                         photosGalleryHtml += `</div>`;
                                     }
 
-                                    // 2단계 상세 정보 영역 (장소 카드를 한 번 더 누르거나 직전·다음 일정일 때 표시)
                                     let expandedDetailsHtml = '';
                                     if (isCardExpanded) {
-                                        const visitBtnHtml = isVisited
-                                            ? `<button type="button" onclick="event.stopPropagation(); toggleVisitStatus('${item.id}')" class="bg-sky-600 hover:bg-sky-700 text-white border border-sky-600 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer shadow-sm flex items-center gap-1">
-                                                 <i class="fa-solid fa-check"></i> 방문완료 (취소클릭)
-                                               </button>`
-                                            : `<button type="button" onclick="event.stopPropagation(); toggleVisitStatus('${item.id}')" class="bg-amber-400 hover:bg-amber-500 text-slate-900 border border-amber-500 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer shadow-sm flex items-center gap-1">
-                                                 <i class="fa-regular fa-circle"></i> 방문전 (완료체크)
-                                               </button>`;
+                                        const visitBtnHtml = !isCurrentTripCompleted
+                                            ? (isVisited
+                                                ? `<button type="button" onclick="event.stopPropagation(); toggleVisitStatus('${item.id}')" class="bg-sky-600 hover:bg-sky-700 text-white border border-sky-600 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer shadow-sm flex items-center gap-1">
+                                                     <i class="fa-solid fa-check"></i> 방문완료 (취소클릭)
+                                                   </button>`
+                                                : `<button type="button" onclick="event.stopPropagation(); toggleVisitStatus('${item.id}')" class="bg-amber-400 hover:bg-amber-500 text-slate-900 border border-amber-500 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer shadow-sm flex items-center gap-1">
+                                                     <i class="fa-regular fa-circle"></i> 방문전 (완료체크)
+                                                   </button>`)
+                                            : '';
 
                                         const navMapUrl = `https://map.naver.com/p/search/${encodeURIComponent(item.address || item.place_name)}`;
                                         const navReviewUrl = `https://search.naver.com/search.naver?where=view&query=${encodeURIComponent(item.place_name + ' 후기 리뷰')}`;
@@ -2535,24 +2809,26 @@
                                                      <i class="fa-solid fa-receipt text-amber-600"></i> 영수증 보기
                                                    </button>`
                                                 : '';
+                                            const editActBtn = !isCurrentTripCompleted
+                                                ? `<button type="button" onclick="event.stopPropagation(); editAct('${linkedAct.id}')" class="bg-sky-100 hover:bg-sky-200 text-sky-900 px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer">
+                                                     ✏️ 지출·영수증 수정
+                                                   </button>`
+                                                : '';
                                             linkedActInfoHtml = `
                                             <div class="mt-1.5 p-2.5 bg-white/90 rounded-lg border border-sky-200 flex flex-wrap justify-between items-center gap-2 text-xs">
                                                 <div class="flex flex-wrap items-center gap-1.5">
                                                     <span class="font-extrabold text-sky-900"><i class="fa-solid fa-coins text-sky-600 mr-1"></i>실제지출: ${Number(linkedAct.expense || 0).toLocaleString()}원</span>
-                                                    <span class="text-[11px] text-slate-600">(결제: ${esc(linkedAct.traveler || '공통')})</span>
-                                                    ${linkedAct.action ? `<span class="text-[11px] text-slate-500">· ${esc(linkedAct.action)}</span>` : ''}
+                                                    <span class="text-[11px] text-slate-600">[${esc(linkedAct.category || '')}] (결제: ${esc(linkedAct.traveler || '공통')})</span>
                                                 </div>
                                                 <div class="flex items-center gap-1.5">
                                                     ${receiptThumb}
-                                                    <button type="button" onclick="event.stopPropagation(); editAct('${linkedAct.id}')" class="bg-sky-100 hover:bg-sky-200 text-sky-900 px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer">
-                                                        ✏️ 지출·영수증 수정
-                                                    </button>
+                                                    ${editActBtn}
                                                 </div>
                                             </div>`;
                                         }
 
                                         let altButtonsHtml = '';
-                                        if (Array.isArray(item.alternatives) && item.alternatives.length > 0) {
+                                        if (!isCurrentTripCompleted && Array.isArray(item.alternatives) && item.alternatives.length > 0) {
                                             altButtonsHtml = `<div class="flex flex-wrap items-center gap-1.5 pt-1">
                                                 <span class="text-[11px] font-bold text-indigo-700"><i class="fa-solid fa-repeat mr-0.5"></i>대안 교체:</span>`;
                                             item.alternatives.forEach((alt, altIdx) => {
@@ -2563,6 +2839,11 @@
                                             });
                                             altButtonsHtml += `</div>`;
                                         }
+
+                                        const editDeleteBtnsHtml = !isCurrentTripCompleted
+                                            ? `<button type="button" onclick="event.stopPropagation(); editExp('${item.id}')" class="ml-auto bg-white hover:bg-slate-100 border border-slate-300 text-blue-600 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">수정</button>
+                                               <button type="button" onclick="event.stopPropagation(); deleteSubItem('expected_places', '${item.id}')" class="bg-white hover:bg-slate-100 border border-slate-300 text-red-500 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">삭제</button>`
+                                            : '';
 
                                         expandedDetailsHtml = `
                                         <div class="pt-2 space-y-1.5 border-t border-slate-200/80">
@@ -2589,13 +2870,11 @@
                                                 <a href="${navReviewUrl}" target="_blank" onclick="event.stopPropagation();" class="bg-white hover:bg-slate-100 border border-amber-300 text-amber-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
                                                     <i class="fa-solid fa-star text-amber-500"></i> 리뷰
                                                 </a>
-                                                <button type="button" onclick="event.stopPropagation(); editExp('${item.id}')" class="ml-auto bg-white hover:bg-slate-100 border border-slate-300 text-blue-600 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">수정</button>
-                                                <button type="button" onclick="event.stopPropagation(); deleteSubItem('expected_places', '${item.id}')" class="bg-white hover:bg-slate-100 border border-slate-300 text-red-500 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">삭제</button>
+                                                ${editDeleteBtnsHtml}
                                             </div>
                                         </div>`;
                                     }
 
-                                    // 구간 이동 거리·소요시간 박스 (2단계 상세가 펼쳐진 상태일 때만 표시 & 높이 깨짐 방지 슬림 레이아웃)
                                     let routeBoxHtml = '';
                                     if (nextItem && isCardExpanded) {
                                         const move = getSegmentMoveInfo(item, nextItem);
@@ -2606,6 +2885,11 @@
                                             ? `이동 <b>약 ${move.km}km</b> · <b>${move.timeFormatted}</b>`
                                             : '길찾기 경로 확인';
                                         const routeBtnLabel = (currentRegion === 'kr') ? '네이버 길찾기 ▶' : '구글맵 길찾기 ▶';
+                                        const manualDistBtnHtml = !isCurrentTripCompleted
+                                            ? `<button type="button" onclick="event.stopPropagation(); promptManualMoveInfo('${item.id}', '${nextItem.id}')" class="text-[11px] font-bold text-slate-700 bg-white hover:bg-slate-100 border border-blue-300 px-2 py-1 rounded-lg cursor-pointer flex items-center gap-1 whitespace-nowrap">
+                                                 <i class="fa-solid fa-pen text-[10px] text-blue-600"></i> 거리·시간 입력
+                                               </button>`
+                                            : '';
                                         routeBoxHtml = `
                                         <div class="pt-2 pb-0.5 relative">
                                             <span class="absolute -left-[25px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-blue-100 border border-blue-400 text-blue-700 flex items-center justify-center text-[9px] shadow-sm">
@@ -2618,9 +2902,7 @@
                                                     <span class="whitespace-nowrap truncate">${distTimeText}</span>
                                                 </div>
                                                 <div class="flex items-center gap-1.5 shrink-0 ml-auto">
-                                                    <button type="button" onclick="event.stopPropagation(); promptManualMoveInfo('${item.id}', '${nextItem.id}')" class="text-[11px] font-bold text-slate-700 bg-white hover:bg-slate-100 border border-blue-300 px-2 py-1 rounded-lg cursor-pointer flex items-center gap-1 whitespace-nowrap">
-                                                        <i class="fa-solid fa-pen text-[10px] text-blue-600"></i> 거리·시간 입력
-                                                    </button>
+                                                    ${manualDistBtnHtml}
                                                     <button type="button" onclick="event.stopPropagation(); openRouteByExpId('${item.id}', '${nextItem.id}')" class="text-[11px] font-extrabold text-emerald-700 bg-white hover:bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg cursor-pointer flex items-center gap-1 whitespace-nowrap">
                                                         <i class="fa-solid fa-diamond-turn-right"></i> ${routeBtnLabel}
                                                     </button>
@@ -2633,7 +2915,6 @@
                                     <div id="timeline-card-${item.id}" class="relative pl-5">
                                         <span class="absolute -left-[7px] top-3.5 w-3 h-3 rounded-full ${dotColor} ring-2 ring-white"></span>
                                         <div onclick="toggleTimelineCardExpand('${item.id}', ${isAutoFocus})" class="${cardBgClass} ${focusRingClass} p-3 rounded-xl border space-y-1.5 cursor-pointer transition">
-                                            <!-- 1차 요약 상태: 시간, 장소명, 상태배지 (언제나 표시) -->
                                             <div class="flex justify-between items-center gap-2">
                                                 <div class="flex flex-wrap items-center gap-1.5 min-w-0">
                                                     <span class="text-xs font-extrabold text-slate-800 bg-white/90 border border-slate-200 px-2 py-0.5 rounded shrink-0"><i class="fa-regular fa-clock mr-1 text-blue-600"></i>${esc(item.time || '시간미정')}</span>
@@ -2657,11 +2938,17 @@
                                     const act = entry.data;
                                     const actCardKey = `act_${act.id}`;
                                     const isActExpanded = isExpandAllTimeline || expandedTimelineIds.has(actCardKey);
+                                    const mappedCat = mapExpCategoryToAct(act.category, act.place);
 
                                     const receiptBtnHtml = act.receipt
                                         ? `<button type="button" onclick="event.stopPropagation(); viewActReceipt('${act.id}')" class="bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 px-2.5 py-1 rounded-lg text-[11px] font-extrabold cursor-pointer flex items-center gap-1">
                                              <i class="fa-solid fa-receipt text-amber-600"></i> 영수증 보기
                                            </button>`
+                                        : '';
+
+                                    const actEditDeleteBtns = !isCurrentTripCompleted
+                                        ? `<button type="button" onclick="event.stopPropagation(); editAct('${act.id}')" class="ml-auto bg-white border border-slate-300 text-blue-600 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">수정</button>
+                                           <button type="button" onclick="event.stopPropagation(); deleteSubItem('actual_visits', '${act.id}')" class="bg-white border border-slate-300 text-red-500 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">삭제</button>`
                                         : '';
 
                                     html += `
@@ -2672,7 +2959,7 @@
                                                 <div class="flex flex-wrap items-center gap-1.5">
                                                     <span class="text-xs font-extrabold text-slate-800 bg-white/90 border border-slate-200 px-2 py-0.5 rounded"><i class="fa-regular fa-clock mr-1 text-sky-600"></i>${esc(act.time || '')}</span>
                                                     <span class="text-[10px] font-extrabold text-sky-800 bg-sky-200/80 px-2 py-0.5 rounded-full">✓ 현장지출</span>
-                                                    <h4 class="font-bold text-slate-900 text-sm leading-snug break-words">${act.category ? `<span class="text-sky-700">[${esc(act.category)}]</span> ` : ''}${esc(act.place)}</h4>
+                                                    <h4 class="font-bold text-slate-900 text-sm leading-snug break-words"><span class="text-sky-700">[${esc(mappedCat)}]</span> ${esc(act.place)}</h4>
                                                 </div>
                                                 <div class="flex items-center gap-1.5 shrink-0">
                                                     <span class="text-xs font-extrabold text-sky-800">${Number(act.expense || 0).toLocaleString()}원</span>
@@ -2688,8 +2975,7 @@
                                                         <i class="fa-solid fa-location-dot"></i> 지도확대
                                                     </button>
                                                     ${receiptBtnHtml}
-                                                    <button type="button" onclick="event.stopPropagation(); editAct('${act.id}')" class="ml-auto bg-white border border-slate-300 text-blue-600 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">수정</button>
-                                                    <button type="button" onclick="event.stopPropagation(); deleteSubItem('actual_visits', '${act.id}')" class="bg-white border border-slate-300 text-red-500 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">삭제</button>
+                                                    ${actEditDeleteBtns}
                                                 </div>
                                             </div>` : ''}
                                         </div>
@@ -2709,7 +2995,257 @@
         }
 
         // ==========================================
-        // [Ver 1.35] 가계부·회비 관리 탭 목록 렌더링 (일정 제목과 금액만 기본 표시 ➔ 터치 시 상세 펼침)
+        // [Ver 1.5] 카테고리별 여행 통계 대시보드 (3가지 보기 모드 전환: ①여행전·후 비교 / ②여행전 통계만 / ③여행중·완료 통계만)
+        // ==========================================
+        window.setAccountStatsMode = function(mode) {
+            currentAccountStatsMode = ['compare', 'pre', 'post'].includes(mode) ? mode : 'compare';
+            ['compare', 'pre', 'post'].forEach(m => {
+                const btn = document.getElementById(`btn-stat-mode-${m}`);
+                if (!btn) return;
+                if (m === currentAccountStatsMode) {
+                    btn.className = "py-2 px-1.5 rounded-lg bg-white text-indigo-700 shadow-sm cursor-pointer font-extrabold";
+                } else {
+                    btn.className = "py-2 px-1.5 rounded-lg text-slate-600 hover:text-slate-900 cursor-pointer font-bold";
+                }
+            });
+            renderAccountCategoryStats();
+        };
+
+        function computeAccountCategoryStats() {
+            const statsMap = {};
+            ACCOUNT_CATEGORIES.forEach(c => {
+                statsMap[c.key] = { key: c.key, icon: c.icon, label: c.label, preTotal: 0, preCount: 0, postTotal: 0, postCount: 0 };
+            });
+
+            // 1) 여행전 예상 일정 예산 집계
+            expectedData.forEach(item => {
+                const amt = Number(item.budget || 0);
+                const mappedKey = mapExpCategoryToAct(item.category, item.place_name);
+                if (!statsMap[mappedKey]) statsMap[mappedKey] = { key: mappedKey, icon: '📌', label: mappedKey, preTotal: 0, preCount: 0, postTotal: 0, postCount: 0 };
+                statsMap[mappedKey].preTotal += amt;
+                if (amt > 0) statsMap[mappedKey].preCount += 1;
+            });
+
+            // 체크리스트 4. 여행중 구입품목에 등록된 사전 계획 예산도 [마트·장보기] 여행전 예산에 합산
+            checklistData.forEach(chk => {
+                if ((chk.major === 'buy' || chk.major === 'food') && Number(chk.price || 0) > 0) {
+                    const amt = Number(chk.price || 0);
+                    statsMap['마트·장보기'].preTotal += amt;
+                    statsMap['마트·장보기'].preCount += 1;
+                }
+            });
+
+            // 2) 여행중·완료 실제 가계부 지출 집계
+            actualData.forEach(act => {
+                const amt = Number(act.expense || 0);
+                const mappedKey = mapExpCategoryToAct(act.category, act.place);
+                if (!statsMap[mappedKey]) statsMap[mappedKey] = { key: mappedKey, icon: '📌', label: mappedKey, preTotal: 0, preCount: 0, postTotal: 0, postCount: 0 };
+                statsMap[mappedKey].postTotal += amt;
+                statsMap[mappedKey].postCount += 1;
+            });
+
+            const rows = Object.values(statsMap);
+            const sumPre = rows.reduce((s, r) => s + r.preTotal, 0);
+            const sumPost = rows.reduce((s, r) => s + r.postTotal, 0);
+            return { rows, sumPre, sumPost };
+        }
+
+        function renderAccountCategoryStats() {
+            const container = document.getElementById('account-stats-content');
+            if (!container) return;
+
+            const { rows, sumPre, sumPost } = computeAccountCategoryStats();
+            const members = Math.max(1, Number(currentMemberCount || 8));
+
+            if (currentAccountStatsMode === 'compare') {
+                // ① 여행전 vs 여행후 비교 통계
+                const activeRows = rows.filter(r => r.preTotal > 0 || r.postTotal > 0 || r.postCount > 0);
+                if (activeRows.length === 0) {
+                    container.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center">집계할 예산 또는 지출 데이터가 없습니다.</p>`;
+                    return;
+                }
+                const diffAll = sumPre - sumPost;
+                const diffBadge = diffAll >= 0
+                    ? `<span class="text-emerald-700 font-extrabold">예산 대비 ${diffAll.toLocaleString()}원 절감(여유)</span>`
+                    : `<span class="text-rose-600 font-extrabold">예산 대비 ${Math.abs(diffAll).toLocaleString()}원 초과</span>`;
+
+                let html = `
+                <div class="bg-white p-3 rounded-xl border border-indigo-100 flex flex-wrap justify-between items-center gap-2 text-xs">
+                    <div>
+                        <span class="text-slate-500 font-semibold">전체 비교:</span>
+                        <span class="ml-1 font-bold text-amber-800">여행전 ${sumPre.toLocaleString()}원</span>
+                        <i class="fa-solid fa-arrow-right mx-1 text-slate-400 text-[10px]"></i>
+                        <span class="font-extrabold text-sky-800">여행후 ${sumPost.toLocaleString()}원</span>
+                    </div>
+                    <div>${diffBadge}</div>
+                </div>
+                <div class="space-y-2">`;
+
+                activeRows.forEach(r => {
+                    const diff = r.postTotal - r.preTotal; // 양수면 초과지출, 음수면 절감
+                    let diffHtml = `<span class="text-[11px] font-bold text-slate-500">동일 (0원)</span>`;
+                    if (diff > 0) diffHtml = `<span class="text-[11px] font-extrabold text-rose-600">+${diff.toLocaleString()}원 (초과)</span>`;
+                    else if (diff < 0) diffHtml = `<span class="text-[11px] font-extrabold text-emerald-600">${diff.toLocaleString()}원 (절감)</span>`;
+
+                    const postPct = sumPost > 0 ? Math.round((r.postTotal / sumPost) * 100) : 0;
+
+                    html += `
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-sm">
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="text-xs font-extrabold text-slate-800">${r.icon} ${esc(r.label)}</span>
+                            <div class="flex items-center gap-2">
+                                ${diffHtml}
+                                <span class="bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded text-[10px] font-extrabold">실제비중 ${postPct}%</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs pt-0.5">
+                            <div class="bg-amber-50/70 border border-amber-200/80 px-2.5 py-1.5 rounded-lg flex justify-between items-center">
+                                <span class="text-[11px] text-amber-800 font-semibold">📋 여행전</span>
+                                <span class="font-bold text-slate-800">${r.preTotal.toLocaleString()}원</span>
+                            </div>
+                            <div class="bg-sky-50/80 border border-sky-200/80 px-2.5 py-1.5 rounded-lg flex justify-between items-center">
+                                <span class="text-[11px] text-sky-800 font-semibold">🧾 여행후</span>
+                                <span class="font-extrabold text-sky-900">${r.postTotal.toLocaleString()}원</span>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+                container.innerHTML = html;
+
+            } else if (currentAccountStatsMode === 'pre') {
+                // ② 여행전(예상 예산) 통계만 보기
+                const preRows = rows.filter(r => r.preTotal > 0).sort((a, b) => b.preTotal - a.preTotal);
+                if (preRows.length === 0) {
+                    container.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center">등록된 여행전 예상 예산이 없습니다.</p>`;
+                    return;
+                }
+                let html = `
+                <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 flex flex-wrap justify-between items-center gap-2 text-xs">
+                    <span class="font-extrabold text-amber-900">📋 여행전 계획 총 예산: ${sumPre.toLocaleString()}원</span>
+                    <span class="font-bold text-amber-800">1인당 예상 (${members}명): 약 ${Math.round(sumPre / members).toLocaleString()}원</span>
+                </div>
+                <div class="space-y-2">`;
+
+                preRows.forEach(r => {
+                    const pct = sumPre > 0 ? Math.round((r.preTotal / sumPre) * 100) : 0;
+                    html += `
+                    <div class="bg-white p-3 rounded-xl border border-amber-200/80 space-y-1.5">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-extrabold text-slate-800">${r.icon} ${esc(r.label)} <span class="text-[11px] text-slate-400 font-normal">(${r.preCount}건)</span></span>
+                            <span class="font-extrabold text-amber-900">${r.preTotal.toLocaleString()}원 <span class="text-[11px] text-amber-700">(${pct}%)</span></span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                            <div class="bg-amber-400 h-full rounded-full" style="width:${pct}%"></div>
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+                container.innerHTML = html;
+
+            } else {
+                // ③ 여행중·여행완료(실제 지출) 통계만 보기
+                const postRows = rows.filter(r => r.postTotal > 0 || r.postCount > 0).sort((a, b) => b.postTotal - a.postTotal);
+                if (postRows.length === 0) {
+                    container.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center">기록된 실제 지출 내역이 없습니다.</p>`;
+                    return;
+                }
+                const perRound = Math.ceil(sumPost / members / 100) * 100;
+                let html = `
+                <div class="bg-sky-50 p-3 rounded-xl border border-sky-200 flex flex-wrap justify-between items-center gap-2 text-xs">
+                    <span class="font-extrabold text-sky-900">🧾 여행중·완료 실제 총 지출: ${sumPost.toLocaleString()}원</span>
+                    <span class="font-extrabold text-emerald-700">1인 회비(100원올림): ${perRound.toLocaleString()}원</span>
+                </div>
+                <div class="space-y-2">`;
+
+                postRows.forEach(r => {
+                    const pct = sumPost > 0 ? Math.round((r.postTotal / sumPost) * 100) : 0;
+                    html += `
+                    <div class="bg-white p-3 rounded-xl border border-sky-200/80 space-y-1.5">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-extrabold text-slate-800">${r.icon} ${esc(r.label)} <span class="text-[11px] text-slate-400 font-normal">(${r.postCount}건)</span></span>
+                            <span class="font-extrabold text-sky-900">${r.postTotal.toLocaleString()}원 <span class="text-[11px] text-sky-700">(${pct}%)</span></span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                            <div class="bg-sky-500 h-full rounded-full" style="width:${pct}%"></div>
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+                container.innerHTML = html;
+            }
+        }
+
+        // ==========================================
+        // [Ver 1.5] 가계부 탭 - [1. 여행전 예산 목록] 렌더링 (일정 제목·금액 요약 ➔ 터치 시 상세 펼침)
+        // ==========================================
+        function buildPreTripBudgetListHtml(list) {
+            const groups = {};
+            list.forEach(item => {
+                const d = item.day || 1;
+                if (!groups[d]) groups[d] = [];
+                groups[d].push(item);
+            });
+
+            let html = '';
+            Object.keys(groups).sort((a, b) => Number(a) - Number(b)).forEach(day => {
+                const dayDateLabel = getDayDateLabel(day);
+                const daySum = groups[day].reduce((s, i) => s + Number(i.budget || 0), 0);
+                html += `
+                <div class="space-y-2">
+                    <div class="bg-amber-500 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex flex-wrap justify-between items-center gap-1 shadow-sm">
+                        <span>📋 ${esc(day)}일차 여행전 예상 예산 <span class="text-amber-100 font-extrabold ml-1">${esc(dayDateLabel)}</span></span>
+                        <span class="bg-amber-700/60 px-2.5 py-0.5 rounded-full text-[11px]">${groups[day].length}건 · 소계 ${daySum.toLocaleString()}원</span>
+                    </div>
+                    <div class="space-y-2">`;
+
+                groups[day].forEach(item => {
+                    const isDetailOpen = expandedPreBudgetIds.has(item.id);
+                    const mappedCat = mapExpCategoryToAct(item.category, item.place_name);
+                    const catIcon = getAccountCategoryIcon(mappedCat);
+                    const isVisited = Boolean(item.visited);
+
+                    html += `
+                    <div onclick="togglePreBudgetExpand('${item.id}')" class="bg-yellow-50/90 hover:bg-yellow-100/60 p-3 rounded-xl border border-amber-200 space-y-2 shadow-sm cursor-pointer transition">
+                        <!-- 기본 요약 줄: 시간, 가계부 변환 카테고리, 일정 제목, 예상 예산 금액만 깔끔하게 표시 -->
+                        <div class="flex justify-between items-center gap-2">
+                            <div class="flex flex-wrap items-center gap-1.5 min-w-0">
+                                <span class="text-[11px] font-bold text-amber-900 bg-white border border-amber-200 px-2 py-0.5 rounded shrink-0">${esc(item.time || '')}</span>
+                                <span class="text-[11px] font-extrabold text-amber-800">${catIcon}[${esc(mappedCat)}]</span>
+                                <h4 class="font-extrabold text-slate-900 text-sm break-words">${esc(item.place_name)}</h4>
+                                ${isVisited ? `<span class="text-[10px] font-bold bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded">✓방문완료</span>` : ''}
+                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <span class="text-xs sm:text-sm font-extrabold text-amber-900 whitespace-nowrap">${Number(item.budget || 0).toLocaleString()}원</span>
+                                <span class="text-[10px] text-slate-500 bg-white/80 px-1.5 py-0.5 rounded-full border border-slate-200">
+                                    <i class="fa-solid ${isDetailOpen ? 'fa-chevron-up' : 'fa-chevron-down'}"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- 터치 시 펼쳐지는 상세 정보 -->
+                        ${isDetailOpen ? `
+                        <div class="pt-2 space-y-1.5 border-t border-amber-200/80 text-xs">
+                            <p class="text-slate-600">📌 일정 원래 구분: <b>${esc(item.category || '관광')}</b> ➔ 가계부 분류: <b>${esc(mappedCat)}</b></p>
+                            ${item.memo ? `<p class="text-slate-700 leading-relaxed break-words bg-white/70 p-2 rounded-lg">📝 ${esc(item.memo)}</p>` : ''}
+                            ${item.address ? `<p class="text-slate-500 break-words"><i class="fa-solid fa-location-dot mr-1"></i>${esc(item.address)}</p>` : ''}
+                            ${item.phone ? `<p class="text-blue-700 font-semibold"><i class="fa-solid fa-phone mr-1"></i>${esc(item.phone)}</p>` : ''}
+                            ${!isCurrentTripCompleted ? `
+                            <div class="flex flex-wrap items-center gap-1.5 pt-1.5">
+                                <button type="button" onclick="event.stopPropagation(); editExp('${item.id}')" class="bg-white border border-amber-300 text-amber-900 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">
+                                    ✏️ 예상 일정·예산 수정
+                                </button>
+                            </div>` : ''}
+                        </div>` : ''}
+                    </div>`;
+                });
+                html += `</div></div>`;
+            });
+            return html;
+        }
+
+        // ==========================================
+        // [Ver 1.5] 가계부 탭 - [2. 여행중(여행완료 포함) 실제 지출 목록] 렌더링 (일정 제목과 금액만 기본 표시 ➔ 터치 시 상세 펼침)
         // ==========================================
         function buildActListHtml(list) {
             const actGroups = {};
@@ -2726,13 +3262,15 @@
                 html += `
                 <div class="space-y-2">
                     <div class="bg-emerald-600 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl flex flex-wrap justify-between items-center gap-1 shadow-sm">
-                        <span>🧾 ${esc(day)}일차 가계부 지출 내역 <span class="text-amber-200 font-extrabold ml-1">${esc(dayDateLabel)}</span></span>
+                        <span>🧾 ${esc(day)}일차 여행중·완료 실제 지출 <span class="text-amber-200 font-extrabold ml-1">${esc(dayDateLabel)}</span></span>
                         <span class="bg-emerald-700 px-2.5 py-0.5 rounded-full text-[11px]">${actGroups[day].length}건 · 소계 ${dayTotal.toLocaleString()}원</span>
                     </div>
                     <div class="space-y-2">`;
 
                 actGroups[day].forEach(item => {
                     const isDetailOpen = expandedActualManageIds.has(item.id);
+                    const mappedCat = mapExpCategoryToAct(item.category, item.place);
+                    const catIcon = getAccountCategoryIcon(mappedCat);
                     const navMapUrl = `https://map.naver.com/p/search/${encodeURIComponent(item.address || item.place)}`;
                     const navReviewUrl = `https://search.naver.com/search.naver?where=view&query=${encodeURIComponent(item.place + ' 후기 리뷰')}`;
                     const phoneBtnHtml = item.phone
@@ -2754,13 +3292,19 @@
                            </div>`
                         : '';
 
+                    const editDeleteBtns = !isCurrentTripCompleted
+                        ? `<button type="button" onclick="event.stopPropagation(); editAct('${item.id}')" class="ml-auto bg-white border border-slate-300 text-blue-600 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">수정</button>
+                           <button type="button" onclick="event.stopPropagation(); deleteSubItem('actual_visits', '${item.id}')" class="bg-white border border-slate-300 text-red-500 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">삭제</button>`
+                        : '';
+
                     html += `
                     <div onclick="toggleActualManageExpand('${item.id}')" class="bg-sky-50/90 hover:bg-sky-100/60 p-3 rounded-xl border border-sky-300 space-y-2 shadow-sm cursor-pointer transition">
-                        <!-- 기본 요약 줄: 시간, 일정 제목(방문장소명), 금액만 깔끔하게 표시 -->
+                        <!-- 기본 요약 줄: 시간, 가계부 카테고리, 일정 제목(방문장소명), 금액만 깔끔하게 표시 -->
                         <div class="flex justify-between items-center gap-2">
                             <div class="flex flex-wrap items-center gap-1.5 min-w-0">
                                 <span class="text-[11px] font-bold text-sky-900 bg-white border border-sky-200 px-2 py-0.5 rounded shrink-0">${esc(item.time || '')}</span>
-                                <h4 class="font-extrabold text-slate-900 text-sm break-words">${item.category ? `<span class="text-sky-700">[${esc(item.category)}]</span> ` : ''}${esc(item.place)}</h4>
+                                <span class="text-[11px] font-extrabold text-sky-700">${catIcon}[${esc(mappedCat)}]</span>
+                                <h4 class="font-extrabold text-slate-900 text-sm break-words">${esc(item.place)}</h4>
                                 ${item.receipt ? `<span class="text-[10px] font-extrabold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded shrink-0">🧾영수증</span>` : ''}
                             </div>
                             <div class="flex items-center gap-1.5 shrink-0">
@@ -2791,8 +3335,7 @@
                                 <a href="${navReviewUrl}" target="_blank" onclick="event.stopPropagation();" class="bg-white border border-amber-300 text-amber-700 px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
                                     <i class="fa-solid fa-star text-amber-500"></i> 리뷰
                                 </a>
-                                <button type="button" onclick="event.stopPropagation(); editAct('${item.id}')" class="ml-auto bg-white border border-slate-300 text-blue-600 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">수정</button>
-                                <button type="button" onclick="event.stopPropagation(); deleteSubItem('actual_visits', '${item.id}')" class="bg-white border border-slate-300 text-red-500 px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">삭제</button>
+                                ${editDeleteBtns}
                             </div>
                         </div>` : ''}
                     </div>`;
@@ -2806,17 +3349,17 @@
             const sortedExpAll = sortByDayAndTime(expectedData);
             const sortedActAll = sortByDayAndTime(actualData);
 
-            const totalExp = sortedExpAll.reduce((s, x) => s + Number(x.budget || 0), 0);
-            const totalAct = sortedActAll.reduce((s, x) => s + Number(x.expense || 0), 0);
-            const diff = totalExp - totalAct;
+            // 체크리스트 구입예정 금액까지 포함한 전체 여행전 예산과 실제 지출 계산
+            const { sumPre, sumPost } = computeAccountCategoryStats();
+            const diff = sumPre - sumPost;
             const members = Math.max(1, Number(currentMemberCount || 8));
 
-            document.getElementById('calc-exp-total').innerText = totalExp.toLocaleString() + '원';
-            document.getElementById('calc-exp-per').innerText = `1인 예상 약 ${Math.round(totalExp / members).toLocaleString()}원`;
-            document.getElementById('calc-act-total').innerText = totalAct.toLocaleString() + '원';
+            document.getElementById('calc-exp-total').innerText = sumPre.toLocaleString() + '원';
+            document.getElementById('calc-exp-per').innerText = `1인 예상 약 ${Math.round(sumPre / members).toLocaleString()}원`;
+            document.getElementById('calc-act-total').innerText = sumPost.toLocaleString() + '원';
             document.getElementById('calc-diff-text').innerText = diff >= 0 ? `예산 여유 +${diff.toLocaleString()}원` : `예산 초과 ${diff.toLocaleString()}원`;
-            document.getElementById('calc-per-person-exact').innerText = Math.round(totalAct / members).toLocaleString() + '원';
-            document.getElementById('calc-per-person-round').innerText = `100원 올림: ${(Math.ceil(totalAct / members / 100) * 100).toLocaleString()}원`;
+            document.getElementById('calc-per-person-exact').innerText = Math.round(sumPost / members).toLocaleString() + '원';
+            document.getElementById('calc-per-person-round').innerText = `100원 올림: ${(Math.ceil(sumPost / members / 100) * 100).toLocaleString()}원`;
 
             const filteredExp = sortedExpAll.filter(item => {
                 if (selectedDayFilter === 'all') return true;
@@ -2835,19 +3378,28 @@
             document.getElementById('exp-count-badge').innerText = `계획전 ${unvisitedCount}곳`;
             document.getElementById('act-count-badge').innerText = `방문완료 ${completedCount}곳 · 지출 ${filteredAct.length}건`;
 
+            const preBadgeEl = document.getElementById('pre-trip-list-badge');
+            if (preBadgeEl) preBadgeEl.innerText = `${sortedExpAll.length}곳 · ${sortedExpAll.reduce((s, x) => s + Number(x.budget || 0), 0).toLocaleString()}원`;
+            const postBadgeEl = document.getElementById('post-trip-list-badge');
+            if (postBadgeEl) postBadgeEl.innerText = `${sortedActAll.length}건 · ${sumPost.toLocaleString()}원`;
+
             document.getElementById('expected-timeline-list').innerHTML = buildExpListHtml(filteredExp, true) || '<p class="text-xs text-slate-400 py-4 text-center">등록된 여행 일정이 없습니다.</p>';
-            document.getElementById('actual-manage-list').innerHTML = buildActListHtml(sortedActAll) || '<p class="text-xs text-slate-400 py-4 text-center">기록된 지출 내역이 없습니다.</p>';
+            document.getElementById('pre-trip-budget-list').innerHTML = buildPreTripBudgetListHtml(sortedExpAll) || '<p class="text-xs text-slate-400 py-4 text-center">등록된 여행전 예상 일정이 없습니다.</p>';
+            document.getElementById('actual-manage-list').innerHTML = buildActListHtml(sortedActAll) || '<p class="text-xs text-slate-400 py-4 text-center">기록된 실제 지출 내역이 없습니다.</p>';
+
+            renderAccountCategoryStats();
 
             let presetHtml = '<option value="">-- 예상 방문지 목록에서 선택하세요 --</option>';
             sortedExpAll.forEach(item => {
-                presetHtml += `<option value="${item.id}">[${esc(item.day || 1)}일차 ${esc(item.time || '')}] ${esc(item.place_name)} (예산: ${Number(item.budget || 0).toLocaleString()}원)</option>`;
+                const mappedCat = mapExpCategoryToAct(item.category, item.place_name);
+                presetHtml += `<option value="${item.id}">[${esc(item.day || 1)}일차 ${esc(item.time || '')}] ${esc(item.place_name)} (${esc(mappedCat)} · 예산 ${Number(item.budget || 0).toLocaleString()}원)</option>`;
             });
             document.getElementById('act-preset-select').innerHTML = presetHtml;
         }
 
         // <!-- 4부 코드를 바로 아래에 이어서 붙여넣으세요 -->
         // ==========================================
-        // 4부: 첫 화면 브리핑 위젯, 체크리스트, 통합 폼 저장/수정, 엑셀 백업·복원 및 초기화
+        // 4부: 첫 화면 브리핑 위젯, 체크리스트, 완료 여행 재수정 연동, 엑셀 백업·복원 및 초기화
         // ==========================================
         function syncParticipantDropdowns() {
             const namesSet = new Set();
@@ -2919,6 +3471,7 @@
         };
 
         window.quickOpenChkForm = function(major, defaultMinor) {
+            if (!checkEditable()) return;
             resetChkForm(true);
             toggleAccordion('chk-form-body', 'chk-form-chevron', true);
             document.getElementById('chk-major').value = major;
@@ -2983,7 +3536,12 @@
                         const sendBtnHtml = (isBuySection && priceNum > 0)
                             ? (isSent
                                 ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-[10px] font-bold">✓ 가계부반영됨</span>`
-                                : `<button type="button" onclick="sendBuyItemToActual('${item.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded text-[10px] font-bold cursor-pointer">가계부반영</button>`)
+                                : (!isCurrentTripCompleted ? `<button type="button" onclick="sendBuyItemToActual('${item.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded text-[10px] font-bold cursor-pointer">가계부반영</button>` : ''))
+                            : '';
+
+                        const chkEditDeleteBtns = !isCurrentTripCompleted
+                            ? `<button type="button" onclick="editChkItem('${item.id}')" class="bg-slate-100 text-blue-600 px-2 py-1 rounded text-[11px] font-bold cursor-pointer">수정</button>
+                               <button type="button" onclick="deleteSubItem('checklists', '${item.id}')" class="bg-slate-100 text-red-500 px-2 py-1 rounded text-[11px] font-bold cursor-pointer">삭제</button>`
                             : '';
 
                         html += `
@@ -3001,8 +3559,7 @@
                             </label>
                             <div class="flex items-center justify-end gap-1 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-100">
                                 ${sendBtnHtml}
-                                <button type="button" onclick="editChkItem('${item.id}')" class="bg-slate-100 text-blue-600 px-2 py-1 rounded text-[11px] font-bold cursor-pointer">수정</button>
-                                <button type="button" onclick="deleteSubItem('checklists', '${item.id}')" class="bg-slate-100 text-red-500 px-2 py-1 rounded text-[11px] font-bold cursor-pointer">삭제</button>
+                                ${chkEditDeleteBtns}
                             </div>
                         </div>`;
                     });
@@ -3020,7 +3577,7 @@
         };
 
         window.toggleChkItem = async function(chkId) {
-            if (!currentTripId || !db) return;
+            if (!checkEditable() || !currentTripId || !db) return;
             const item = checklistData.find(x => x.id === chkId);
             if (!item) return;
             await db.collection("trips").doc(currentTripId).collection("checklists").doc(chkId).update({
@@ -3028,6 +3585,7 @@
             });
         };
 
+        // [Ver 1.5] 체크리스트 구입품목을 가계부에 반영할 때 11대 가계부 카테고리 중 [마트·장보기]로 자동 매핑
         window.sendBuyItemToActual = async function(chkId) {
             if (!checkEditable() || !currentTripId || !db) return;
             const item = checklistData.find(x => x.id === chkId);
@@ -3045,7 +3603,7 @@
                 linkedChkId: chkId,
                 day: targetDay,
                 time: targetTime,
-                category: matchedExp ? (matchedExp.category || "장보기") : "장보기",
+                category: "마트·장보기",
                 traveler: item.person || "총무(공통)",
                 place: item.minor || "현지 마트/시장",
                 phone: matchedExp ? (matchedExp.phone || '') : '',
@@ -3061,7 +3619,7 @@
                 checked: true,
                 sentToActual: true
             });
-            alert(`'${item.title}' (${Number(item.price || 0).toLocaleString()}원) 내역이 [${targetDay}일차 ${targetTime}] 가계부 및 통합 타임라인(블루 박스)에 반영되었습니다!`);
+            alert(`'${item.title}' (${Number(item.price || 0).toLocaleString()}원) 내역이 [${targetDay}일차 ${targetTime}] 가계부 [🛒 마트·장보기] 항목 및 통합 타임라인(블루 박스)에 반영되었습니다!`);
         };
 
         window.editChkItem = function(chkId) {
@@ -3128,32 +3686,47 @@
             alert('기본 준비물 템플릿이 추가되었습니다!');
         };
 
+        // [Ver 1.5] 카카오톡 정산 공유 시 11대 카테고리별 지출 요약 + 건별 내역 함께 복사
         window.copySettlementReport = function() {
             const trip = tripsData.find(t => t.id === currentTripId);
             const sortedAct = sortByDayAndTime(actualData);
-            const totalAct = sortedAct.reduce((s, x) => s + Number(x.expense || 0), 0);
+            const { rows, sumPre, sumPost } = computeAccountCategoryStats();
             const members = Math.max(1, Number(currentMemberCount || 8));
-            const exactPer = Math.round(totalAct / members);
-            const roundPer = Math.ceil(totalAct / members / 100) * 100;
+            const exactPer = Math.round(sumPost / members);
+            const roundPer = Math.ceil(sumPost / members / 100) * 100;
 
-            let text = `📋 [${trip ? trip.name : '단체 여행'}] 가계부 정산 내역\n`;
+            let text = `📋 [${trip ? trip.name : '단체 여행'}] 가계부 최종 정산 리포트\n`;
             text += `• 일정: ${trip ? formatWithDayOfWeek(trip.startDate) : ''} ~ ${trip ? formatWithDayOfWeek(trip.endDate) : ''} (${members}명)\n`;
             text += `--------------------------\n`;
+            text += `📊 [카테고리별 지출 통계 요약]\n`;
+            const activePostRows = rows.filter(r => r.postTotal > 0).sort((a, b) => b.postTotal - a.postTotal);
+            if (activePostRows.length > 0) {
+                activePostRows.forEach(r => {
+                    const pct = sumPost > 0 ? Math.round((r.postTotal / sumPost) * 100) : 0;
+                    text += `• ${r.icon} ${r.label}: ${r.postTotal.toLocaleString()}원 (${pct}%)\n`;
+                });
+            } else {
+                text += `• 지출 내역 없음\n`;
+            }
+            text += `--------------------------\n`;
+            text += `🧾 [상세 지출 내역]\n`;
             sortedAct.forEach(item => {
-                const catTag = item.category ? `[${item.category}] ` : '';
-                const rcptTag = item.receipt ? ' (🧾영수증첨부)' : '';
-                text += `[${item.day || 1}일차] ${catTag}${item.place}: ${Number(item.expense || 0).toLocaleString()}원 (${item.traveler || '공통'})${rcptTag}\n`;
+                const mappedCat = mapExpCategoryToAct(item.category, item.place);
+                const rcptTag = item.receipt ? ' (🧾영수증)' : '';
+                text += `[${item.day || 1}일차] [${mappedCat}] ${item.place}: ${Number(item.expense || 0).toLocaleString()}원 (${item.traveler || '공통'})${rcptTag}\n`;
             });
             text += `--------------------------\n`;
-            text += `💰 총 실제 사용금액: ${totalAct.toLocaleString()}원\n`;
+            text += `📋 여행전 총 예산: ${sumPre.toLocaleString()}원\n`;
+            text += `💰 실제 총 지출액: ${sumPost.toLocaleString()}원\n`;
             text += `👤 1인당 납부 회비 (1/${members}): ${exactPer.toLocaleString()}원\n`;
             text += `✨ 100원 단위 올림 시: ${roundPer.toLocaleString()}원`;
 
             navigator.clipboard.writeText(text).then(() => {
-                alert('카카오톡 공유용 정산 내역이 복사되었습니다!');
+                alert('카카오톡 공유용 정산 리포트(카테고리 통계 요약 포함)가 복사되었습니다!');
             }).catch(() => prompt('아래 내용을 복사하세요:', text));
         };
 
+        // [Ver 1.5] 예상 일정에서 불러올 때 일정 카테고리를 11대 가계부 전용 카테고리로 자동 변환하여 선택
         window.fillFromExpected = function() {
             const expId = document.getElementById('act-preset-select').value;
             const item = expectedData.find(x => x.id === expId);
@@ -3161,8 +3734,7 @@
             document.getElementById('act-day').value = item.day || 1;
             const normT = normalizeTime(item.time);
             document.getElementById('act-time').value = normT !== '99:99' ? normT : '12:00';
-            const mappedCat = (item.category === '숙소') ? '숙박' : (item.category || '식당');
-            document.getElementById('act-category').value = mappedCat;
+            document.getElementById('act-category').value = mapExpCategoryToAct(item.category, item.place_name);
             document.getElementById('act-place').value = item.place_name || '';
             document.getElementById('act-phone').value = item.phone || '';
             document.getElementById('act-address').value = item.address || '';
@@ -3173,7 +3745,7 @@
             if (item.lat && item.lng) placePickerMarker('act', item.lat, item.lng);
         };
 
-        // [Ver 1.35] 통합 타임라인·일정 탭에서 바로 수정 창 열기 (사진 3장 및 수동 이동거리·시간 불러오기)
+        // 통합 타임라인·일정 탭에서 바로 수정 창 열기
         window.editExp = function(id) {
             if (!checkEditable()) return;
             const item = expectedData.find(x => x.id === id);
@@ -3226,7 +3798,7 @@
             if (!keepOpen) toggleExpFormAccordion(false);
         };
 
-        // 가계부 지출 수정 시 기존 첨부 영수증 불러오기
+        // 가계부 지출 수정 시 11대 가계부 카테고리 자동 매칭 및 기존 첨부 영수증 불러오기
         window.editAct = function(id) {
             if (!checkEditable()) return;
             const item = actualData.find(x => x.id === id);
@@ -3237,8 +3809,7 @@
             document.getElementById('act-day').value = item.day || 1;
             const normT = normalizeTime(item.time);
             document.getElementById('act-time').value = normT !== '99:99' ? normT : '12:00';
-            const mappedCat = (item.category === '숙소') ? '숙박' : (item.category || '식당');
-            document.getElementById('act-category').value = mappedCat;
+            document.getElementById('act-category').value = mapExpCategoryToAct(item.category, item.place);
             document.getElementById('act-traveler').value = item.traveler || '총무(공통)';
             document.getElementById('act-place').value = item.place || '';
             document.getElementById('act-phone').value = item.phone || '';
@@ -3292,7 +3863,7 @@
 
         // ==========================================
         // 첫 화면 상단: 최근 열었던(진행중) 여행의 현재 시간 기준 [직전 일정] & [다음 일정] 브리핑 위젯
-        // - 완료된 여행이거나 진행중인 일정이 없으면 위젯을 숨기고 기존 연도별·지역별 목록을 최상단에 표시
+        // - 여행완료(isCompleted) 상태이거나 종료일이 지난 여행은 위젯에서 자동 제외하고 기존 연도·지역별 폴더 목록 중심 유지
         // ==========================================
         window.renderRecentTripWidget = function() {
             const widgetEl = document.getElementById('recent-trip-widget');
@@ -3309,14 +3880,14 @@
 
             let targetTrip = recentId ? tripsData.find(t => t.id === recentId) : null;
 
-            if (!targetTrip || (targetTrip.endDate && targetTrip.endDate < nowDate)) {
+            if (!targetTrip || targetTrip.isCompleted || (targetTrip.endDate && targetTrip.endDate < nowDate)) {
                 const activeOrUpcoming = [...tripsData]
-                    .filter(t => !t.endDate || t.endDate >= nowDate)
+                    .filter(t => !t.isCompleted && (!t.endDate || t.endDate >= nowDate))
                     .sort((a, b) => (a.startDate || '9999').localeCompare(b.startDate || '9999'));
                 targetTrip = activeOrUpcoming[0] || null;
             }
 
-            if (!targetTrip || (targetTrip.endDate && targetTrip.endDate < nowDate)) {
+            if (!targetTrip || targetTrip.isCompleted || (targetTrip.endDate && targetTrip.endDate < nowDate)) {
                 if (recentWidgetUnsub) { recentWidgetUnsub(); recentWidgetUnsub = null; }
                 widgetEl.classList.add('hidden');
                 return;
@@ -3411,25 +3982,35 @@
 
         // ==========================================
         // 여행 일정 목록 폴더(연도별 / 국내·해외 지역별) 렌더링
+        // - 완료된 여행은 [🏆 여행완료] 배지 + [📊 최종통계] + [🔓 일정재수정] 버튼 제공
         // ==========================================
         function buildSingleTripCardHtml(trip) {
             const subReg = inferTripSubRegion(trip);
             const regionBadge = trip.region === 'global'
                 ? `<span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">🌍 해외 · ${esc(subReg)}</span>`
                 : `<span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">🇰🇷 국내 · ${esc(subReg)}</span>`;
+            const completedBadge = trip.isCompleted
+                ? `<span class="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded-full font-extrabold">🏆 여행완료</span>`
+                : '';
+
+            const enterActionBtn = trip.isCompleted
+                ? `<button type="button" onclick="selectTrip('${trip.id}', 'actual')" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-extrabold cursor-pointer">📊 최종통계</button>
+                   <button type="button" onclick="unlockAndEnterTrip('${trip.id}')" class="bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 px-2.5 py-2 rounded-lg text-xs font-extrabold cursor-pointer">🔓 일정재수정</button>`
+                : `<button type="button" onclick="selectTrip('${trip.id}')" class="flex-1 sm:flex-none bg-blue-600 active:bg-blue-800 text-white px-3.5 py-2 rounded-lg text-xs font-bold cursor-pointer">입장하기</button>`;
 
             return `
-            <div class="bg-white border border-slate-200 p-3.5 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-3 shadow-sm">
-                <div onclick="selectTrip('${trip.id}')" class="cursor-pointer flex-1 min-w-0">
+            <div class="bg-white border ${trip.isCompleted ? 'border-indigo-200 bg-indigo-50/20' : 'border-slate-200'} p-3.5 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-3 shadow-sm">
+                <div onclick="selectTrip('${trip.id}', '${trip.isCompleted ? 'actual' : 'plan'}')" class="cursor-pointer flex-1 min-w-0">
                     <div class="flex flex-wrap items-center gap-1.5">
                         <h3 class="font-bold text-slate-800 text-sm sm:text-base hover:text-blue-600 transition break-words">${esc(trip.name || '제목 없음')}</h3>
+                        ${completedBadge}
                         <span class="text-[11px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">${Number(trip.memberCount || 8)}인</span>
                         ${regionBadge}
                     </div>
                     <p class="text-xs text-slate-500 mt-1 break-words"><i class="fa-regular fa-calendar mr-1"></i>${esc(formatWithDayOfWeek(trip.startDate))} ~ ${esc(formatWithDayOfWeek(trip.endDate))}</p>
                 </div>
-                <div class="flex items-center gap-1.5 shrink-0">
-                    <button type="button" onclick="selectTrip('${trip.id}')" class="flex-1 sm:flex-none bg-blue-600 active:bg-blue-800 text-white px-3.5 py-2 rounded-lg text-xs font-bold cursor-pointer">입장하기</button>
+                <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+                    ${enterActionBtn}
                     <button type="button" onclick="editTripInfo('${trip.id}')" class="bg-slate-50 border border-slate-300 text-slate-700 px-2.5 py-2 rounded-lg text-xs font-bold cursor-pointer">수정</button>
                     <button type="button" onclick="deleteTrip('${trip.id}')" class="bg-slate-50 border border-red-200 text-red-600 px-2.5 py-2 rounded-lg text-xs font-bold cursor-pointer">삭제</button>
                 </div>
@@ -3581,7 +4162,10 @@
                 snap.forEach(d => tripsData.push({ id: d.id, ...d.data() }));
                 renderTripCards();
                 renderRecentTripWidget();
-                if (currentTripId) subscribeTripData(currentTripId);
+                if (currentTripId) {
+                    updateTripCompletedUI();
+                    subscribeTripData(currentTripId);
+                }
                 setSyncBadge("연결됨", "bg-emerald-500");
             } catch (e) {
                 setSyncBadge("오류", "bg-red-600");
@@ -3618,6 +4202,12 @@
                 snap.forEach(d => {
                     const data = d.data();
                     carsData.push({ id: d.id, ...data });
+                    const carEditBtns = !isCurrentTripCompleted
+                        ? `<div class="flex gap-1 shrink-0">
+                               <button type="button" onclick="editCar('${d.id}')" class="bg-white border border-slate-300 text-blue-600 px-2.5 py-1 rounded text-xs font-bold cursor-pointer">수정</button>
+                               <button type="button" onclick="deleteSubItem('cars', '${d.id}')" class="bg-white border border-slate-300 text-red-500 px-2.5 py-1 rounded text-xs font-bold cursor-pointer">삭제</button>
+                           </div>`
+                        : '';
                     html += `
                     <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-start gap-2">
                         <div class="space-y-1 text-xs">
@@ -3626,10 +4216,7 @@
                             <p class="text-slate-600"><b class="text-blue-700">운전자:</b> ${esc(data.driver)}</p>
                             <p class="text-slate-600"><b>탑승자:</b> ${esc(data.members)}</p>
                         </div>
-                        <div class="flex gap-1 shrink-0">
-                            <button type="button" onclick="editCar('${d.id}')" class="bg-white border border-slate-300 text-blue-600 px-2.5 py-1 rounded text-xs font-bold cursor-pointer">수정</button>
-                            <button type="button" onclick="deleteSubItem('cars', '${d.id}')" class="bg-white border border-slate-300 text-red-500 px-2.5 py-1 rounded text-xs font-bold cursor-pointer">삭제</button>
-                        </div>
+                        ${carEditBtns}
                     </div>`;
                 });
                 document.getElementById('car-list').innerHTML = html || '<p class="text-xs text-slate-400 col-span-2 py-3 text-center">등록된 차량 배치가 없습니다. 우측 상단 [+ 차량 추가/수정]을 눌러 등록해보세요.</p>';
@@ -3641,11 +4228,13 @@
                 checklistData = [];
                 snap.forEach(d => checklistData.push({ id: d.id, ...d.data() }));
                 renderChecklistAll();
+                renderAllViews(); // 체크리스트 구입품목 예산 합산 갱신
                 scheduleBackupCache();
             });
         }
 
         window.updateMemberCount = async function(val) {
+            if (!checkEditable()) return;
             currentMemberCount = Math.max(1, Number(val || 8));
             renderAllViews();
             if (currentTripId && db) {
@@ -3666,7 +4255,10 @@
         }
 
         window.deleteTrip = async function(tripId) {
-            if (!checkEditable() || !db) return;
+            if (isEditLocked || !db) {
+                alert('현재 [🔒 잠금됨] 상태입니다. 우측 상단 잠금을 해제해 주세요.');
+                return;
+            }
             const trip = tripsData.find(t => t.id === tripId);
             if (!confirm(`[${trip ? trip.name : '이 여행'}] 일정과 하위 데이터(일정·가계부·차량·체크리스트)를 모두 완전히 삭제하시겠습니까?`)) return;
             try {
@@ -3685,7 +4277,7 @@
         };
 
         // ==========================================
-        // 디바운스 엑셀 백업 캐시 및 Batch 고속 복원 (수동거리·시간 포함)
+        // 디바운스 엑셀 백업 캐시 및 Batch 고속 복원 (여행완료여부 및 11대 카테고리 포함)
         // ==========================================
         function scheduleBackupCache() {
             if (backupDebounceTimer) clearTimeout(backupDebounceTimer);
@@ -3713,7 +4305,8 @@
                         지역소분류: inferTripSubRegion(tData),
                         참여인원: tData.memberCount || 8,
                         시작일: tData.startDate || '',
-                        종료일: tData.endDate || ''
+                        종료일: tData.endDate || '',
+                        여행완료여부: tData.isCompleted ? 'Y' : 'N'
                     });
 
                     const eSnap = await db.collection("trips").doc(tId).collection("expected_places").get();
@@ -3748,7 +4341,7 @@
                             여행제목: tData.name || '',
                             일차: x.day || 1,
                             시간: x.time || '',
-                            구분: x.category || '식당',
+                            구분: mapExpCategoryToAct(x.category, x.place),
                             결제자: x.traveler || '',
                             방문장소: x.place || '',
                             전화번호: x.phone || '',
@@ -3853,7 +4446,11 @@
         };
 
         window.restoreFromExcelFile = function(event) {
-            if (!checkEditable()) { event.target.value = ''; return; }
+            if (isEditLocked) {
+                alert('현재 [🔒 잠금됨] 상태입니다. 우측 상단 잠금을 해제해 주세요.');
+                event.target.value = '';
+                return;
+            }
             const file = event.target.files[0];
             if (!file || !db) return;
 
@@ -3890,7 +4487,8 @@
                             subRegion: String(tRow.지역소분류 || inferTripSubRegion({ name: tRow.여행제목, region: tRow.지역구분 || 'kr' })),
                             memberCount: Number(tRow.참여인원 || 8),
                             startDate: String(tRow.시작일 || ''),
-                            endDate: String(tRow.종료일 || '')
+                            endDate: String(tRow.종료일 || ''),
+                            isCompleted: String(tRow.여행완료여부 || 'N').toUpperCase() === 'Y'
                         };
 
                         if (overwriteExisting && existingTrip) {
@@ -3974,7 +4572,7 @@
                         batch.set(ref, {
                             day: Number(aRow.일차 || 1),
                             time: String(aRow.시간 || '12:00'),
-                            category: String(aRow.구분 || '식당'),
+                            category: mapExpCategoryToAct(aRow.구분, aRow.방문장소),
                             traveler: String(aRow.결제자 || '총무(공통)'),
                             place: String(aRow.방문장소),
                             phone: String(aRow.전화번호 || ''),
@@ -4041,7 +4639,8 @@
                 subRegion: "충청권",
                 memberCount: 8,
                 startDate: "2026-10-23",
-                endDate: "2026-10-24"
+                endDate: "2026-10-24",
+                isCompleted: false
             });
             const tripId = tripRef.id;
 
@@ -4097,7 +4696,7 @@
             return tripId;
         }
 
-        // [Ver 1.35] 앱 재접속 시 개인 휴대폰에 저장된 마지막 여행 및 3탭('plan', 'actual', 'checklist') 자동 복원
+        // 앱 재접속 시 개인 휴대폰에 저장된 마지막 여행 및 3탭('plan', 'actual', 'checklist') 자동 복원
         let hasRestoredInitialSession = false;
         function restoreLastSessionOnce() {
             if (hasRestoredInitialSession) return;
@@ -4126,6 +4725,7 @@
                     snap.forEach(d => tripsData.push({ id: d.id, ...d.data() }));
                     renderTripCards();
                     renderRecentTripWidget();
+                    if (currentTripId) updateTripCompletedUI();
                     restoreLastSessionOnce();
                     scheduleBackupCache();
                 }, (err) => {
@@ -4139,7 +4739,10 @@
 
             document.getElementById('trip-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                if (!checkEditable() || !db) return;
+                if (isEditLocked || !db) {
+                    alert('현재 [🔒 잠금됨] 상태입니다. 우측 상단 잠금을 해제해 주세요.');
+                    return;
+                }
                 const editId = document.getElementById('trip-edit-id').value;
                 const payload = {
                     name: document.getElementById('trip-name').value.trim(),
@@ -4149,19 +4752,25 @@
                     startDate: document.getElementById('trip-start').value,
                     endDate: document.getElementById('trip-end').value
                 };
-                if (editId) await db.collection("trips").doc(editId).update(payload);
-                else await db.collection("trips").add(payload);
+                if (editId) {
+                    // 여행 목록에서 [수정]으로 저장할 때 완료 상태도 함께 해제하여 일정 수정이 가능하도록 보장
+                    payload.isCompleted = false;
+                    await db.collection("trips").doc(editId).update(payload);
+                } else {
+                    payload.isCompleted = false;
+                    await db.collection("trips").add(payload);
+                }
                 resetTripForm();
             });
 
             document.getElementById('btn-create-danyang').onclick = async function() {
-                if (!checkEditable() || !db) return;
+                if (isEditLocked || !db) return;
                 if (!confirm('단양·영월·청풍호 1박 2일 샘플(일정·차량·5대분류 체크리스트 포함)을 생성하시겠습니까?')) return;
                 const tripId = await createDanyangStandardTrip();
                 selectTrip(tripId);
             };
 
-            // [Ver 1.35] 예상 일정 저장 시 해당 반나절 대분류 자동 펼침 + 사진 배열(최대 3장) 및 수동 이동거리·시간 함께 저장
+            // 예상 일정 저장 시 해당 반나절 대분류 자동 펼침 + 사진 배열(최대 3장) 및 수동 이동거리·시간 함께 저장
             document.getElementById('expected-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!checkEditable() || !currentTripId || !db) return;
@@ -4187,7 +4796,6 @@
                     alternatives: collectAlternativesFromForm()
                 };
 
-                // 방금 추가/수정한 일정이 속한 반나절 그룹을 펼쳐두어 즉시 확인할 수 있게 처리
                 const savedHalfKey = `${payload.day}_${getHalfDayPeriod(payload.time)}`;
                 manuallyCollapsedHalfDayKeys.delete(savedHalfKey);
                 expandedHalfDayKeys.add(savedHalfKey);
@@ -4202,7 +4810,7 @@
                 resetExpForm(false);
             });
 
-            // 가계부 저장 시 영수증 사진 데이터 함께 저장
+            // 가계부 저장 시 11대 가계부 카테고리 및 영수증 사진 데이터 함께 저장
             document.getElementById('actual-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 if (!checkEditable() || !currentTripId || !db) return;
